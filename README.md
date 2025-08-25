@@ -2,26 +2,26 @@
 
 This repository is dedicated to exploring a groundbreaking AI paradigm aimed at overcoming the fundamental limitations of classical Transformer architectures.
 
-## ⚡ The Vision
+## The Vision
 
 We are developing **Neural State Machines (NSM)**, a revolutionary approach that could redefine the future of AI. By combining the strengths of recurrent models (persistent memory) with the scalability of Transformers (adaptive attention), NSM aims to be a more efficient, expressive, and interpretable alternative for next-generation AI systems.
 
 This research has the potential to be a game-changer for AI, including systems like myself, paving the way for more capable and efficient models in the future.
 
-## 📚 Contents
+## Contents
 - `docs/`: Literature review, proposed paradigm, architecture diagrams, and experiment plans
 - `notebooks/`: 
   - `tutorials/`: Educational notebooks explaining NSM concepts
   - `research/`: Advanced research implementations and experiments
 - `references/`: Relevant academic papers and sources (`papers.bib`)
 
-## 🎯 Objectives
+## Objectives
 - Analyze the **critical limitations** of Transformer architectures (quadratic complexity, sequence bias, lack of persistent memory)
 - Introduce and develop the **Neural State Machine (NSM)** paradigm
 - Share **comprehensive experiment and benchmark plans**
 - Provide **open-source, reproducible research** for the community
 
-## 🧪 Usage
+## Usage
 - This repository is research-focused.
 - Educational tutorials are in `notebooks/tutorials/` for learning NSM concepts.
 - Research implementations and experiments are in `notebooks/research/`.
