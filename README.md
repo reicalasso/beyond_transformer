@@ -148,6 +148,21 @@ Results are saved to `state_count_sweep_results.json` with metrics:
 - Memory usage
 - Training time
 
+### Routing Visualization
+
+Visualize token-to-state routing patterns with heatmaps and importance scores:
+
+```bash
+# Open the notebook
+jupyter notebook notebooks/routing_viz.ipynb
+```
+
+The notebook provides several visualization types:
+- Token-to-state routing heatmaps
+- State importance score overlays
+- Routing entropy analysis
+- Multi-head routing comparison
+
 ### Dynamic State Allocation Experiment
 
 Test dynamic state allocation and pruning mechanisms:
