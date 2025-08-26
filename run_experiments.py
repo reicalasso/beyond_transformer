@@ -10,6 +10,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from nsm.experiments import run_state_count_sweep, save_results
+from nsm.experiments.dynamic_state_allocation import run_dynamic_state_experiment
 
 
 def main():
@@ -17,13 +18,14 @@ def main():
     print("Neural State Machine Experiments")
     print("=" * 40)
     
-    # Run state count sweep
+    print("\n1. Running State Count Hyperparameter Sweep...")
     results = run_state_count_sweep()
+    save_results(results, 'state_count_sweep_results.json')
     
-    # Save results
-    save_results(results)
+    print("\n2. Running Dynamic State Allocation Experiment...")
+    dynamic_results = run_dynamic_state_experiment()
     
-    print("\nExperiment completed successfully!")
+    print("\nAll experiments completed successfully!")
 
 
 if __name__ == "__main__":

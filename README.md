@@ -13,9 +13,15 @@ This repository explores Neural State Machines (NSM) as an alternative to tradit
 - Optional residual connections and layer normalization
 - Useful for relational reasoning between memory slots
 
-### 3. Hyperparameter Analysis
-- Comprehensive experiment testing different state counts (8, 16, 32, 64)
-- Performance metrics: accuracy, memory usage, training speed
+### 3. Dynamic State Allocation and Pruning
+- Learnable importance scores for each state node
+- Automatic pruning of low-importance states
+- Dynamic allocation of new states when needed
+
+### 4. Hybrid Attention Mechanisms
+- Token-to-state routing with learned attention
+- Content-based attention for information flow
+- Flexible routing strategies
 
 ## Project Structure
 
@@ -23,16 +29,20 @@ This repository explores Neural State Machines (NSM) as an alternative to tradit
 src/
 ├── nsm/
 │   ├── __init__.py
+│   ├── layers.py              # Core NSM layers (NSMLayer, HybridAttention)
+│   ├── components.py          # Key components (TokenToStateRouter, StateManager)
 │   ├── modules/
 │   │   ├── __init__.py
-│   │   ├── state_propagator.py      # Core state propagation logic
+│   │   ├── state_propagator.py      # Legacy state propagation logic
+│   │   ├── state_manager.py         # Basic state management
 │   │   └── test_state_propagator.py # Unit tests
 │   ├── models/
 │   │   ├── __init__.py
 │   │   └── simple_nsm.py            # Example NSM model
 │   ├── experiments/
 │   │   ├── __init__.py
-│   │   └── state_count_sweep.py     # Hyperparameter experiments
+│   │   ├── state_count_sweep.py     # Hyperparameter experiments
+│   │   └── dynamic_state_allocation.py # Dynamic state experiments
 │   └── utils/
 │       └── __init__.py
 ├── run_experiments.py               # Main experiment runner
@@ -46,7 +56,8 @@ src/
 git clone <repository-url>
 cd beyond_transformer
 
-# No additional dependencies required beyond PyTorch
+# Install dependencies
+pip install -r requirements.txt
 ```
 
 ## Usage
@@ -55,7 +66,7 @@ cd beyond_transformer
 
 ```python
 import torch
-from nsm.modules import StatePropagator
+from nsm import StatePropagator, NSMLayer, StateManager
 
 # Initialize state propagator
 propagator = StatePropagator(
@@ -75,6 +86,30 @@ num_states = 16
 prev_states = torch.randn(batch_size, num_states, 128)
 new_inputs = torch.randn(batch_size, num_states, 128)
 updated_states = propagator(prev_states, new_inputs)
+```
+
+### Advanced Usage with Dynamic State Management
+
+```python
+from nsm import NSMLayer, StateManager
+
+# Create state manager with dynamic allocation
+state_manager = StateManager(
+    state_dim=128,
+    max_states=64,
+    initial_states=16,
+    prune_threshold=0.3
+)
+
+# Create NSM layer
+nsm_layer = NSMLayer(state_dim=128, token_dim=64, num_heads=4)
+
+# Get current states
+states = state_manager()
+
+# During training, periodically prune and allocate states
+pruned_count = state_manager.prune_low_importance_states()
+allocated_count = state_manager.allocate_states(2)
 ```
 
 ### Complete Model Example
@@ -107,27 +142,75 @@ Run the experiment to test different numbers of state nodes:
 python run_experiments.py
 ```
 
-Results are saved to `hyperparameter_sweep_results.json` with metrics:
+Results are saved to `state_count_sweep_results.json` with metrics:
 - Training accuracy
 - Test accuracy
 - Memory usage
 - Training time
 
-### Results Summary
+### Dynamic State Allocation Experiment
 
-Key findings from the state count experiment:
-- Training accuracy varies with state count (53-75%)
-- Test accuracy remains relatively stable (10-12%)
-- Memory usage increases with more states
-- Training time scales linearly with state count
+Test dynamic state allocation and pruning mechanisms:
+
+```bash
+python src/nsm/experiments/dynamic_state_allocation.py
+```
 
 ## Testing
 
-Run the unit tests:
+### Unit Tests
+
+Run comprehensive unit tests for all components:
 
 ```bash
-python src/nsm/modules/test_state_propagator.py
+# Run all component tests
+python tests/run_components_tests.py
+
+# Run individual test suites
+python -m pytest tests/components/test_layers.py -v
+python -m pytest tests/components/test_router.py -v
+python -m pytest tests/components/test_state_manager.py -v
 ```
+
+### Core Module Tests
+
+```bash
+# Legacy module tests
+python src/nsm/modules/test_state_propagator.py
+
+# Component integration tests
+python src/nsm/test_components.py
+```
+
+### Smoke Tests
+
+```bash
+# Integration smoke test
+python tests/smoke_test.py
+```
+
+### Test Coverage
+
+The test suite includes:
+- **Shape verification** for all tensor operations
+- **Differentiability testing** for gradient flow
+- **Probability constraints** (softmax outputs sum to 1)
+- **Edge case handling** (boundary conditions, error cases)
+- **Integration testing** between components
+- **Performance smoke tests** for basic functionality
+
+## Key Research Findings
+
+### State Count Analysis
+- Training accuracy varies with state count (53-75% in experiments)
+- Test accuracy remains relatively stable (10-12% for synthetic data)
+- Memory usage increases linearly with state count
+- Training time scales with state count
+
+### Dynamic State Management
+- Automatic pruning can reduce memory footprint
+- State importance scores provide interpretability
+- Dynamic allocation allows adaptive model complexity
 
 ## Contributing
 
