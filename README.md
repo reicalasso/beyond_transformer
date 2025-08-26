@@ -156,6 +156,31 @@ Test dynamic state allocation and pruning mechanisms:
 python src/nsm/experiments/dynamic_state_allocation.py
 ```
 
+### Baseline Model Comparison
+
+Compare NSM against traditional architectures (LSTM, GRU, Transformer):
+
+```bash
+# Run comparison experiment
+python notebooks/run_baseline_comparison.py
+
+# View results summary
+python summarize_results.py
+```
+
+Results are saved to `baseline_comparison_results.json` with metrics:
+- Accuracy (training and test)
+- F1 Score (conceptual)
+- Memory usage
+- FLOPs (conceptual)
+- Training speed
+
+Datasets tested:
+- MNIST (image classification)
+- CIFAR-10 (image classification)
+- Tiny Shakespeare (text generation) - partial results
+- IMDb (sentiment classification) - partial results
+
 ## Testing
 
 ### Unit Tests
