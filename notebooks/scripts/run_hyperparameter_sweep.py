@@ -349,12 +349,12 @@ if __name__ == "__main__":
         }
     
     # Save results
-    with open('hyperparameter_sweep_results.json', 'w') as f:
+    with open('results/experiments/hyperparameter_sweep_results.json', 'w') as f:
         json.dump(serializable_results, f, indent=2)
     
     # Plot results
     plot_results(results)
     
-    print("Results saved to hyperparameter_sweep_results.json")
-    print("Plot saved to hyperparameter_sweep_results.png")
+    print("Results saved to results/experiments/hyperparameter_sweep_results.json")
+    print("Plot saved to results/visualization/nsm_hyperparameter_sweep_results.png")
     print("Hyperparameter sweep completed successfully!")

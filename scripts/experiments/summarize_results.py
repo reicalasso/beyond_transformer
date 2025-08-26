@@ -7,7 +7,7 @@ import json
 import numpy as np
 
 # Load results
-with open('baseline_comparison_results.json', 'r') as f:
+with open('results/experiments/baseline_comparison_results.json', 'r') as f:
     results = json.load(f)
 
 print("Baseline Model Comparison Results Summary")

@@ -1,6 +1,43 @@
 # Experiments Plan
 
-This document describes the experimental roadmap for exploring **Neural State Machines (NSM)** as a paradigm beyond Transformers. Our goal is to validate NSM's potential to become a foundational architecture for next-generation AI systems.
+
+This document describes the experimental roadmap for exploring **Neural State Machines (NSM)** as a paradigm beyond Transformers. The project yapısı ve kodlar için güncel referanslar aşağıdadır:
+
+## Project Directory Structure (2025)
+
+```
+requirements/                # Gereksinim dosyaları
+  requirements.txt
+  requirements-experiments.txt
+  requirements-test.txt
+results/
+  experiments/             # Deney sonuçları (json)
+  visualization/           # Görselleştirme çıktıları (png)
+scripts/
+  experiments/             # Deney çalıştırma ve özetleme scriptleri
+  visualization/           # Görselleştirme scriptleri
+src/                         # Ana kaynak kodu
+docs/                        # Belgeler
+notebooks/
+  experiments/             # Ana deney defterleri (ipynb)
+  scripts/                 # Deney ve görselleştirme scriptleri (py)
+  tests/                   # Test notebook ve scriptleri
+  utils/                   # Yardımcı scriptler
+  research/                # Araştırma amaçlı notebooklar
+  tutorials/               # Eğitim ve örnek notebooklar
+references/                  # Referanslar (papers.bib)
+tests/                       # Testler
+```
+
+Referanslar için: `references/papers.bib`
+
+Kod ve notebook örnekleri için:
+- Ana deney: `notebooks/experiments/baseline_comparison.ipynb`
+- Hiperparametre süpürme: `notebooks/experiments/hyperparameter_sweep.ipynb`
+- Routing görselleştirme: `notebooks/experiments/routing_viz.ipynb`
+- Script örnekleri: `scripts/experiments/run_experiments.py`, `scripts/visualization/plot_results.py`
+
+Sonuç dosyaları: `results/experiments/`, görseller: `results/visualization/`
 
 ---
 

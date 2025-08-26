@@ -68,7 +68,12 @@ NSM is positioned to be a **game-changing paradigm** that addresses these critic
 
 ## 6. References
 
-See `references/papers.bib` for full BibTeX entries.
+Tüm kaynaklar ve BibTeX girişleri için: `references/papers.bib`
+
+Proje kodu ve deneyler için güncel yollar:
+- Ana deney notebooku: `notebooks/experiments/baseline_comparison.ipynb`
+- Kod: `src/nsm/`, `scripts/`, `notebooks/scripts/`
+- Sonuçlar: `results/experiments/`, `results/visualization/`
 
 - Vaswani et al., *Attention is All You Need*, NeurIPS 2017  
 - Wang et al., *Linformer*, arXiv 2020  

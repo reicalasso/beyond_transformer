@@ -244,8 +244,8 @@ if __name__ == "__main__":
     }
     
     # Save results
-    with open('hyperparameter_sweep_results.json', 'w') as f:
+    with open('results/experiments/hyperparameter_sweep_results.json', 'w') as f:
         json.dump(serializable_results, f, indent=2)
     
-    print("Results saved to hyperparameter_sweep_results.json")
+    print("Results saved to results/experiments/hyperparameter_sweep_results.json")
     print("Hyperparameter sweep completed successfully!")

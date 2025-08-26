@@ -1,4 +1,31 @@
 # Beyond Transformer: Neural State Machines
+# Klasör ve Dosya Yapısı (2025 Düzenlemesi)
+
+```
+requirements/                # Tüm gereksinim dosyaları
+    requirements.txt
+    requirements-experiments.txt
+    requirements-test.txt
+results/
+    experiments/             # Deney sonuçları (json)
+    visualization/           # Görselleştirme çıktıları (png)
+scripts/
+    experiments/             # Deney çalıştırma ve özetleme scriptleri (ör: run_experiments.py, summarize_results.py)
+    visualization/           # Görselleştirme scriptleri (ör: plot_results.py)
+src/                         # Ana kaynak kodu
+docs/                        # Belgeler
+notebooks/
+    experiments/             # Ana deney defterleri (ipynb)
+    scripts/                 # Deney ve görselleştirme scriptleri (py)
+    tests/                   # Test notebook ve scriptleri
+    utils/                   # Yardımcı scriptler
+    research/                # Araştırma amaçlı notebooklar
+    tutorials/               # Eğitim ve örnek notebooklar
+references/                  # Referanslar
+tests/                       # Testler
+```
+
+Her dosya ve klasör işlevine ve konusuna göre gruplandırılmıştır. Detaylar için ilgili klasörlerin README dosyalarına bakabilirsiniz.
 
 This repository explores Neural State Machines (NSM) as an alternative to traditional transformer architectures. NSMs maintain and update explicit state vectors, enabling more interpretable and potentially more efficient sequence processing.
 
@@ -57,7 +84,7 @@ git clone <repository-url>
 cd beyond_transformer
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements/requirements.txt
 ```
 
 ## Usage
@@ -139,7 +166,7 @@ output = model(x)
 Run the experiment to test different numbers of state nodes:
 
 ```bash
-python run_experiments.py
+python scripts/experiments/run_experiments.py
 ```
 
 Results are saved to `state_count_sweep_results.json` with metrics:
@@ -154,7 +181,7 @@ Visualize token-to-state routing patterns with heatmaps and importance scores:
 
 ```bash
 # Open the notebook
-jupyter notebook notebooks/routing_viz.ipynb
+jupyter notebook notebooks/experiments/routing_viz.ipynb
 ```
 
 The notebook provides several visualization types:
@@ -177,13 +204,13 @@ Compare NSM against traditional architectures (LSTM, GRU, Transformer):
 
 ```bash
 # Run comparison experiment
-python notebooks/run_baseline_comparison.py
+python notebooks/scripts/run_baseline_comparison.py
 
 # View results summary
-python summarize_results.py
+python scripts/experiments/summarize_results.py
 ```
 
-Results are saved to `baseline_comparison_results.json` with metrics:
+Results are saved to `results/experiments/baseline_comparison_results.json` with metrics:
 - Accuracy (training and test)
 - F1 Score (conceptual)
 - Memory usage

@@ -71,7 +71,7 @@ Input Tokens → Local Attention → Token-to-State Interaction → Updated Stat
 
 ---
 
-## 6. Experimental Roadmap
+## 6. Experimental Roadmap & Project Reference
 
 1. **Toy Datasets**: MNIST, CIFAR-10, Tiny Shakespeare
 2. **Baselines**: Transformer, LSTM, RWKV, S4
@@ -79,6 +79,15 @@ Input Tokens → Local Attention → Token-to-State Interaction → Updated Stat
 4. **Visualizations**:  
    - Token-to-state attention heatmaps  
    - State evolution graphs
+
+### Proje Dosya ve Klasör Referansları
+
+- Ana deney notebooku: `notebooks/experiments/baseline_comparison.ipynb`
+- Hiperparametre süpürme: `notebooks/experiments/hyperparameter_sweep.ipynb`
+- Routing görselleştirme: `notebooks/experiments/routing_viz.ipynb`
+- Kod: `src/nsm/`, `scripts/`, `notebooks/scripts/`
+- Sonuçlar: `results/experiments/`, `results/visualization/`
+- Referanslar: `references/papers.bib`
 
 ---
 

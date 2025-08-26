@@ -612,11 +612,11 @@ def plot_comparison_results(results):
         ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('baseline_comparison_results.png', dpi=300, bbox_inches='tight')
+    plt.savefig('results/visualization/baseline_comparison_results.png', dpi=300, bbox_inches='tight')
     plt.show()
 
 
-def save_results(results, filename='baseline_comparison_results.json'):
+def save_results(results, filename='results/experiments/baseline_comparison_results.json'):
     """Save results to JSON file."""
     # Convert results to JSON-serializable format
     serializable_results = {}
@@ -650,5 +650,5 @@ if __name__ == "__main__":
     save_results(results)
     
     print("\nBaseline comparison experiment completed!")
-    print("Results saved to baseline_comparison_results.json")
-    print("Plot saved to baseline_comparison_results.png")
+    print("Results saved to results/experiments/baseline_comparison_results.json")
+    print("Plot saved to results/visualization/baseline_comparison_results.png")

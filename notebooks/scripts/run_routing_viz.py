@@ -9,7 +9,7 @@ import os
 
 def main():
     """Launch the routing visualization notebook"""
-    notebook_path = "notebooks/routing_viz.ipynb"
+    notebook_path = "notebooks/experiments/routing_viz.ipynb"
     
     # Check if notebook exists
     if not os.path.exists(notebook_path):

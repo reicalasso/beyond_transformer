@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load results
-with open('hyperparameter_sweep_results.json', 'r') as f:
+with open('results/experiments/hyperparameter_sweep_results.json', 'r') as f:
     results = json.load(f)
 
 # Extract data
@@ -59,7 +59,7 @@ ax.grid(True, alpha=0.3)
 ax.set_xticks(state_counts)
 
 plt.tight_layout()
-plt.savefig('nsm_hyperparameter_sweep_results.png', dpi=300, bbox_inches='tight')
+plt.savefig('results/visualization/nsm_hyperparameter_sweep_results.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-print("Plot saved to nsm_hyperparameter_sweep_results.png")
+print("Plot saved to results/visualization/nsm_hyperparameter_sweep_results.png")
