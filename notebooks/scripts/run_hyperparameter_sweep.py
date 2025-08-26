@@ -23,12 +23,7 @@ from collections import defaultdict
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-try:
-    from state_propagator import StatePropagator
-except ModuleNotFoundError:
-    # Try importing from src directory if not found
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-    from state_propagator import StatePropagator
+from nsm.state_propagator import StatePropagator
 
 # For reproducibility
 torch.manual_seed(42)
