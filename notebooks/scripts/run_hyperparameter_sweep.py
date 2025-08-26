@@ -23,7 +23,7 @@ from collections import defaultdict
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from nsm.state_propagator import StatePropagator
+from nsm.modules.state_propagator import StatePropagator
 
 # For reproducibility
 torch.manual_seed(42)
