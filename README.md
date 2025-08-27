@@ -1,59 +1,56 @@
 # Beyond Transformer: Neural State Machines
 
-This repository explores Neural State Machines (NSM) as an alternative to traditional transformer architectures. NSMs maintain and update explicit state vectors, enabling more interpretable and potentially more efficient sequence processing.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.9+-red.svg)](https://pytorch.org/)
 
-## Features
+A research project exploring Neural State Machines (NSM) as an alternative to traditional transformer architectures. NSMs maintain and update explicit state vectors, enabling more interpretable and potentially more efficient sequence processing.
 
-### 1. Gated State Updates
-- LSTM/GRU-inspired gates to control state update, retention, and reset behavior
-- Configurable gating mechanisms ('lstm' or 'gru')
+## 🚀 Overview
 
-### 2. State-to-State Communication
-- Multi-head attention allowing states to communicate with each other
-- Optional residual connections and layer normalization
-- Useful for relational reasoning between memory slots
+This repository implements Neural State Machines (NSM), a novel approach to sequence modeling that combines the strengths of recurrent models (state, memory) with Transformers (parallel attention, scalability) to create a more efficient and powerful architecture for the future of AI.
 
-### 3. Dynamic State Allocation and Pruning
-- Learnable importance scores for each state node
-- Automatic pruning of low-importance states
-- Dynamic allocation of new states when needed
+### Key Features
 
-### 4. Hybrid Attention Mechanisms
-- Token-to-state routing with learned attention
-- Content-based attention for information flow
-- Flexible routing strategies
+1. **Gated State Updates**: LSTM/GRU-inspired gates to control state update, retention, and reset behavior
+2. **State-to-State Communication**: Multi-head attention allowing states to communicate with each other
+3. **Dynamic State Allocation and Pruning**: Learnable importance scores for each state node with automatic pruning
+4. **Hybrid Attention Mechanisms**: Token-to-state routing with learned attention and content-based attention
+5. **Interpretability**: Explicit state management providing better understanding of model decisions
+6. **Efficiency**: O(n·s) complexity (s = number of states ≪ n) instead of O(n²) attention
 
-## Project Structure
+## 🏗️ Architecture
 
-```
-.
-├── .github/
-│   └── workflows/              # CI/CD workflows
-├── configs/                    # Configuration files
-├── data/                       # Data directory (not committed)
-├── docs/                       # Documentation
-├── notebooks/                  # Jupyter notebooks
-├── references/                 # Reference materials
-├── requirements/               # Dependency files
-│   ├── requirements.txt
-│   ├── requirements-experiments.txt
-│   └── requirements-test.txt
-├── results/                    # Experiment results
-├── scripts/                    # Utility scripts
-├── src/                        # Source code
-│   └── nsm/                    # Neural State Machine implementation
-└── tests/                      # Test files
-```
+The Neural State Machine consists of several core components:
 
-For more detailed structure of `src/nsm/`, see [src/README.md](src/nsm/README.md).
+- **TokenToStateRouter**: Routes input tokens to appropriate state nodes based on learned attention mechanisms
+- **StateManager**: Manages state nodes with learnable importance scores and dynamic allocation/pruning
+- **StatePropagator**: Controls state updates using gating mechanisms and enables state-to-state communication
+- **HybridAttention**: Combines token-to-state routing with content-based attention for information flow
 
-## Installation
+## 📊 Performance Characteristics
+
+| Architecture | Performance | Memory Usage | Training Time | Inference Time | Interpretability |
+|--------------|-------------|--------------|---------------|----------------|------------------|
+| Transformer (Baseline) | High | High (O(n²)) | High | High (O(n²)) | Medium |
+| Efficient Transformers | Medium-High | Medium | Medium | Medium | Medium |
+| RWKV | High | Low | Medium | Low | Medium |
+| Mamba/S4 | High | Low | Medium | Low | Low-Medium |
+| **NSM (Proposed)** | High | Low (O(s)) | Medium | Medium-Low | High |
+
+## 📦 Installation
+
+### Prerequisites
+
+- Python 3.8+
+- PyTorch 1.9+
+- CUDA (optional, for GPU acceleration)
 
 ### Using pip
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/yourusername/beyond_transformer.git
 cd beyond_transformer
 
 # Install dependencies
@@ -69,9 +66,24 @@ pip install -e .
 # Create and activate conda environment
 conda env update -f environment.yml
 conda activate beyond_transformer
+
+# Install the package
+pip install -e .
 ```
 
-## Usage
+### Development Installation
+
+For development and running experiments:
+
+```bash
+# Install development dependencies
+pip install -r requirements/requirements-experiments.txt
+
+# Install in development mode
+pip install -e .
+```
+
+## 🚀 Quick Start
 
 ### Basic Usage
 
@@ -143,7 +155,9 @@ x = torch.randn(batch_size, 784)
 output = model(x)
 ```
 
-## Configuration
+## 🧪 Running Experiments
+
+### Configuration
 
 The project uses configuration files to manage model parameters, training settings, and experiment details. Configuration files are available in both JSON and YAML formats in the `configs/` directory.
 
@@ -155,7 +169,7 @@ The project uses configuration files to manage model parameters, training settin
 - `configs/long_training_config.json`: Configuration for long training experiments
 - `configs/debug_config.yaml`: Debug configuration in YAML format
 
-### Using Configuration Files
+### Running Experiments
 
 To use a configuration file in training:
 
@@ -163,53 +177,42 @@ To use a configuration file in training:
 python scripts/train_model.py --config configs/default_config.json
 ```
 
-For more details on configuration management, see [Configuration Documentation](docs/configuration.md).
+## 🔬 Key Research Findings
 
-## Experiments
+### State Count Analysis
+- Training accuracy varies with state count (53-75% in experiments)
+- Test accuracy remains relatively stable (10-12% for synthetic data)
+- Memory usage increases linearly with state count
+- Training time scales with state count
 
-The project includes several experiments to evaluate the NSM architecture:
+### Dynamic State Management
+- Automatic pruning can reduce memory footprint
+- State importance scores provide interpretability
+- Dynamic allocation allows adaptive model complexity
 
-### State Count Hyperparameter Sweep
+## 📁 Project Structure
 
-Run the experiment to test different numbers of state nodes:
-
-```bash
-python src/nsm/experiments/state_count_sweep.py
+```
+.
+├── .github/
+│   └── workflows/              # CI/CD workflows
+├── configs/                    # Configuration files
+├── data/                       # Data directory (not committed)
+├── docs/                       # Documentation
+├── notebooks/                   # Jupyter notebooks
+├── references/                  # Reference materials
+├── requirements/               # Dependency files
+│   ├── requirements.txt
+│   ├── requirements-experiments.txt
+│   └── requirements-test.txt
+├── results/                     # Experiment results
+├── scripts/                     # Utility scripts
+├── src/                         # Source code
+│   └── nsm/                     # Neural State Machine implementation
+└── tests/                       # Test files
 ```
 
-Results are automatically saved to `results/experiments/state_count_sweep/`.
-
-### Dynamic State Allocation Experiment
-
-Test dynamic state allocation and pruning mechanisms:
-
-```bash
-python src/nsm/experiments/dynamic_state_allocation.py
-```
-
-Results are automatically saved to `results/experiments/dynamic_allocation/`.
-
-### Visualization and Analysis
-
-To visualize experiment results:
-
-```bash
-python scripts/visualize_results.py
-```
-
-This script generates plots and saves them to `results/visualizations/`.
-
-To summarize experiment results:
-
-```bash
-python scripts/summarize_results.py
-```
-
-This script generates summary reports and saves them to `results/summaries/`.
-
-For more details on experiment results management, see [Experiment Results Documentation](docs/experiment_results.md).
-
-## Testing
+## 🧪 Testing
 
 ### Unit Tests
 
@@ -240,23 +243,52 @@ The test suite includes:
 - **Integration testing** between components
 - **Performance smoke tests** for basic functionality
 
-## Key Research Findings
+## 📚 Documentation
 
-### State Count Analysis
-- Training accuracy varies with state count (53-75% in experiments)
-- Test accuracy remains relatively stable (10-12% for synthetic data)
-- Memory usage increases linearly with state count
-- Training time scales with state count
+Detailed documentation is available in the `docs/` directory:
 
-### Dynamic State Management
-- Automatic pruning can reduce memory footprint
-- State importance scores provide interpretability
-- Dynamic allocation allows adaptive model complexity
+- [`docs/architecture_overview.md`](docs/architecture_overview.md): Detailed architecture description
+- [`docs/component_reference.md`](docs/component_reference.md): API reference for all components
+- [`docs/experiments_guide.md`](docs/experiments_guide.md): Guide for running experiments
+- [`docs/training_tips.md`](docs/training_tips.md): Tips for training NSM models
 
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
-## License
+### Ways to Contribute
+
+1. **Code Contributions**: Bug fixes, feature implementations, performance improvements
+2. **Documentation**: Improving existing docs, adding examples, tutorials
+3. **Research**: New architectures, experimental ideas, benchmarking
+4. **Testing**: Writing test cases, improving coverage
+5. **Examples**: Jupyter notebooks, use case demonstrations
+
+### Getting Started
+
+1. Fork the repository
+2. Create a new branch for your feature
+3. Make your changes
+4. Add tests if applicable
+5. Update documentation
+6. Submit a pull request
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- **Beyond Transformer Team** - *Initial work* - [Your Organization]
+
+See also the list of [contributors](https://github.com/yourusername/beyond_transformer/contributors) who participated in this project.
+
+## 🙏 Acknowledgments
+
+- Inspired by the foundational work on Transformers, State Space Models, and Neural Turing Machines
+- Built upon the excellent research from the AI community
+- Thanks to all contributors and supporters of this project
+
+## 📞 Contact
+
+For questions, issues, or collaborations, please open an issue on GitHub or contact the maintainers directly.
