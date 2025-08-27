@@ -4,7 +4,8 @@ Example NSM Model Implementation
 
 import torch
 import torch.nn as nn
-from nsm.modules import StatePropagator
+# Use relative import
+from ..modules.state_propagator import StatePropagator
 
 
 class SimpleNSM(nn.Module):
