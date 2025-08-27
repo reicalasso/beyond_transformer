@@ -153,8 +153,11 @@ class TestNSMDebugger:
         assert summary['step_1'] == 2
         assert summary['step_2'] == 1
 
-    def test_print_summary(self, debugger, capsys):
+    def test_print_summary(self, debugger, capsys, caplog):
         """Test printing debug summary."""
+        import logging
+        caplog.set_level(logging.INFO)
+        
         debugger.enable_debug()
         
         # Add some entries
@@ -162,11 +165,10 @@ class TestNSMDebugger:
         debugger.log_memory_operation('read', 'slot_0')
         
         debugger.print_summary()
-        captured = capsys.readouterr()
         
-        # Should contain summary information
-        assert "DEBUG SUMMARY" in captured.out
-        assert "Total steps logged:" in captured.out
+        # Should contain summary information in logs
+        assert "NSM Debug Summary" in caplog.text
+        assert "Total steps logged:" in caplog.text
 
     def test_serialize_tensor(self, debugger):
         """Test tensor serialization."""
@@ -415,6 +417,8 @@ class TestDebugAndPerformanceIntegration:
         
         # Create analyzer
         analyzer = ComparativePerformanceAnalyzer()
+        # Set debugger on analyzer
+        analyzer.set_debugger(debugger)
         
         # Create simple models
         class SimpleModelA(torch.nn.Module):
@@ -487,10 +491,10 @@ class TestDebugAndPerformanceIntegration:
         assert 'performance' in results
         
         performance = results['performance']
-        assert 'avg_forward_time' in performance
-        assert 'avg_backward_time' in performance
-        assert performance['avg_forward_time'] > 0
-        assert performance['avg_backward_time'] > 0
+        assert 'avg_forward_time_ms' in performance
+        assert 'avg_backward_time_ms' in performance
+        assert performance['avg_forward_time_ms'] > 0
+        assert performance['avg_backward_time_ms'] > 0
 
 
 # Performance tests

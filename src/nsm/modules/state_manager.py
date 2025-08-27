@@ -87,6 +87,10 @@ class StateManager(nn.Module):
             gradients (torch.Tensor, optional): Gradient information
             attention_weights (torch.Tensor, optional): Attention weight information
         """
+        # NOTE: These updates are not differentiable by design, as they represent
+        # learned importance scores that are updated with exponential moving averages
+        # rather than gradient descent. The parameter itself can still have gradients
+        # from other operations in the computational graph.
         with torch.no_grad():
             if gradients is not None:
                 # Update based on gradient magnitude
@@ -130,6 +134,18 @@ class StateManager(nn.Module):
                 return would_prune
             else:
                 return 0
+    
+    def prune_low_importance_states(self, force_pruning=False):
+        """
+        Prune states below importance threshold.
+        
+        Args:
+            force_pruning (bool): Force pruning even if it would reduce below minimum
+            
+        Returns:
+            int: Number of states pruned
+        """
+        return self.prune_states(force_pruning)
     
     def allocate_states(self, num_states):
         """

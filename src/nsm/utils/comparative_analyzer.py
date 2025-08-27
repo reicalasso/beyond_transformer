@@ -34,6 +34,16 @@ class ComparativePerformanceAnalyzer:
         self.performance_monitor = PerformanceMonitor(log_dir)
         self.model_profiler = ModelProfiler()
         self.comparison_results = []
+        self.debugger = None
+    
+    def set_debugger(self, debugger):
+        """
+        Set debugger for this analyzer.
+        
+        Args:
+            debugger: NSMDebugger instance
+        """
+        self.debugger = debugger
     
     def benchmark_model(self, model: nn.Module, model_name: str, 
                        input_shape: Tuple[int, ...], 
@@ -51,6 +61,14 @@ class ComparativePerformanceAnalyzer:
             Dictionary with benchmark results
         """
         print(f"Benchmarking {model_name}...")
+        
+        # Log to debugger if available
+        if self.debugger is not None:
+            self.debugger.log_step("benchmark_start", {
+                'model_name': model_name,
+                'input_shape': input_shape,
+                'num_iterations': num_iterations
+            })
         
         # Profile model
         profile = self.model_profiler.profile_model(model, input_shape)
@@ -72,12 +90,20 @@ class ComparativePerformanceAnalyzer:
         for i in range(num_iterations):
             metrics = self.performance_monitor.measure_forward_pass(model, sample_input)
             forward_times.append(metrics['forward_time'])
+            
+            # Log to debugger if available
+            if self.debugger is not None:
+                self.debugger.log_step(f"forward_pass_{i}", metrics)
         
         # Measure multiple backward passes
         backward_times = []
         for i in range(num_iterations):
             metrics = self.performance_monitor.measure_backward_pass(model, sample_input, sample_target)
             backward_times.append(metrics['backward_time'])
+            
+            # Log to debugger if available
+            if self.debugger is not None:
+                self.debugger.log_step(f"backward_pass_{i}", metrics)
         
         # Get performance summary
         summary = self.performance_monitor.get_summary()
@@ -103,6 +129,10 @@ class ComparativePerformanceAnalyzer:
             },
             'timestamp': datetime.now().isoformat()
         }
+        
+        # Log results to debugger if available
+        if self.debugger is not None:
+            self.debugger.log_step("benchmark_complete", results)
         
         self.comparison_results.append(results)
         return results

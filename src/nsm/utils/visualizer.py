@@ -50,6 +50,10 @@ class NSMVisualizer:
         Returns:
             Matplotlib figure
         """
+        # Handle empty tensor
+        if attention_weights.numel() == 0:
+            raise ValueError("Cannot plot attention map with empty tensor")
+        
         # Handle different tensor shapes
         if attention_weights.dim() == 4:
             # [batch, heads, seq, seq] - take first batch and head
@@ -60,6 +64,10 @@ class NSMVisualizer:
         else:
             # [seq, seq]
             attention_map = attention_weights.detach().cpu().numpy()
+        
+        # Handle empty attention map
+        if attention_map.size == 0:
+            raise ValueError("Cannot plot attention map with empty data")
         
         # Create figure
         fig, ax = plt.subplots(figsize=self.figsize)

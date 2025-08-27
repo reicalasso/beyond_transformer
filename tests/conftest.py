@@ -5,6 +5,7 @@ Test configuration for Neural State Machine tests.
 import os
 import sys
 from pathlib import Path
+import pytest
 
 # Add src to path
 SRC_PATH = Path(__file__).parent / "src"

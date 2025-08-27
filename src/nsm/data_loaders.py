@@ -81,6 +81,9 @@ class MNISTDataset(Dataset):
         # Flatten the image
         image = image.view(-1)
         
+        # Convert label to Python int
+        label = int(label)
+        
         if self.transform:
             image = self.transform(image)
         

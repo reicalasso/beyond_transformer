@@ -31,6 +31,7 @@ class SimpleNSM(nn.Module):
         self.state_dim = state_dim
         self.num_states = num_states
         self.output_dim = output_dim
+        self.gate_type = gate_type
         
         # Input projection to state dimension
         self.input_projection = nn.Linear(input_dim, state_dim)

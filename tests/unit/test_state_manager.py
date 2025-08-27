@@ -230,7 +230,9 @@ class TestStateManager:
         """Test that operations are differentiable."""
         # Get states and compute some loss
         states = state_manager()
-        loss = states.sum()
+        # Create a loss that involves importance scores
+        importance_scores = state_manager.get_importance_scores()
+        loss = states.sum() + importance_scores.sum()
         
         # Backward pass should work
         loss.backward()

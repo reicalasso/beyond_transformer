@@ -325,6 +325,35 @@ class NSMDebugger:
                         if 'state_update' in entry['data']]
         self.logger.info(f"State updates: {len(state_updates)}")
 
+    def record_memory_snapshot(self, label: str = ""):
+        """
+        Record memory usage snapshot.
+        
+        Args:
+            label: Label for this snapshot
+            
+        Returns:
+            Dictionary with memory snapshot information
+        """
+        import psutil
+        import os
+        import time
+        
+        process = psutil.Process(os.getpid())
+        current_memory = process.memory_info().rss / 1024 / 1024  # MB
+        timestamp = datetime.now().isoformat()
+        
+        snapshot = {
+            'timestamp': timestamp,
+            'memory_mb': current_memory,
+            'label': label
+        }
+        
+        if self.debug_enabled and self.verbose:
+            self.logger.debug(f"Memory snapshot [{label}]: {current_memory:.2f} MB")
+        
+        return snapshot
+
 
 class DebuggableNSMComponent(nn.Module):
     """
