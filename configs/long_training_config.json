@@ -1,0 +1,24 @@
+{
+  "model": {
+    "input_dim": 784,
+    "state_dim": 128,
+    "num_states": 16,
+    "output_dim": 10,
+    "gate_type": "gru"
+  },
+  "training": {
+    "epochs": 20,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "optimizer": "adam",
+    "early_stopping_patience": 3
+  },
+  "data": {
+    "dataset": "mnist",
+    "num_samples": 10000
+  },
+  "experiment": {
+    "name": "long_training_experiment",
+    "description": "Extended training to evaluate convergence"
+  }
+}

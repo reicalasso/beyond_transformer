@@ -4,7 +4,6 @@ Training script for the NSM model.
 """
 
 import argparse
-import json
 import os
 import sys
 
@@ -12,13 +11,9 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import torch
+from nsm.config import Config
 from nsm.models import SimpleNSM
-
-
-def load_config(config_path):
-    """Load configuration from JSON file."""
-    with open(config_path, 'r') as f:
-        return json.load(f)
+from nsm.data_loaders import get_mnist_dataloaders
 
 
 def create_model(config):
@@ -33,18 +28,6 @@ def create_model(config):
     )
 
 
-def create_synthetic_data(config):
-    """Create synthetic dataset for training."""
-    data_config = config['data']
-    num_samples = data_config['num_samples']
-    input_dim = config['model']['input_dim']
-    output_dim = config['model']['output_dim']
-    
-    X = torch.randn(num_samples, input_dim)
-    y = torch.randint(0, output_dim, (num_samples,))
-    return torch.utils.data.TensorDataset(X, y)
-
-
 def train_model(model, train_loader, config):
     """Train the model."""
     training_config = config['training']
@@ -54,6 +37,11 @@ def train_model(model, train_loader, config):
     criterion = torch.nn.CrossEntropyLoss()
     optimizer_class = getattr(torch.optim, training_config['optimizer'].capitalize())
     optimizer = optimizer_class(model.parameters(), lr=training_config['learning_rate'])
+    
+    # Validate configuration
+    required_keys = ['training.epochs', 'training.batch_size', 'training.learning_rate']
+    if not config.validate(required_keys):
+        raise ValueError("Missing required training configuration")
     
     model.train()
     for epoch in range(training_config['epochs']):
@@ -84,19 +72,14 @@ def main():
     args = parser.parse_args()
     
     # Load configuration
-    config = load_config(args.config)
+    config = Config(args.config)
     
     # Create model
     model = create_model(config)
     print(f"Model created: {model}")
     
-    # Create dataset
-    dataset = create_synthetic_data(config)
-    train_loader = torch.utils.data.DataLoader(
-        dataset, 
-        batch_size=config['training']['batch_size'], 
-        shuffle=True
-    )
+    # Get data loaders
+    train_loader, _ = get_mnist_dataloaders("data/", batch_size=config['training.batch_size'])
     
     # Train model
     train_model(model, train_loader, config)

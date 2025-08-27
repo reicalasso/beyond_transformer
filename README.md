@@ -143,6 +143,28 @@ x = torch.randn(batch_size, 784)
 output = model(x)
 ```
 
+## Configuration
+
+The project uses configuration files to manage model parameters, training settings, and experiment details. Configuration files are available in both JSON and YAML formats in the `configs/` directory.
+
+### Available Configurations
+
+- `configs/default_config.json`: Default configuration
+- `configs/small_model_config.json`: Configuration for small models
+- `configs/large_model_config.json`: Configuration for large models
+- `configs/long_training_config.json`: Configuration for long training experiments
+- `configs/debug_config.yaml`: Debug configuration in YAML format
+
+### Using Configuration Files
+
+To use a configuration file in training:
+
+```bash
+python scripts/train_model.py --config configs/default_config.json
+```
+
+For more details on configuration management, see [Configuration Documentation](docs/configuration.md).
+
 ## Experiments
 
 ### State Count Hyperparameter Sweep

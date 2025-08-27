@@ -1,0 +1,19 @@
+{
+  "model": {
+    "input_dim": 784,
+    "state_dim": 256,
+    "num_states": 32,
+    "output_dim": 10,
+    "gate_type": "lstm"
+  },
+  "training": {
+    "epochs": 10,
+    "batch_size": 64,
+    "learning_rate": 0.0005,
+    "optimizer": "adam"
+  },
+  "data": {
+    "dataset": "mnist",
+    "num_samples": 5000
+  }
+}
