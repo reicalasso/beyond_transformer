@@ -10,9 +10,14 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 import time
-from collections import defaultdict
+import sys
+import os
+
+# Add src to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from nsm import StateManager, NSMLayer, TokenToStateRouter
+from nsm.experiment_results import ExperimentResults
 
 
 class DynamicNSM(nn.Module):
@@ -206,6 +211,9 @@ def train_model(model, train_loader, epochs=5, lr=0.001):
 def run_dynamic_state_experiment():
     """
     Run the dynamic state allocation and pruning experiment.
+    
+    Returns:
+        dict: Experiment results
     """
     print("Running Dynamic State Allocation and Pruning Experiment")
     print("=" * 60)
@@ -234,18 +242,31 @@ def run_dynamic_state_experiment():
     metrics = train_model(model, train_loader, epochs=5)
     end_time = time.time()
     
+    # Collect final state information
+    state_info = model.state_manager.get_state_info()
+    
+    # Combine metrics and state info
+    results = {
+        'training_time': end_time - start_time,
+        'final_accuracy': metrics['accuracies'][-1],
+        'initial_active_states': metrics['active_states'][0],
+        'final_active_states': metrics['active_states'][-1],
+        'total_states_pruned': sum(metrics['pruned_states']),
+        'total_states_allocated': sum(metrics['allocated_states']),
+        'state_info': state_info,
+        'metrics': metrics
+    }
+    
     # Print results
     print("\nExperiment Results:")
     print("-" * 30)
-    print(f"Training time: {end_time - start_time:.2f} seconds")
-    print(f"Final accuracy: {metrics['accuracies'][-1]:.2f}%")
-    print(f"Initial active states: {metrics['active_states'][0]}")
-    print(f"Final active states: {metrics['active_states'][-1]}")
-    print(f"Total states pruned: {sum(metrics['pruned_states'])}")
-    print(f"Total states allocated: {sum(metrics['allocated_states'])}")
+    print(f"Training time: {results['training_time']:.2f} seconds")
+    print(f"Final accuracy: {results['final_accuracy']:.2f}%")
+    print(f"Initial active states: {results['initial_active_states']}")
+    print(f"Final active states: {results['final_active_states']}")
+    print(f"Total states pruned: {results['total_states_pruned']}")
+    print(f"Total states allocated: {results['total_states_allocated']}")
     
-    # Test state manager info
-    state_info = model.state_manager.get_state_info()
     print(f"\nFinal state information:")
     print(f"  Total states: {state_info['total_states']}")
     print(f"  Active states: {state_info['active_states']}")
@@ -253,9 +274,23 @@ def run_dynamic_state_experiment():
           f"{min(state_info['importance_scores']):.3f} - "
           f"{max(state_info['importance_scores']):.3f}")
     
-    return metrics
+    return results
+
+
+def main():
+    """Main function to run the dynamic state allocation experiment."""
+    # Create experiment results manager
+    results_manager = ExperimentResults()
+    
+    # Run the experiment
+    results = run_dynamic_state_experiment()
+    
+    # Save results using the results manager
+    filepath = results_manager.save_experiment_results("dynamic_allocation", results)
+    print(f"Results saved to {filepath}")
+    
+    print("\n✓ Dynamic state allocation experiment completed!")
 
 
 if __name__ == "__main__":
-    metrics = run_dynamic_state_experiment()
-    print("\n✓ Dynamic state allocation experiment completed!")
+    main()

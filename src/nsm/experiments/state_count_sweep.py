@@ -12,10 +12,14 @@ import numpy as np
 import time
 import psutil
 import os
-import json
-from collections import defaultdict
+import sys
+from pathlib import Path
+
+# Add src to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from nsm.models import SimpleNSM
+from nsm.experiment_results import ExperimentResults
 
 
 def create_mnist_dataset(num_samples=1000):
@@ -202,34 +206,20 @@ def run_state_count_sweep():
     return results
 
 
-def save_results(results, filename='hyperparameter_sweep_results.json'):
-    """
-    Save results to JSON file.
+def main():
+    """Main function to run the state count sweep experiment."""
+    # Create experiment results manager
+    results_manager = ExperimentResults()
     
-    Args:
-        results (dict): Results to save
-        filename (str): Output filename
-    """
-    # Convert results to JSON-serializable format
-    serializable_results = {
-        'state_counts': [int(x) for x in results['state_counts']],
-        'accuracies': [float(x) for x in results['accuracies']],
-        'test_accuracies': [float(x) for x in results['test_accuracies']],
-        'memory_usages': [float(x) for x in results['memory_usages']],
-        'training_times': [float(x) for x in results['training_times']]
-    }
-    
-    with open(filename, 'w') as f:
-        json.dump(serializable_results, f, indent=2)
-    
-    print(f"Results saved to {filename}")
-
-
-if __name__ == "__main__":
     # Run the hyperparameter sweep
     results = run_state_count_sweep()
     
-    # Save results
-    save_results(results)
+    # Save results using the results manager
+    filepath = results_manager.save_experiment_results("state_count_sweep", results)
+    print(f"Results saved to {filepath}")
     
     print("Hyperparameter sweep completed successfully!")
+
+
+if __name__ == "__main__":
+    main()

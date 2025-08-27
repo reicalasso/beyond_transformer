@@ -167,34 +167,17 @@ For more details on configuration management, see [Configuration Documentation](
 
 ## Experiments
 
+The project includes several experiments to evaluate the NSM architecture:
+
 ### State Count Hyperparameter Sweep
 
 Run the experiment to test different numbers of state nodes:
 
 ```bash
-python scripts/experiments/run_experiments.py
+python src/nsm/experiments/state_count_sweep.py
 ```
 
-Results are saved to `state_count_sweep_results.json` with metrics:
-- Training accuracy
-- Test accuracy
-- Memory usage
-- Training time
-
-### Routing Visualization
-
-Visualize token-to-state routing patterns with heatmaps and importance scores:
-
-```bash
-# Open the notebook
-jupyter notebook notebooks/experiments/routing_viz.ipynb
-```
-
-The notebook provides several visualization types:
-- Token-to-state routing heatmaps
-- State importance score overlays
-- Routing entropy analysis
-- Multi-head routing comparison
+Results are automatically saved to `results/experiments/state_count_sweep/`.
 
 ### Dynamic State Allocation Experiment
 
@@ -204,30 +187,27 @@ Test dynamic state allocation and pruning mechanisms:
 python src/nsm/experiments/dynamic_state_allocation.py
 ```
 
-### Baseline Model Comparison
+Results are automatically saved to `results/experiments/dynamic_allocation/`.
 
-Compare NSM against traditional architectures (LSTM, GRU, Transformer):
+### Visualization and Analysis
+
+To visualize experiment results:
 
 ```bash
-# Run comparison experiment
-python notebooks/scripts/run_baseline_comparison.py
-
-# View results summary
-python scripts/experiments/summarize_results.py
+python scripts/visualize_results.py
 ```
 
-Results are saved to `results/experiments/baseline_comparison_results.json` with metrics:
-- Accuracy (training and test)
-- F1 Score (conceptual)
-- Memory usage
-- FLOPs (conceptual)
-- Training speed
+This script generates plots and saves them to `results/visualizations/`.
 
-Datasets tested:
-- MNIST (image classification)
-- CIFAR-10 (image classification)
-- Tiny Shakespeare (text generation) - partial results
-- IMDb (sentiment classification) - partial results
+To summarize experiment results:
+
+```bash
+python scripts/summarize_results.py
+```
+
+This script generates summary reports and saves them to `results/summaries/`.
+
+For more details on experiment results management, see [Experiment Results Documentation](docs/experiment_results.md).
 
 ## Testing
 
