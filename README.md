@@ -1,31 +1,4 @@
 # Beyond Transformer: Neural State Machines
-# Klasör ve Dosya Yapısı (2025 Düzenlemesi)
-
-```
-requirements/                # Tüm gereksinim dosyaları
-    requirements.txt
-    requirements-experiments.txt
-    requirements-test.txt
-results/
-    experiments/             # Deney sonuçları (json)
-    visualization/           # Görselleştirme çıktıları (png)
-scripts/
-    experiments/             # Deney çalıştırma ve özetleme scriptleri (ör: run_experiments.py, summarize_results.py)
-    visualization/           # Görselleştirme scriptleri (ör: plot_results.py)
-src/                         # Ana kaynak kodu
-docs/                        # Belgeler
-notebooks/
-    experiments/             # Ana deney defterleri (ipynb)
-    scripts/                 # Deney ve görselleştirme scriptleri (py)
-    tests/                   # Test notebook ve scriptleri
-    utils/                   # Yardımcı scriptler
-    research/                # Araştırma amaçlı notebooklar
-    tutorials/               # Eğitim ve örnek notebooklar
-references/                  # Referanslar
-tests/                       # Testler
-```
-
-Her dosya ve klasör işlevine ve konusuna göre gruplandırılmıştır. Detaylar için ilgili klasörlerin README dosyalarına bakabilirsiniz.
 
 This repository explores Neural State Machines (NSM) as an alternative to traditional transformer architectures. NSMs maintain and update explicit state vectors, enabling more interpretable and potentially more efficient sequence processing.
 
@@ -53,30 +26,30 @@ This repository explores Neural State Machines (NSM) as an alternative to tradit
 ## Project Structure
 
 ```
-src/
-├── nsm/
-│   ├── __init__.py
-│   ├── layers.py              # Core NSM layers (NSMLayer, HybridAttention)
-│   ├── components.py          # Key components (TokenToStateRouter, StateManager)
-│   ├── modules/
-│   │   ├── __init__.py
-│   │   ├── state_propagator.py      # Legacy state propagation logic
-│   │   ├── state_manager.py         # Basic state management
-│   │   └── test_state_propagator.py # Unit tests
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── simple_nsm.py            # Example NSM model
-│   ├── experiments/
-│   │   ├── __init__.py
-│   │   ├── state_count_sweep.py     # Hyperparameter experiments
-│   │   └── dynamic_state_allocation.py # Dynamic state experiments
-│   └── utils/
-│       └── __init__.py
-├── run_experiments.py               # Main experiment runner
-└── plot_results.py                  # Results visualization
+.
+├── .github/
+│   └── workflows/              # CI/CD workflows
+├── configs/                    # Configuration files
+├── data/                       # Data directory (not committed)
+├── docs/                       # Documentation
+├── notebooks/                  # Jupyter notebooks
+├── references/                 # Reference materials
+├── requirements/               # Dependency files
+│   ├── requirements.txt
+│   ├── requirements-experiments.txt
+│   └── requirements-test.txt
+├── results/                    # Experiment results
+├── scripts/                    # Utility scripts
+├── src/                        # Source code
+│   └── nsm/                    # Neural State Machine implementation
+└── tests/                      # Test files
 ```
 
+For more detailed structure of `src/nsm/`, see [src/README.md](src/nsm/README.md).
+
 ## Installation
+
+### Using pip
 
 ```bash
 # Clone the repository
@@ -85,6 +58,17 @@ cd beyond_transformer
 
 # Install dependencies
 pip install -r requirements/requirements.txt
+
+# Install the package in development mode
+pip install -e .
+```
+
+### Using conda
+
+```bash
+# Create and activate conda environment
+conda env update -f environment.yml
+conda activate beyond_transformer
 ```
 
 ## Usage
@@ -230,13 +214,8 @@ Datasets tested:
 Run comprehensive unit tests for all components:
 
 ```bash
-# Run all component tests
-python tests/run_components_tests.py
-
-# Run individual test suites
-python -m pytest tests/components/test_layers.py -v
-python -m pytest tests/components/test_router.py -v
-python -m pytest tests/components/test_state_manager.py -v
+# Run all tests with pytest
+python -m pytest tests/ -v
 ```
 
 ### Core Module Tests
@@ -247,13 +226,6 @@ python src/nsm/modules/test_state_propagator.py
 
 # Component integration tests
 python src/nsm/test_components.py
-```
-
-### Smoke Tests
-
-```bash
-# Integration smoke test
-python tests/smoke_test.py
 ```
 
 ### Test Coverage
@@ -281,11 +253,7 @@ The test suite includes:
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a pull request
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
 ## License
 
