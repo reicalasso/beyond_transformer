@@ -12,12 +12,12 @@ long_description = (this_directory / "README.md").read_text(encoding='utf-8')
 setup(
     name="beyond-transformer",
     version="0.1.0",
-    author="Beyond Transformer Team",
-    author_email="your.email@example.com",
+    author="Rei Calasso",
+    author_email="reicalasso@gmail.com",
     description="Neural State Machines as an alternative to Transformer architectures",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/beyond_transformer",
+    url="https://github.com/reicalasso/beyond_transformer",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[

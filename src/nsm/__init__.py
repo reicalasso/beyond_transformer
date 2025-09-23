@@ -23,22 +23,23 @@ Example:
 __version__ = "0.1.0"
 __author__ = "Beyond Transformer Team"
 
-# Core modules
-from .modules.state_propagator import StatePropagator
-from .modules.state_manager import StateManager as BasicStateManager
-from .modules.ssm_block import SSMBlock
-from .modules.ntm_memory import NTMMemory
-from .modules.transformer_attention import TransformerAttention
-from .modules.rnn_memory import RNNMemory
+# Components
+from .modules.state_manager import StateManager
+from .core.components import TokenToStateRouter
 
 # Layers
-from .layers import NSMLayer, HybridAttention
-
-# Components
-from .components import TokenToStateRouter, StateManager
+from .core.layers import HybridAttention, NSMLayer
 
 # Models
 from .models import SimpleNSM
+from .modules.ntm_memory import NTMMemory
+from .modules.rnn_memory import RNNMemory
+from .modules.ssm_block import SSMBlock
+from .modules.state_manager import StateManager as BasicStateManager
+
+# Core modules
+from .modules.state_propagator import StatePropagator
+from .modules.transformer_attention import TransformerAttention
 
 __all__ = [
     "StatePropagator",
@@ -46,7 +47,7 @@ __all__ = [
     "NTMMemory",
     "TransformerAttention",
     "RNNMemory",
-    "NSMLayer", 
+    "NSMLayer",
     "HybridAttention",
     "TokenToStateRouter",
     "StateManager",

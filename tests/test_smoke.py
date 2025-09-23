@@ -2,6 +2,7 @@
 Simple smoke test to verify test framework.
 """
 
+
 def test_framework_works():
     """Test that the test framework is working."""
     assert True
@@ -11,6 +12,7 @@ def test_pytest_available():
     """Test that pytest is available."""
     try:
         import pytest
+
         assert pytest is not None
     except ImportError:
         assert False, "pytest not available"
@@ -20,6 +22,7 @@ def test_torch_available():
     """Test that PyTorch is available."""
     try:
         import torch
+
         assert torch is not None
     except ImportError:
         assert False, "PyTorch not available"
@@ -35,6 +38,7 @@ def test_basic_math():
 def test_torch_tensor_creation():
     """Test PyTorch tensor creation."""
     import torch
+
     tensor = torch.randn(2, 3)
     assert tensor.shape == (2, 3)
     assert torch.isfinite(tensor).all()

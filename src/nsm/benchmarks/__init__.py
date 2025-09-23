@@ -2,10 +2,10 @@
 NSM Benchmarks Package
 """
 
-from .lra_benchmark import LRABenchmark, LRADataset
 from .babi_benchmark import bAbIBenchmark, bAbIDataset
-from .pg19_benchmark import PG19Benchmark, PG19Dataset
 from .comprehensive_benchmark import ComprehensiveBenchmark
+from .lra_benchmark import LRABenchmark, LRADataset
+from .pg19_benchmark import PG19Benchmark, PG19Dataset
 
 __all__ = [
     "LRABenchmark",

@@ -5,10 +5,11 @@ Test configuration for Neural State Machine tests.
 import os
 import sys
 from pathlib import Path
+
 import pytest
 
 # Add src to path
-SRC_PATH = Path(__file__).parent / "src"
+SRC_PATH = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(SRC_PATH))
 
 # Test constants
@@ -29,7 +30,8 @@ TEST_LOG_DIR.mkdir(exist_ok=True)
 
 # Device configuration
 import torch
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Test tolerances
 FLOAT_TOLERANCE = 1e-6
@@ -44,10 +46,10 @@ RANDOM_SEED = 42
 
 # Test markers
 MARKERS = {
-    'slow': 'marks tests as slow',
-    'integration': 'marks tests as integration tests',
-    'gpu': 'marks tests that require GPU',
-    'torch': 'marks tests that require PyTorch'
+    "slow": "marks tests as slow",
+    "integration": "marks tests as integration tests",
+    "gpu": "marks tests that require GPU",
+    "torch": "marks tests that require PyTorch",
 }
 
 
@@ -63,10 +65,12 @@ def pytest_runtest_setup(item):
         pytest.skip("CUDA not available")
 
 
+import random
+
+import numpy as np
+
 # Set random seeds for reproducibility
 import torch
-import numpy as np
-import random
 
 torch.manual_seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
