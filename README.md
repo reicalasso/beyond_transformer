@@ -432,13 +432,10 @@ Special thanks to the PyTorch team and the broader AI research community for the
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/reicalasso/beyond_transformer/issues)
 - **Discussions**: [Join our research discussions](https://github.com/reicalasso/beyond_transformer/discussions)
-- **Email**: [beyond.transformer@ai.research](mailto:beyond.transformer@ai.research)
 
 ### � **Community**
 
-- **Discord**: Join our developer community (coming soon)
-- **Twitter**: Follow [@BeyondTransformer](https://twitter.com/BeyondTransformer) for updates
-- **Blog**: Read our latest research insights at [our blog](https://beyond-transformer.ai/blog)
+- **Discord**: Join our developer community (coming soon
 
 ---
 
@@ -447,8 +444,6 @@ Special thanks to the PyTorch team and the broader AI research community for the
 **🚀 Ready to revolutionize AI architectures? Start with NSM today!**
 
 [![Star this repo](https://img.shields.io/github/stars/reicalasso/beyond_transformer?style=social)](https://github.com/reicalasso/beyond_transformer)
-[![Follow on Twitter](https://img.shields.io/twitter/follow/BeyondTransformer?style=social)](https://twitter.com/BeyondTransformer)
-
 [🏁 Quick Start](#-quick-start) • [📊 Benchmarks](#-performance-characteristics) • [📖 Documentation](#-documentation) • [🤝 Contribute](#-contributing--community)
 
 </div>
