@@ -9,24 +9,24 @@ This document presents the architectural diagram of the Neural State Machine, de
 │                        Neural State Machine (NSM)                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐       │
-│  │   Input Layer   │────▶│Token-to-State   │────▶│  Hybrid         │       │
-│  │ (Tokenization,  │     │    Router       │     │  Attention      │       │
-│  │Embedding, etc.) │     │                 │     │                 │       │
-│  └─────────────────┘     └─────────────────┘     └─────────────────┘       │
+│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐        │
+│  │   Input Layer   │────▶│Token-to-State   │────▶│  Hybrid         │        │
+│  │ (Tokenization,  │     │    Router       │     │  Attention      │        │
+│  │Embedding, etc.) │     │                 │     │                 │        │
+│  └─────────────────┘     └─────────────────┘     └─────────────────┘        │
 │                                    │                         │              │
 │                                    ▼                         ▼              │
-│                          ┌─────────────────┐     ┌─────────────────┐       │
-│                          │   State         │◀───▶│  State          │       │
-│                          │   Manager       │     │  Propagator     │       │
-│                          │                 │     │                 │       │
-│                          └─────────────────┘     └─────────────────┘       │
+│                          ┌─────────────────┐     ┌─────────────────┐        │
+│                          │   State         │◀───▶│  State          │        │
+│                          │   Manager       │     │  Propagator     │        │
+│                          │                 │     │                 │        │
+│                          └─────────────────┘     └─────────────────┘        │
 │                                    │                         │              │
 │                                    ▼                         ▼              │
-│                          ┌─────────────────────────────────────────┐       │
-│                          │        Output Layer                     │       │
-│                          │  (Classification, Generation, etc.)     │       │
-│                          └─────────────────────────────────────────┘       │
+│                          ┌─────────────────────────────────────────┐        │
+│                          │        Output Layer                     │        │
+│                          │  (Classification, Generation, etc.)     │        │
+│                          └─────────────────────────────────────────┘        │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -40,9 +40,9 @@ This document presents the architectural diagram of the Neural State Machine, de
 │                        Token-to-State Router                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  Input Tokens                Routing Mechanism              Routed Tokens   │
-│  [batch, seq_len,         ┌─────────────────────┐          [batch, num_states, │
-│   token_dim]              │                     │           state_dim]      │
+│  Input Tokens                Routing Mechanism           Routed Tokens      │
+│  [batch, seq_len,         ┌─────────────────────┐        [batch, num_states,│
+│   token_dim]              │                     │        state_dim]         │
 │  ┌─────────────┐          │  Multi-head Linear  │          ┌─────────────┐  │
 │  │             │─────────▶│    Projection       │─────────▶│             │  │
 │  │   Tokens    │          │                     │          │ Routed      │  │
@@ -76,9 +76,9 @@ This document presents the architectural diagram of the Neural State Machine, de
 │                          Hybrid Attention                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  States                    Attention Computation           Attended Tokens  │
-│  [batch, num_states,      ┌─────────────────────┐         [batch, num_states,│
-│   state_dim]              │                     │          state_dim]      │
+│  States                    Attention Computation         Attended Tokens    │
+│  [batch, num_states,      ┌─────────────────────┐        [batch, num_states,│
+│   state_dim]              │                     │        state_dim]         │
 │  ┌─────────────┐          │  State Projection   │          ┌─────────────┐  │
 │  │             │─────────▶│                     │────┐     │             │  │
 │  │   States    │          └─────────────────────┘    │     │ Attended    │  │
@@ -86,17 +86,17 @@ This document presents the architectural diagram of the Neural State Machine, de
 │  └─────────────┘                                     │     └─────────────┘  │
 │            │                                         │                      │
 │            │                                         ▼                      │
-│            │                               ┌─────────────────────┐        │
-│            │                               │  Token Projection   │        │
-│            │                               │                     │        │
-│            │                               └─────────────────────┘        │
+│            │                               ┌─────────────────────┐          │
+│            │                               │  Token Projection   │          │
+│            │                               │                     │          │
+│            │                               └─────────────────────┘          │
 │            │                                         │                      │
 │            ▼                                         ▼                      │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                   Attention Scoring                                 │   │
-│  │            (States attend to Tokens)                                │   │
-│  │         Q=States, K=Tokens, V=Tokens                                │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                   Attention Scoring                                 │    │
+│  │            (States attend to Tokens)                                │    │
+│  │         Q=States, K=Tokens, V=Tokens                                │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
 │                                     │                                       │
 │                                     ▼                                       │
 │                           ┌─────────────────────┐                           │
@@ -138,21 +138,21 @@ This document presents the architectural diagram of the Neural State Machine, de
 │  │  │  [max_states] (Boolean)                                      │   │    │
 │  │  └──────────────────────────────────────────────────────────────┘   │    │
 │  └─────────────────────────────────────────────────────────────────────┘    │
-│                                    │                                         │
-│                                    ▼                                         │
-│                    ┌─────────────────────────────┐                           │
-│                    │  Importance Scoring         │                           │
-│                    │  [max_states] (Parameters)  │                           │
-│                    └─────────────────────────────┘                           │
-│                                    │                                         │
-│                                    ▼                                         │
-│                    ┌─────────────────────────────┐                           │
-│                    │  Sigmoid Activation         │                           │
-│                    └─────────────────────────────┘                           │
-│                                    │                                         │
-│                                    ▼                                         │
-│                        Importance Scores                                   │
-│                       [max_states] (0-1)                                   │
+│                                    │                                        │
+│                                    ▼                                        │
+│                    ┌─────────────────────────────┐                          │
+│                    │  Importance Scoring         │                          │
+│                    │  [max_states] (Parameters)  │                          │
+│                    └─────────────────────────────┘                          │
+│                                    │                                        │
+│                                    ▼                                        │
+│                    ┌─────────────────────────────┐                          │
+│                    │  Sigmoid Activation         │                          │
+│                    └─────────────────────────────┘                          │
+│                                    │                                        │
+│                                    ▼                                        │
+│                        Importance Scores                                    │
+│                       [max_states] (0-1)                                    │
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │                      Management Operations                          │    │
@@ -191,39 +191,39 @@ This document presents the architectural diagram of the Neural State Machine, de
 │                         └─────────────────────┘                             │
 │                                    │                                        │
 │                                    ▼                                        │
-│                          ┌─────────────────────┐                           │
-│                          │  Candidate State    │                           │
-│                          │   Computation       │                           │
-│                          └─────────────────────┘                           │
+│                          ┌─────────────────────┐                            │
+│                          │  Candidate State    │                            │
+│                          │   Computation       │                            │
+│                          └─────────────────────┘                            │
 │                                    │                                        │
 │                                    ▼                                        │
-│                          ┌─────────────────────┐                           │
-│                          │  State Update       │                           │
-│                          │   Formula           │                           │
-│                          └─────────────────────┘                           │
+│                          ┌─────────────────────┐                            │
+│                          │  State Update       │                            │
+│                          │   Formula           │                            │
+│                          └─────────────────────┘                            │
 │                                    │                                        │
 │                                    ▼                                        │
-│                         Updated States                                     │
-│                        [batch, num_states,                                 │
-│                         state_dim]                                         │
+│                         Updated States                                      │
+│                        [batch, num_states,                                  │
+│                         state_dim]                                          │
 │                                    │                                        │
 │                                    ▼                                        │
 │                    (Optional) State-to-State Communication                  │
-│                         ┌─────────────────────┐                           │
-│                         │  Multi-head         │                           │
-│                         │  Attention          │                           │
-│                         └─────────────────────┘                           │
+│                         ┌─────────────────────┐                             │
+│                         │  Multi-head         │                             │
+│                         │  Attention          │                             │
+│                         └─────────────────────┘                             │
 │                                    │                                        │
 │                                    ▼                                        │
-│                         ┌─────────────────────┐                           │
-│                         │  Residual +         │                           │
-│                         │  Layer Norm         │                           │
-│                         └─────────────────────┘                           │
+│                         ┌─────────────────────┐                             │
+│                         │  Residual +         │                             │
+│                         │  Layer Norm         │                             │
+│                         └─────────────────────┘                             │
 │                                    │                                        │
 │                                    ▼                                        │
-│                        Final Updated States                                │
-│                       [batch, num_states,                                  │
-│                        state_dim]                                          │
+│                        Final Updated States                                 │
+│                       [batch, num_states,                                   │
+│                        state_dim]                                           │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -253,17 +253,17 @@ This document presents the architectural diagram of the Neural State Machine, de
 │  │ │ Tokens ──────┐                                                  │ │    │
 │  │ │              ▼                                                  │ │    │
 │  │ │    ┌─────────────────┐    Routed Tokens    ┌─────────────────┐  │ │    │
-│  │ │    │  Multi-head     │───────────────────▶│  Dimension      │  │ │    │
-│  │ │    │  Projection     │                    │  Projection     │  │ │    │
-│  │ │    └─────────────────┘                    └─────────────────┘  │ │    │
-│  │ │              │                                    │              │ │    │
-│  │ │              ▼                                    ▼              │ │    │
+│  │ │    │  Multi-head     │───────────────────▶ │  Dimension      │  │ │    │
+│  │ │    │  Projection     │                     │  Projection     │  │ │    │
+│  │ │    └─────────────────┘                     └─────────────────┘  │ │    │
+│  │ │              │                                    │             │ │    │
+│  │ │              ▼                                    ▼             │ │    │
 │  │ │    ┌─────────────────┐                   ┌─────────────────┐    │ │    │
 │  │ │    │    Softmax      │                   │   States from   │    │ │    │
 │  │ │    │ (Routing Weights)                   │   StateManager  │    │ │    │
 │  │ │    └─────────────────┘                   └─────────────────┘    │ │    │
-│  │ │              │                                    │              │ │    │
-│  │ │              ▼                                    ▼              │ │    │
+│  │ │              │                                    │             │ │    │
+│  │ │              ▼                                    ▼             │ │    │
 │  │ │    ┌─────────────────────────────────────────────────────────┐  │ │    │
 │  │ │    │                   Hybrid Attention                      │  │ │    │
 │  │ │    │                                                         │  │ │    │
@@ -275,21 +275,21 @@ This document presents the architectural diagram of the Neural State Machine, de
 │  │ │    │ └─────────────┤                 │                       │  │ │    │
 │  │ │    │               └─────────────────┘                       │  │ │    │
 │  │ │    └─────────────────────────────────────────────────────────┘  │ │    │
-│  │ │                                 │                                │ │    │
-│  │ │                                 ▼                                │ │    │
-│  │ │                   ┌─────────────────────────┐                    │ │    │
-│  │ │                   │    State Propagator     │                    │ │    │
-│  │ │                   │                         │                    │ │    │
-│  │ │    Prev States ──▶│  Gated State Updates    │◀── Attended Tokens │ │    │
-│  │ │                   │                         │                    │ │    │
-│  │ │                   └─────────────────────────┘                    │ │    │
-│  │ │                                 │                                │ │    │
-│  │ │                                 ▼                                │ │    │
-│  │ │                   ┌─────────────────────────┐                    │ │    │
-│  │ │                   │  State-to-State Comm.   │                    │ │    │
-│  │ │                   └─────────────────────────┘                    │ │    │
-│  │ │                                 │                                │ │    │
-│  │ │                                 ▼                                │ │    │
+│  │ │                                 │                               │ │    │
+│  │ │                                 ▼                               │ │    │
+│  │ │                   ┌─────────────────────────┐                   │ │    │
+│  │ │                   │    State Propagator     │                   │ │    │
+│  │ │                   │                         │                   │ │    │
+│  │ │    Prev States ──▶│  Gated State Updates    │◀── Attended Tokens│ │    │
+│  │ │                   │                         │                   │ │    │
+│  │ │                   └─────────────────────────┘                   │ │    │
+│  │ │                                 │                               │ │    │
+│  │ │                                 ▼                               │ │    │
+│  │ │                   ┌─────────────────────────┐                   │ │    │
+│  │ │                   │  State-to-State Comm.   │                   │ │    │
+│  │ │                   └─────────────────────────┘                   │ │    │
+│  │ │                                 │                               │ │    │
+│  │ │                                 ▼                               │ │    │
 │  │ │                         Updated States                          │ │    │
 │  │ │                                                                 │ │    │
 │  │ │          ┌────────────────────────────────────────────┐         │ │    │
@@ -300,7 +300,7 @@ This document presents the architectural diagram of the Neural State Machine, de
 │  │ │          │  │                                     │   │         │ │    │
 │  │ │          │  │  Importance Score Updates           │◀──┘         │ │    │
 │  │ │          │  └─────────────────────────────────────┘             │ │    │
-│  │ │          └─────────────────────────────────────────────────────┘ │ │    │
+│  │ │          └─────────────────────────────────────────────────────┘│ │    │
 │  │ └─────────────────────────────────────────────────────────────────┘ │    │
 │  └─────────────────────────────────────────────────────────────────────┘    │
 │         │                                                                   │
