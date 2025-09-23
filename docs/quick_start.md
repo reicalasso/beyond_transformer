@@ -1,32 +1,70 @@
-# Quick Start Guide
+# Neural State Machines: Quick Start Guide
+## Get Running with NSM in 5 Minutes
 
-Get up and running with Neural State Machines in minutes!
+---
 
-## 🚀 5-Minute Quick Start
+## 🚀 **Installation & Setup**
 
-### 1. Installation
+### **Prerequisites**
+- Python 3.8+ (3.10 recommended)
+- PyTorch 1.9+ (2.0+ recommended for optimal performance)
+- CUDA (optional, but recommended for GPU acceleration)
+
+### **Option 1: pip Installation (Recommended)**
 
 ```bash
-# Clone and install
-git clone https://github.com/yourusername/beyond_transformer.git
+# Install from PyPI (when available)
+pip install beyond-transformer
+
+# Or install from source
+git clone https://github.com/reicalasso/beyond_transformer.git
 cd beyond_transformer
-pip install -e .
+pip install -e ".[all]"
 ```
 
-### 2. Basic Usage
+### **Option 2: Conda Environment**
+
+```bash
+# Create optimized environment
+git clone https://github.com/reicalasso/beyond_transformer.git
+cd beyond_transformer
+conda env create -f environment.yml
+conda activate beyond_transformer
+```
+
+### **Verify Installation**
 
 ```python
 import torch
-from nsm import StatePropagator
+from nsm import NSMLayer, StateManager
+print("✅ Neural State Machines ready!")
+```
 
-# Create a state propagator
-propagator = StatePropagator(state_dim=128, gate_type='gru')
+---
 
-# Process some data
-batch_size = 32
-prev_state = torch.randn(batch_size, 128)
-new_input = torch.randn(batch_size, 128)
-updated_state = propagator(prev_state, new_input)
+## 📚 **Basic Usage Examples**
+
+### **Example 1: Simple Classification (30 seconds)**
+
+```python
+import torch
+from nsm.models import SimpleNSM
+
+# Create a classification model
+model = SimpleNSM(
+    input_dim=768,      # Input feature dimension
+    state_dim=256,      # Memory state dimension
+    num_states=16,      # Number of memory states
+    output_dim=10,      # Number of classes
+    gate_type='gru'     # Gating mechanism (gru/lstm)
+)
+
+# Sample data (batch_size=32, sequence_length=512, features=768)
+batch_data = torch.randn(32, 512, 768)
+
+# Forward pass
+predictions = model(batch_data)
+print(f"Predictions shape: {predictions.shape}")  # [32, 10]
 
 print(f"State updated! Shape: {updated_state.shape}")
 ```
