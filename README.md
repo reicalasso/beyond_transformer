@@ -6,7 +6,7 @@
 
 A research project exploring Neural State Machines (NSM) as an alternative to traditional transformer architectures. NSMs maintain and update explicit state vectors, enabling more interpretable and potentially more efficient sequence processing.
 
-## 🚀 Overview
+## Overview
 
 This repository implements Neural State Machines (NSM), a novel approach to sequence modeling that combines the strengths of recurrent models (state, memory) with Transformers (parallel attention, scalability) to create a more efficient and powerful architecture for the future of AI.
 
@@ -19,7 +19,7 @@ This repository implements Neural State Machines (NSM), a novel approach to sequ
 5. **Interpretability**: Explicit state management providing better understanding of model decisions
 6. **Efficiency**: O(n·s) complexity (s = number of states ≪ n) instead of O(n²) attention
 
-## 🏗️ Architecture
+## Architecture
 
 The Neural State Machine consists of several core components:
 
@@ -28,7 +28,7 @@ The Neural State Machine consists of several core components:
 - **StatePropagator**: Controls state updates using gating mechanisms and enables state-to-state communication
 - **HybridAttention**: Combines token-to-state routing with content-based attention for information flow
 
-## 📊 Performance Characteristics
+## Performance Characteristics
 
 | Architecture | Performance | Memory Usage | Training Time | Inference Time | Interpretability |
 |--------------|-------------|--------------|---------------|----------------|------------------|
@@ -38,7 +38,7 @@ The Neural State Machine consists of several core components:
 | Mamba/S4 | High | Low | Medium | Low | Low-Medium |
 | **NSM (Proposed)** | High | Low (O(s)) | Medium | Medium-Low | High |
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
@@ -83,7 +83,7 @@ pip install -r requirements/requirements-experiments.txt
 pip install -e .
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Basic Usage
 
@@ -155,7 +155,7 @@ x = torch.randn(batch_size, 784)
 output = model(x)
 ```
 
-## 🧪 Running Experiments
+## Running Experiments
 
 ### Configuration
 
@@ -177,7 +177,7 @@ To use a configuration file in training:
 python scripts/train_model.py --config configs/default_config.json
 ```
 
-## 🔬 Key Research Findings
+## Key Research Findings
 
 ### State Count Analysis
 - Training accuracy varies with state count (53-75% in experiments)
@@ -190,7 +190,7 @@ python scripts/train_model.py --config configs/default_config.json
 - State importance scores provide interpretability
 - Dynamic allocation allows adaptive model complexity
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 .
@@ -212,7 +212,7 @@ python scripts/train_model.py --config configs/default_config.json
 └── tests/                       # Test files
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Unit Tests
 
@@ -243,7 +243,7 @@ The test suite includes:
 - **Integration testing** between components
 - **Performance smoke tests** for basic functionality
 
-## 📚 Documentation
+## Documentation
 
 Detailed documentation is available in the `docs/` directory:
 
@@ -252,7 +252,7 @@ Detailed documentation is available in the `docs/` directory:
 - [`docs/experiments_guide.md`](docs/experiments_guide.md): Guide for running experiments
 - [`docs/training_tips.md`](docs/training_tips.md): Tips for training NSM models
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
@@ -273,17 +273,17 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 5. Update documentation
 6. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
+## Authors
 
-- **Beyond Transformer Team** - *Initial work* - [Your Organization]
+- **Beyond Transformer Team** - *Initial work* - [NeoSynaptic AI]
 
 See also the list of [contributors](https://github.com/yourusername/beyond_transformer/contributors) who participated in this project.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Inspired by the foundational work on Transformers, State Space Models, and Neural Turing Machines
 - Built upon the excellent research from the AI community
