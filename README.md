@@ -42,19 +42,19 @@ Neural State Machines (NSMs) represent a paradigm shift from attention-based mod
 
 
 
-| Metric | NSM | Transformer | Improvement |### 🧠 **Intelligent State Management**
+| Metric | NSM | Transformer | Improvement |### 🧠 **Intelligent State Management** |
 
-|--------|-----|-------------|-------------|- **Dynamic State Allocation**: Adaptive memory allocation based on task complexity
+|--------|-----|-------------|-------------|- **Dynamic State Allocation**: Adaptive memory allocation based on task complexity |
 
-| **Memory Usage** | 2.1 GB | 8.4 GB | **75% reduction** |- **Learnable Pruning**: Automatic removal of low-importance states for efficiency
+| **Memory Usage** | 2.1 GB | 8.4 GB | **75% reduction** |- **Learnable Pruning**: Automatic removal of low-importance states for efficiency |
 
-| **Training Speed** | 45 tok/s | 28 tok/s | **61% faster** |- **Persistent Memory**: Long-term context preservation across processing layers
+| **Training Speed** | 45 tok/s | 28 tok/s | **61% faster** |- **Persistent Memory**: Long-term context preservation across processing layers |
 
 | **LRA Average** | 67.8% | 65.2% | **+2.6 points** |
 
-| **bAbI Tasks** | 94.2% | 91.8% | **+2.4 points** |### ⚡ **Hybrid Attention Mechanisms**
+| **bAbI Tasks** | 94.2% | 91.8% | **+2.4 points** |### ⚡ **Hybrid Attention Mechanisms** |
 
-- **Token-to-State Routing**: Intelligent attention routing to relevant memory states
+- **Token-to-State Routing**: Intelligent attention routing to relevant memory states 
 
 *Benchmarks run on V100 GPU with 512-dim models*- **State-to-State Communication**: Multi-head attention between memory states
 
