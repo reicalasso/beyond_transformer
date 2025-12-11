@@ -1,3 +1,0 @@
-"""
-PULSE Component Tests Package
-"""

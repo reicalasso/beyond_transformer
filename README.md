@@ -3,21 +3,25 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**Breaking the O(n²) barrier: Linear complexity sequence modeling with state-of-the-art performance**
+**Breaking the O(n²) barrier: Linear complexity sequence modeling**
 
-PULSE represents a paradigm shift from attention-based models to state-based computation, achieving **O(n·s) complexity** (where s is the number of states) compared to Transformers' **O(n²) complexity**, while maintaining or improving accuracy across diverse tasks.
+PULSE is a state-based alternative to Transformers, achieving **O(n·s) complexity** compared to Transformers' **O(n²)**.
 
----
+## 📊 Benchmark Results
+
+| Sequence Length | PULSE | Transformer | Speedup | Memory Savings |
+|-----------------|-------|-------------|---------|----------------|
+| 512 | 10.4ms | 8.9ms | 0.86x | -27% |
+| 1024 | 23.9ms | 29.9ms | **1.25x** | **+33%** |
+| 2048 | 27.9ms | 57.5ms | **2.06x** | **+80%** |
 
 ## 🚀 Key Features
 
-- **⚡ Linear Complexity**: O(n·s) vs O(n²) - up to 10x faster on long sequences
-- **💾 Memory Efficient**: 60-80% reduction in memory usage
-- **🎯 Superior Performance**: Competitive results on LRA, bAbI, and language modeling benchmarks
-- **🔧 Production Ready**: Type hints, comprehensive tests, professional documentation
-- **🏗️ Flexible Architecture**: Hybrid models, memory augmentation, modular design
+- **⚡ 2x Faster** on sequences ≥1024 tokens
+- **💾 80% Less Memory** on long sequences
+- **🔥 Flash Attention** support (PyTorch 2.0+)
+- **🎯 Production Ready** with optimized kernels
 - **📊 Rich Visualization**: Built-in tools for understanding model behavior
 - **🖥️ CLI Tools**: Train, generate, benchmark, and visualize from command line
 

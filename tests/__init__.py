@@ -1,3 +1,0 @@
-"""
-PULSE Tests Package
-"""
