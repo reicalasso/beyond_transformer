@@ -1,5 +1,5 @@
 """
-Smoke test for NSM components integration
+Smoke test for PULSE components integration
 """
 
 import os
@@ -10,12 +10,12 @@ import torch
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from nsm import NSMLayer, StateManager, TokenToStateRouter
+from pulse import PulseLayer, StateManager, TokenToStateRouter
 
 
 def test_component_integration():
     """Test that all components work together."""
-    print("Running NSM Components Integration Smoke Test")
+    print("Running PULSE Components Integration Smoke Test")
     print("=" * 50)
 
     # Test parameters
@@ -28,7 +28,7 @@ def test_component_integration():
     # Create components
     print("1. Creating components...")
     router = TokenToStateRouter(token_dim, state_dim, num_states)
-    nsm_layer = NSMLayer(state_dim=state_dim, token_dim=state_dim, num_heads=4)
+    pulse_layer = PulseLayer(state_dim=state_dim, token_dim=state_dim, num_heads=4)
     state_manager = StateManager(state_dim=state_dim, max_states=16, initial_states=8)
 
     # Create test data
@@ -55,9 +55,9 @@ def test_component_integration():
     ), "Routing weights should sum to 1"
     print("   ✓ Routing weights sum to 1")
 
-    # Test NSMLayer
-    print("4. Testing NSMLayer...")
-    updated_states = nsm_layer(states, routed_tokens)
+    # Test PulseLayer
+    print("4. Testing PulseLayer...")
+    updated_states = pulse_layer(states, routed_tokens)
     print(f"   Updated states shape: {updated_states.shape}")
 
     # Verify output shape
@@ -90,7 +90,7 @@ def test_component_integration():
     fresh_states = torch.randn(batch_size, num_states, state_dim, requires_grad=True)
 
     routed_tokens, _ = router(tokens, fresh_states)
-    updated_states = nsm_layer(fresh_states, routed_tokens)
+    updated_states = pulse_layer(fresh_states, routed_tokens)
     loss = updated_states.sum()
     loss.backward()
 

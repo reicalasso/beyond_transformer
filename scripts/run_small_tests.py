@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test Runner for Neural State Machine Small-Scale Tests
+Test Runner for PULSE Small-Scale Tests
 """
 
 import sys
@@ -10,12 +10,12 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from nsm.tests.small_scale_tests import SmallScaleTester
+from pulse.tests.small_scale_tests import SmallScaleTester
 
 
 def main():
     """Run all small-scale tests."""
-    print("Neural State Machine - Small-Scale Test Runner")
+    print("PULSE - Small-Scale Test Runner")
     print("=" * 50)
     
     # Create test directory

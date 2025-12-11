@@ -1,5 +1,5 @@
-# Neural State Machines: Quick Start Guide
-## Get Running with NSM in 5 Minutes
+# PULSEs: Quick Start Guide
+## Get Running with PULSE in 5 Minutes
 
 ---
 
@@ -36,8 +36,8 @@ conda activate beyond_transformer
 
 ```python
 import torch
-from nsm import NSMLayer, StateManager
-print("✅ Neural State Machines ready!")
+from pulse import PulseLayer, StateManager
+print("✅ PULSEs ready!")
 ```
 
 ---
@@ -48,10 +48,10 @@ print("✅ Neural State Machines ready!")
 
 ```python
 import torch
-from nsm.models import SimpleNSM
+from pulse.models import SimplePulse
 
 # Create a classification model
-model = SimpleNSM(
+model = SimplePulse(
     input_dim=768,      # Input feature dimension
     state_dim=256,      # Memory state dimension
     num_states=16,      # Number of memory states
@@ -72,10 +72,10 @@ print(f"State updated! Shape: {updated_state.shape}")
 ### 3. Complete Model
 
 ```python
-from nsm.models import SimpleNSM
+from pulse.models import SimplePulse
 
-# Create NSM model
-model = SimpleNSM(
+# Create PULSE model
+model = SimplePulse(
     input_dim=784,      # e.g., flattened MNIST
     state_dim=128,
     num_states=16,
@@ -95,10 +95,10 @@ print(f"Output shape: {output.shape}")
 
 ```python
 import torch
-from nsm import NSMLayer
+from pulse import PulseLayer
 
-# Process sequences with NSM
-nsm_layer = NSMLayer(
+# Process sequences with PULSE
+pulse_layer = PulseLayer(
     state_dim=128,
     token_dim=64,
     num_heads=4
@@ -114,13 +114,13 @@ states = torch.randn(batch_size, 16, 128)
 # Process sequence
 for t in range(seq_len):
     token_t = tokens[:, t, :]  # [batch_size, token_dim]
-    states = nsm_layer(states, token_t.unsqueeze(1).repeat(1, 16, 1))
+    states = pulse_layer(states, token_t.unsqueeze(1).repeat(1, 16, 1))
 ```
 
 ### 2. Dynamic State Management
 
 ```python
-from nsm import StateManager
+from pulse import StateManager
 
 # Create state manager with dynamic allocation
 state_manager = StateManager(
@@ -152,7 +152,7 @@ python scripts/train_model.py --config configs/debug_config.yaml
 
 1. **Dive Deeper**: Check out the [Installation and Usage Guide](installation_and_usage.md)
 2. **Explore Examples**: Look at notebooks in the `notebooks/` directory
-3. **Run Experiments**: Try scripts in `src/nsm/experiments/`
+3. **Run Experiments**: Try scripts in `src/pulse/experiments/`
 4. **Read Documentation**: Browse detailed docs in `docs/`
 
 ## 🤝 Need Help?
@@ -161,4 +161,4 @@ python scripts/train_model.py --config configs/debug_config.yaml
 - Open an [issue](https://github.com/yourusername/beyond_transformer/issues) for bugs or feature requests
 - Join our [discussions](https://github.com/yourusername/beyond_transformer/discussions) for community support
 
-Ready to explore Neural State Machines? [Start experimenting!](../notebooks/getting_started.ipynb)
+Ready to explore PULSEs? [Start experimenting!](../notebooks/getting_started.ipynb)

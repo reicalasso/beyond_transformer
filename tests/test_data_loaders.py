@@ -12,7 +12,7 @@ import numpy as np
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from nsm.data.data_loaders import MNISTDataset, get_mnist_dataloaders
+from pulse.data.data_loaders import MNISTDataset, get_mnist_dataloaders
 
 
 def test_mnist_dataset():

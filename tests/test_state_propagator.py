@@ -10,7 +10,7 @@ import torch
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 
 def test_single_state_gru():

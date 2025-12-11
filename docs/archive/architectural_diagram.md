@@ -1,12 +1,12 @@
-# Neural State Machine Architectural Diagram
+# PULSE Architectural Diagram
 
-This document presents the architectural diagram of the Neural State Machine, defining the forward/backward flow and interactions between memory, attention, and state variables.
+This document presents the architectural diagram of the PULSE, defining the forward/backward flow and interactions between memory, attention, and state variables.
 
 ## 1. High-Level Module Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        Neural State Machine (NSM)                           │
+│                        PULSE (PULSE)                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐        │
@@ -232,7 +232,7 @@ This document presents the architectural diagram of the Neural State Machine, de
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    Complete Neural State Machine Flow                       │
+│                    Complete PULSE Flow                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  Input Sequence                                                             │

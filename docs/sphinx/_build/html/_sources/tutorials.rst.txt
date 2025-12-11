@@ -1,7 +1,7 @@
 Tutorials
 =========
 
-This section contains comprehensive tutorials covering various aspects of Neural State Machines.
+This section contains comprehensive tutorials covering various aspects of Parallel Unified Linear State Engines.
 
 .. toctree::
    :maxdepth: 2
@@ -17,11 +17,11 @@ Overview
 
 These tutorials are designed to take you from basic usage to advanced applications:
 
-1. **Basic Usage**: Learn the fundamentals of NSMs
-2. **Custom Models**: Build your own NSM variants
+1. **Basic Usage**: Learn the fundamentals of pulses
+2. **Custom Models**: Build your own pulse variants
 3. **Performance Optimization**: Maximize efficiency and speed
 4. **Visualization**: Understand model behavior through visualizations
-5. **Debugging**: Tools and techniques for debugging NSMs
+5. **Debugging**: Tools and techniques for debugging pulses
 
 Prerequisites
 -------------
@@ -39,7 +39,7 @@ Some tutorials use example datasets that can be downloaded:
 
 .. code-block:: python
 
-   from nsm.data import download_tutorial_data
+   from pulse.data import download_tutorial_data
    
    # Downloads sample datasets for tutorials
    download_tutorial_data("./tutorial_data")

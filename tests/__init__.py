@@ -1,3 +1,3 @@
 """
-NSM Tests Package
+PULSE Tests Package
 """

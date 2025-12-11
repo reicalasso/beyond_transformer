@@ -1,9 +1,9 @@
 Benchmarks
 ==========
 
-Comprehensive benchmarking suite for evaluating NSM performance.
+Comprehensive benchmarking suite for evaluating pulse performance.
 
-.. automodule:: nsm.benchmarks
+.. automodule:: pulse.benchmarks
    :members:
    :undoc-members:
    :show-inheritance:
@@ -11,7 +11,7 @@ Comprehensive benchmarking suite for evaluating NSM performance.
 Long Range Arena (LRA)
 ----------------------
 
-.. automodule:: nsm.benchmarks.lra_benchmark
+.. automodule:: pulse.benchmarks.lra_benchmark
    :members:
    :undoc-members:
    :show-inheritance:
@@ -19,7 +19,7 @@ Long Range Arena (LRA)
 bAbI Tasks
 ----------
 
-.. automodule:: nsm.benchmarks.babi_benchmark
+.. automodule:: pulse.benchmarks.babi_benchmark
    :members:
    :undoc-members:
    :show-inheritance:
@@ -27,7 +27,7 @@ bAbI Tasks
 PG19 Language Modeling
 ----------------------
 
-.. automodule:: nsm.benchmarks.pg19_benchmark
+.. automodule:: pulse.benchmarks.pg19_benchmark
    :members:
    :undoc-members:
    :show-inheritance:
@@ -35,7 +35,7 @@ PG19 Language Modeling
 Comprehensive Benchmark Suite
 -----------------------------
 
-.. automodule:: nsm.benchmarks.comprehensive_benchmark
+.. automodule:: pulse.benchmarks.comprehensive_benchmark
    :members:
    :undoc-members:
    :show-inheritance:

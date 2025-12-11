@@ -1,7 +1,7 @@
 Quick Start Guide
 ================
 
-This guide will get you up and running with Neural State Machines in just a few minutes.
+This guide will get you up and running with Parallel Unified Linear State Engines in just a few minutes.
 
 Basic Usage
 -----------
@@ -12,10 +12,10 @@ Simple Text Classification
 .. code-block:: python
 
    import torch
-   from nsm import SimpleNSM
+   from pulse import Simplepulse
    
    # Create model for sentiment analysis
-   model = SimpleNSM(
+   model = Simplepulse(
        vocab_size=10000,
        d_model=256,
        num_states=64,
@@ -38,10 +38,10 @@ Language Modeling
 .. code-block:: python
 
    import torch
-   from nsm import SimpleNSM
+   from pulse import Simplepulse
    
    # Create language model
-   model = SimpleNSM(
+   model = Simplepulse(
        vocab_size=50000,
        d_model=512,
        num_states=128,
@@ -73,10 +73,10 @@ Basic Training Loop
    import torch
    import torch.nn as nn
    from torch.optim import Adam
-   from nsm import SimpleNSM
+   from pulse import Simplepulse
    
    # Model setup
-   model = SimpleNSM(vocab_size=10000, d_model=256, num_states=64)
+   model = Simplepulse(vocab_size=10000, d_model=256, num_states=64)
    optimizer = Adam(model.parameters(), lr=1e-4)
    criterion = nn.CrossEntropyLoss()
    
@@ -102,7 +102,7 @@ With Performance Monitoring
 
 .. code-block:: python
 
-   from nsm.utils import PerformanceMonitor
+   from pulse.utils import PerformanceMonitor
    
    # Create performance monitor
    monitor = PerformanceMonitor()
@@ -135,12 +135,12 @@ With Performance Monitoring
 Hybrid Models
 -------------
 
-Combining NSM with Attention
+Combining pulse with Attention
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   from nsm.models import HybridModel
+   from pulse.models import HybridModel
    
    # Create hybrid model
    model = HybridModel(
@@ -148,7 +148,7 @@ Combining NSM with Attention
        d_model=512,
        num_states=64,
        num_attention_layers=2,  # Transformer layers
-       num_nsm_layers=4,        # NSM layers
+       num_pulse_layers=4,        # pulse layers
        num_heads=8,
        max_seq_length=1024
    )
@@ -165,14 +165,14 @@ Using Configuration Files
 
 .. code-block:: python
 
-   from nsm.core import NSMConfig
+   from pulse.core import pulseConfig
    
    # Load from file
-   config = NSMConfig.from_file("config.yaml")
+   config = pulseConfig.from_file("config.yaml")
    model = config.build_model()
    
    # Or create programmatically
-   config = NSMConfig(
+   config = pulseConfig(
        vocab_size=10000,
        d_model=256,
        num_states=64,
@@ -207,7 +207,7 @@ Running Standard Benchmarks
 
 .. code-block:: python
 
-   from nsm.benchmarks import LRABenchmark, bAbIBenchmark
+   from pulse.benchmarks import LRABenchmark, bAbIBenchmark
    
    # Long Range Arena benchmark
    lra_benchmark = LRABenchmark(
@@ -233,14 +233,14 @@ Model Comparison
 
 .. code-block:: python
 
-   from nsm.utils import ComparativePerformanceAnalyzer
+   from pulse.utils import ComparativePerformanceAnalyzer
    
    # Compare multiple models
    analyzer = ComparativePerformanceAnalyzer()
    
    models = {
-       'NSM-64': (nsm_model, (batch_size, seq_len)),
-       'NSM-128': (larger_nsm_model, (batch_size, seq_len)),
+       'pulse-64': (pulse_model, (batch_size, seq_len)),
+       'pulse-128': (larger_pulse_model, (batch_size, seq_len)),
        'Transformer': (transformer_model, (batch_size, seq_len))
    }
    

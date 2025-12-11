@@ -1,12 +1,12 @@
 # Architecture Overview
 
-This document provides a detailed overview of the Neural State Machine (NSM) architecture.
+This document provides a detailed overview of the PULSE (PULSE) architecture.
 
 ## Core Components
 
 ### 1. StatePropagator
 
-The `StatePropagator` is the fundamental building block of NSM that controls how state vectors are updated, retained, or reset.
+The `StatePropagator` is the fundamental building block of PULSE that controls how state vectors are updated, retained, or reset.
 
 #### Key Features:
 - **Gated Updates**: Inspired by LSTM/GRU architectures with reset, update, and forget gates
@@ -17,7 +17,7 @@ The `StatePropagator` is the fundamental building block of NSM that controls how
 #### Usage:
 ```python
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Initialize with state dimension and gate type
 propagator = StatePropagator(
@@ -58,15 +58,15 @@ Manages state nodes with learnable importance scores and dynamic pruning.
 - **Importance Scoring**: Learnable importance scores for each state node
 - **Automatic Pruning**: Prunes low-importance states based on threshold
 
-### 4. NSMLayer
+### 4. PulseLayer
 
-Complete NSM layer combining token-to-state routing with state propagation.
+Complete PULSE layer combining token-to-state routing with state propagation.
 
 ## Architecture Design
 
 ### State Update Mechanism
 
-The NSM uses gated mechanisms similar to RNNs but with explicit state management:
+The PULSE uses gated mechanisms similar to RNNs but with explicit state management:
 
 1. **Reset Gate**: Determines how much past state to forget
 2. **Update Gate**: Determines how much new information to add
@@ -207,4 +207,4 @@ Multi-head attention is implemented using PyTorch's built-in modules:
 - **Hierarchical States**: Multi-level state organization
 - **Sparse Communication**: Efficient state-to-state attention patterns
 
-This architecture overview provides the foundation for understanding how Neural State Machines process information and maintain state, offering a compelling alternative to traditional Transformer architectures.
+This architecture overview provides the foundation for understanding how PULSEs process information and maintain state, offering a compelling alternative to traditional Transformer architectures.

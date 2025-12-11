@@ -1,5 +1,5 @@
 """
-Test configuration for Neural State Machine tests.
+Test configuration for PULSE tests.
 """
 
 import os

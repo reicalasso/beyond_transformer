@@ -1,7 +1,7 @@
 Performance Analysis
 ===================
 
-This document provides comprehensive performance analysis of Neural State Machines, including benchmarks, optimization techniques, and scaling characteristics.
+This document provides comprehensive performance analysis of Parallel Unified Linear State Engines, including benchmarks, optimization techniques, and scaling characteristics.
 
 Benchmark Results
 -----------------
@@ -16,8 +16,8 @@ Comprehensive evaluation on the Long Range Arena benchmark suite:
    :widths: 20 15 15 15 15 20
 
    * - Task
-     - NSM-64
-     - NSM-128
+     - pulse-64
+     - pulse-128
      - Transformer
      - Best Known
      - Improvement
@@ -66,7 +66,7 @@ Comprehensive evaluation on the Long Range Arena benchmark suite:
 
 **Key Insights:**
 
-* NSMs consistently outperform Transformers across all LRA tasks
+* pulses consistently outperform Transformers across all LRA tasks
 * Performance scales with number of states (64 → 128)
 * Largest improvements on tasks requiring long-range dependencies (Path-X, Path-256)
 * Competitive with best-known results while using significantly fewer parameters
@@ -81,7 +81,7 @@ Performance on Facebook's bAbI reasoning benchmark:
    :widths: 30 20 20 30
 
    * - Metric
-     - NSM
+     - pulse
      - Transformer
      - Improvement
    * - Mean Accuracy
@@ -103,9 +103,9 @@ Performance on Facebook's bAbI reasoning benchmark:
 
 **Notable Results:**
 
-* **Task 3 (Three Supporting Facts)**: NSM 96.7% vs Transformer 84.2%
-* **Task 16 (Basic Induction)**: NSM 100% vs Transformer 92.1% 
-* **Task 19 (Path Finding)**: NSM 91.4% vs Transformer 78.6%
+* **Task 3 (Three Supporting Facts)**: pulse 96.7% vs Transformer 84.2%
+* **Task 16 (Basic Induction)**: pulse 100% vs Transformer 92.1% 
+* **Task 19 (Path Finding)**: pulse 91.4% vs Transformer 78.6%
 
 PG19 Language Modeling
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -117,10 +117,10 @@ Evaluation on Project Gutenberg (PG19) long-context language modeling:
    :widths: 25 20 20 20 15
 
    * - Context Length
-     - NSM Perplexity
+     - pulse Perplexity
      - Transformer PPL
      - GPT-2 PPL
-     - NSM Advantage
+     - pulse Advantage
    * - 512 tokens
      - 18.4
      - 19.2
@@ -150,7 +150,7 @@ Evaluation on Project Gutenberg (PG19) long-context language modeling:
 **Key Findings:**
 
 * Performance gap increases with longer contexts
-* NSMs handle 8K+ contexts while Transformers run out of memory
+* pulses handle 8K+ contexts while Transformers run out of memory
 * Consistent perplexity improvements across all context lengths
 
 Computational Efficiency
@@ -166,8 +166,8 @@ Memory consumption comparison across different sequence lengths:
    :widths: 20 20 20 20 20
 
    * - Sequence Length
-     - NSM-64
-     - NSM-128
+     - pulse-64
+     - pulse-128
      - Transformer
      - Memory Savings
    * - 512
@@ -212,7 +212,7 @@ Tokens processed per second during training:
    :widths: 25 20 20 20 15
 
    * - Configuration
-     - NSM Tokens/sec
+     - pulse Tokens/sec
      - Transformer
      - Hardware
      - Speedup
@@ -248,8 +248,8 @@ Single sequence inference times:
    :widths: 20 15 15 15 15 20
 
    * - Sequence Length
-     - NSM-64
-     - NSM-128
+     - pulse-64
+     - pulse-128
      - Transformer
      - Hardware
      - Speedup
@@ -295,17 +295,17 @@ Model size vs performance trade-offs:
      - LRA Score
      - Params/Point
      - Efficiency
-   * - NSM-32
+   * - pulse-32
      - 12M
      - 73.2%
      - 164K
      - Baseline
-   * - NSM-64
+   * - pulse-64
      - 24M
      - 75.3%
      - 319K
      - 0.51x
-   * - NSM-128
+   * - pulse-128
      - 48M
      - 77.4%
      - 620K
@@ -323,9 +323,9 @@ Model size vs performance trade-offs:
 
 **Key Insights:**
 
-* NSMs achieve better parameter efficiency than Transformers
+* pulses achieve better parameter efficiency than Transformers
 * Diminishing returns after 64-128 states for most tasks
-* Sweet spot: NSM-64 for balanced performance and efficiency
+* Sweet spot: pulse-64 for balanced performance and efficiency
 
 Sequence Length Scaling
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -335,10 +335,10 @@ Performance vs sequence length scaling:
 .. code-block:: text
 
    Transformer Complexity: O(n²)
-   NSM Complexity: O(n) [with fixed states]
+   pulse Complexity: O(n) [with fixed states]
    
    Crossover Point: ~400-500 tokens
-   NSM Advantage: Increases linearly with sequence length
+   pulse Advantage: Increases linearly with sequence length
 
 **Empirical Scaling Laws:**
 
@@ -346,7 +346,7 @@ Performance vs sequence length scaling:
 
    \text{Transformer\_Time} \propto n^{1.97} \text{ (close to theoretical } n^2\text{)}
    
-   \text{NSM\_Time} \propto n^{1.12} \text{ (close to linear)}
+   \text{pulse\_Time} \propto n^{1.12} \text{ (close to linear)}
 
 State Count Optimization
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -390,7 +390,7 @@ Reduces memory usage by 40-60% with minimal speed impact:
 
 .. code-block:: python
 
-   model = SimpleNSM(
+   model = Simplepulse(
        vocab_size=10000,
        d_model=512,
        num_states=128,
@@ -421,7 +421,7 @@ Reduces routing computation by 50-70%:
 
 .. code-block:: python
 
-   model = SimpleNSM(
+   model = Simplepulse(
        vocab_size=10000,
        d_model=512,
        num_states=128,
@@ -438,7 +438,7 @@ Maximizes GPU utilization:
 
 .. code-block:: python
 
-   from nsm.utils import DynamicBatcher
+   from pulse.utils import DynamicBatcher
    
    batcher = DynamicBatcher(
        max_tokens=8192,  # Maximum tokens per batch
@@ -496,7 +496,7 @@ Cross-platform deployment:
    torch.onnx.export(
        model,
        dummy_input,
-       "nsm_model.onnx",
+       "pulse_model.onnx",
        opset_version=11,
        dynamic_axes={'input': {0: 'batch_size', 1: 'sequence_length'}}
    )
@@ -511,7 +511,7 @@ GPU inference acceleration:
    
    # Convert ONNX to TensorRT
    engine = build_tensorrt_engine(
-       "nsm_model.onnx",
+       "pulse_model.onnx",
        max_batch_size=32,
        fp16_mode=True
    )
@@ -526,7 +526,7 @@ Built-in performance monitoring tools:
 
 .. code-block:: python
 
-   from nsm.utils import PerformanceMonitor
+   from pulse.utils import PerformanceMonitor
    
    monitor = PerformanceMonitor()
    
@@ -561,13 +561,13 @@ Profiling Tools
        output = model(input_ids)
    
    # Export trace for analysis
-   prof.export_chrome_trace("nsm_trace.json")
+   prof.export_chrome_trace("pulse_trace.json")
 
 **2. Custom Timing Analysis**
 
 .. code-block:: python
 
-   from nsm.utils import ComponentTimer
+   from pulse.utils import ComponentTimer
    
    timer = ComponentTimer()
    
@@ -671,4 +671,4 @@ Training Strategy
 * Weight decay: 0.01-0.1
 * Label smoothing: 0.1 for classification tasks
 
-This comprehensive performance analysis demonstrates that NSMs provide significant computational advantages while maintaining or improving accuracy across diverse tasks. The linear scaling properties make them particularly attractive for production deployments with long sequences or resource constraints.
+This comprehensive performance analysis demonstrates that pulses provide significant computational advantages while maintaining or improving accuracy across diverse tasks. The linear scaling properties make them particularly attractive for production deployments with long sequences or resource constraints.

@@ -1,9 +1,9 @@
 Modules
 =======
 
-Specialized modules and components for NSM architectures.
+Specialized modules and components for pulse architectures.
 
-.. automodule:: nsm.modules
+.. automodule:: pulse.modules
    :members:
    :undoc-members:
    :show-inheritance:
@@ -11,7 +11,7 @@ Specialized modules and components for NSM architectures.
 State Space Models
 ------------------
 
-.. automodule:: nsm.modules.ssm_block
+.. automodule:: pulse.modules.ssm_block
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,7 +22,7 @@ Memory Modules
 RNN Memory
 ~~~~~~~~~~
 
-.. automodule:: nsm.modules.rnn_memory
+.. automodule:: pulse.modules.rnn_memory
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ RNN Memory
 Neural Turing Machine Memory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: nsm.modules.ntm_memory
+.. automodule:: pulse.modules.ntm_memory
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ Neural Turing Machine Memory
 Attention Mechanisms
 --------------------
 
-.. automodule:: nsm.modules.transformer_attention
+.. automodule:: pulse.modules.transformer_attention
    :members:
    :undoc-members:
    :show-inheritance:
@@ -46,7 +46,7 @@ Attention Mechanisms
 Debuggable Components
 --------------------
 
-.. automodule:: nsm.modules.debuggable_components
+.. automodule:: pulse.modules.debuggable_components
    :members:
    :undoc-members:
    :show-inheritance:

@@ -4,7 +4,7 @@ Installation
 System Requirements
 -------------------
 
-Neural State Machines requires:
+Parallel Unified Linear State Engines requires:
 
 * Python 3.8 or higher
 * PyTorch 2.0.0 or higher
@@ -55,7 +55,7 @@ This installs additional development dependencies including:
 GPU Support
 -----------
 
-NSMs support CUDA acceleration out of the box. Ensure you have:
+pulses support CUDA acceleration out of the box. Ensure you have:
 
 1. NVIDIA GPU with CUDA Compute Capability 3.5 or higher
 2. CUDA toolkit installed
@@ -86,12 +86,12 @@ Verify your installation:
 
 .. code-block:: python
 
-   import nsm
-   from nsm import SimpleNSM
+   import pulse
+   from pulse import Simplepulse
    import torch
    
    # Create a simple model
-   model = SimpleNSM(vocab_size=1000, d_model=128, num_states=32)
+   model = Simplepulse(vocab_size=1000, d_model=128, num_states=32)
    
    # Test forward pass
    x = torch.randint(0, 1000, (2, 100))
@@ -106,7 +106,7 @@ Troubleshooting
 Common Issues
 ~~~~~~~~~~~~~
 
-**ImportError: No module named 'nsm'**
+**ImportError: No module named 'pulse'**
 
 Solution: Ensure the package is installed correctly:
 
@@ -120,7 +120,7 @@ Solution: Reduce batch size or model dimensions:
 
 .. code-block:: python
 
-   model = SimpleNSM(
+   model = Simplepulse(
        vocab_size=10000,
        d_model=256,    # Reduce from 512
        num_states=32,  # Reduce from 64

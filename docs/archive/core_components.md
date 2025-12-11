@@ -1,8 +1,8 @@
-# Core Components of Neural State Machine Architecture
+# Core Components of PULSE Architecture
 
-This document defines the core components of the Neural State Machine (NSM) architecture and how they relate to and integrate with existing architectures like Transformers, SSM (Mamba), NTM, and RNNs.
+This document defines the core components of the PULSE (PULSE) architecture and how they relate to and integrate with existing architectures like Transformers, SSM (Mamba), NTM, and RNNs.
 
-## 1. Core NSM Components
+## 1. Core PULSE Components
 
 ### 1.1 TokenToStateRouter
 
@@ -157,7 +157,7 @@ class HybridAttention(nn.Module):
 
 **Role**: Global context modeling
 **Integration Approach**: 
-- NSM can incorporate Transformer layers for global context when needed
+- PULSE can incorporate Transformer layers for global context when needed
 - Hybrid attention mechanism can be extended with standard self-attention
 - Token-to-state routing can complement attention patterns
 
@@ -207,10 +207,10 @@ Input Tokens → TokenToStateRouter → HybridAttention → StatePropagator → 
 4. **StatePropagator**: Updates state representations using gated mechanisms and enables state-to-state communication
 5. **StateManager**: Updates importance scores and manages state lifecycle
 
-## 4. Key Advantages of NSM Components
+## 4. Key Advantages of PULSE Components
 
 ### 4.1 Explicit State Management
-- Unlike Transformers that compute attention weights dynamically, NSM has explicit state nodes
+- Unlike Transformers that compute attention weights dynamically, PULSE has explicit state nodes
 - StateManager enables dynamic allocation and pruning based on task complexity
 - Provides better interpretability through explicit state representations
 
@@ -227,10 +227,10 @@ Input Tokens → TokenToStateRouter → HybridAttention → StatePropagator → 
 ## 5. Implementation Status
 
 ### 5.1 Implemented Components
-- ✅ TokenToStateRouter (in `src/nsm/components.py`)
-- ✅ StateManager (in `src/nsm/modules/state_manager.py`)
-- ✅ StatePropagator (in `src/nsm/modules/state_propagator.py`)
-- ✅ HybridAttention (in `src/nsm/layers.py`)
+- ✅ TokenToStateRouter (in `src/pulse/components.py`)
+- ✅ StateManager (in `src/pulse/modules/state_manager.py`)
+- ✅ StatePropagator (in `src/pulse/modules/state_propagator.py`)
+- ✅ HybridAttention (in `src/pulse/layers.py`)
 
 ### 5.2 Integration Points
 - ⬜ Transformer integration (planned)

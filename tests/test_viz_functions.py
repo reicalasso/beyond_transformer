@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # Add src to path
 sys.path.insert(0, "src")
 
-from nsm import StateManager, TokenToStateRouter
+from pulse import StateManager, TokenToStateRouter
 
 
 def test_visualization_functions():

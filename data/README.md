@@ -23,7 +23,7 @@ To add a new dataset:
 
 1. Add download logic to `scripts/download_data.py`
 2. Add preprocessing logic to `scripts/preprocess_data.py`
-3. Add data loading utilities to `src/nsm/data_loaders.py`
+3. Add data loading utilities to `src//data_loaders.py`
 
 ## Data Versioning
 
@@ -53,10 +53,10 @@ python scripts/preprocess_data.py
 
 ### Loading Data in Models
 
-To load data in your models, use the data loaders in `src/nsm/data_loaders.py`:
+To load data in your models, use the data loaders in `src//data_loaders.py`:
 
 ```python
-from nsm.data_loaders import get_mnist_dataloaders
+from pulse.data_loaders import get_mnist_dataloaders
 
 # Get data loaders
 train_loader, test_loader = get_mnist_dataloaders("data/", batch_size=32)

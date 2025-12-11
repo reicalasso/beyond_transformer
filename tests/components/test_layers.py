@@ -1,5 +1,5 @@
 """
-Unit tests for NSMLayer component
+Unit tests for PulseLayer component
 """
 
 import os
@@ -11,11 +11,11 @@ import torch
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from nsm import HybridAttention, NSMLayer
+from pulse import HybridAttention, PulseLayer
 
 
-class TestNSMLayer(unittest.TestCase):
-    """Test cases for NSMLayer component."""
+class TestPulseLayer(unittest.TestCase):
+    """Test cases for PulseLayer component."""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -27,7 +27,7 @@ class TestNSMLayer(unittest.TestCase):
         self.num_heads = 4
 
         # Create layer
-        self.layer = NSMLayer(
+        self.layer = PulseLayer(
             state_dim=self.state_dim, token_dim=self.token_dim, num_heads=self.num_heads
         )
 
@@ -36,8 +36,8 @@ class TestNSMLayer(unittest.TestCase):
         self.tokens = torch.randn(self.batch_size, self.seq_len, self.token_dim)
 
     def test_initialization(self):
-        """Test NSMLayer initialization."""
-        self.assertIsInstance(self.layer, NSMLayer)
+        """Test PulseLayer initialization."""
+        self.assertIsInstance(self.layer, PulseLayer)
         self.assertEqual(self.layer.state_dim, self.state_dim)
         self.assertEqual(self.layer.token_dim, self.token_dim)
         self.assertEqual(self.layer.num_heads, self.num_heads)

@@ -9,21 +9,21 @@ import numpy as np
 import pytest
 import torch
 
-from nsm.utils.advanced_visualizer import AdvancedNSMVisualizer
-from nsm.utils.visualizer import NSMVisualizer
+from pulse.utils.advanced_visualizer import AdvancedPULSEVisualizer
+from pulse.utils.visualizer import PULSEVisualizer
 
 
-class TestNSMVisualizer:
-    """Test suite for NSMVisualizer."""
+class TestPULSEVisualizer:
+    """Test suite for PULSEVisualizer."""
 
     @pytest.fixture
     def visualizer(self):
-        """Create a NSMVisualizer for testing."""
-        return NSMVisualizer(figsize=(8, 6), style="whitegrid")
+        """Create a PULSEVisualizer for testing."""
+        return PULSEVisualizer(figsize=(8, 6), style="whitegrid")
 
     def test_initialization(self):
-        """Test NSMVisualizer initialization."""
-        visualizer = NSMVisualizer(figsize=(10, 8), style="darkgrid")
+        """Test PULSEVisualizer initialization."""
+        visualizer = PULSEVisualizer(figsize=(10, 8), style="darkgrid")
 
         assert visualizer.figsize == (10, 8)
         assert hasattr(visualizer, "palette")
@@ -94,17 +94,17 @@ class TestNSMVisualizer:
         assert "Mean" in summary_df.columns
 
 
-class TestAdvancedNSMVisualizer:
-    """Test suite for AdvancedNSMVisualizer."""
+class TestAdvancedPULSEVisualizer:
+    """Test suite for AdvancedPULSEVisualizer."""
 
     @pytest.fixture
     def advanced_visualizer(self):
-        """Create an AdvancedNSMVisualizer for testing."""
-        return AdvancedNSMVisualizer(figsize=(10, 8), style="whitegrid")
+        """Create an AdvancedPULSEVisualizer for testing."""
+        return AdvancedPULSEVisualizer(figsize=(10, 8), style="whitegrid")
 
     def test_initialization(self):
-        """Test AdvancedNSMVisualizer initialization."""
-        visualizer = AdvancedNSMVisualizer(figsize=(12, 10), style="darkgrid")
+        """Test AdvancedPULSEVisualizer initialization."""
+        visualizer = AdvancedPULSEVisualizer(figsize=(12, 10), style="darkgrid")
 
         assert visualizer.figsize == (12, 10)
         assert hasattr(visualizer, "palette")
@@ -210,8 +210,8 @@ class TestVisualizationIntegration:
     def test_visualization_workflow(self):
         """Test complete visualization workflow."""
         # Create visualizer
-        visualizer = NSMVisualizer()
-        advanced_visualizer = AdvancedNSMVisualizer()
+        visualizer = PULSEVisualizer()
+        advanced_visualizer = AdvancedPULSEVisualizer()
 
         # Generate test data
         attention_weights = torch.softmax(torch.randn(8, 8), dim=-1)
@@ -245,7 +245,7 @@ class TestVisualizationIntegration:
     @pytest.mark.slow
     def test_large_data_visualization(self):
         """Test visualization with larger datasets."""
-        visualizer = NSMVisualizer()
+        visualizer = PULSEVisualizer()
 
         # Large attention matrix
         large_attention = torch.softmax(torch.randn(32, 32), dim=-1)
@@ -261,7 +261,7 @@ class TestVisualizationIntegration:
 
     def test_error_handling(self):
         """Test visualization error handling."""
-        visualizer = NSMVisualizer()
+        visualizer = PULSEVisualizer()
 
         # Test with invalid data
         with patch("matplotlib.pyplot.show"):
@@ -284,7 +284,7 @@ class TestVisualizationPerformance:
     @pytest.mark.slow
     def test_plotting_speed(self):
         """Test plotting speed performance."""
-        visualizer = NSMVisualizer()
+        visualizer = PULSEVisualizer()
 
         # Medium-sized data
         attention_weights = torch.softmax(torch.randn(16, 16), dim=-1)
@@ -314,7 +314,7 @@ class TestVisualizationPerformance:
         """Test memory efficiency of visualization."""
         import gc
 
-        visualizer = NSMVisualizer()
+        visualizer = PULSEVisualizer()
 
         # Small data first
         small_attention = torch.softmax(torch.randn(8, 8), dim=-1)
@@ -340,8 +340,8 @@ class TestVisualizationUtilities:
 
     def test_color_palette_consistency(self):
         """Test that color palettes are consistent."""
-        viz1 = NSMVisualizer()
-        viz2 = NSMVisualizer()
+        viz1 = PULSEVisualizer()
+        viz2 = PULSEVisualizer()
 
         # Palettes should be the same
         assert len(viz1.palette) == len(viz2.palette)
@@ -352,7 +352,7 @@ class TestVisualizationUtilities:
 
     def test_figure_saving(self, temp_dir):
         """Test figure saving functionality."""
-        visualizer = NSMVisualizer()
+        visualizer = PULSEVisualizer()
         attention_weights = torch.softmax(torch.randn(8, 8), dim=-1)
 
         save_path = temp_dir / "test_plot.png"
@@ -370,7 +370,7 @@ class TestVisualizationUtilities:
 
     def test_data_serialization(self, temp_dir):
         """Test data serialization for reports."""
-        visualizer = NSMVisualizer()
+        visualizer = PULSEVisualizer()
 
         test_data = {
             "attention_weights": torch.softmax(torch.randn(8, 8), dim=-1),

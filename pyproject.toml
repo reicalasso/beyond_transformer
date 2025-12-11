@@ -2,13 +2,13 @@
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 
 [project]
-name = "beyond-transformer"
+name = "pulse-ai"
 dynamic = ["version"]
-description = "Neural State Machines as an alternative to Transformer architectures"
+description = "PULSE - Parallel Unified Linear State Engine: An alternative to Transformer architectures"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = {file == "LICENSE"}
 authors = [
-    {name = "Rei Calasso", email = "reicalasso@gmail.com"},
+    {name == "Rei Calasso", email == "reicalasso@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -23,8 +23,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.8"
-dependencies = [
+requires-python == ">=3.8"
+dependencies == [
     "torch>=2.0.0",
     "numpy>=1.21.0",
     "matplotlib>=3.3.0",
@@ -43,11 +43,21 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
 ]
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
 ]
+experiments = [
+    "wandb>=0.15.0",
+    "tensorboard>=2.10.0",
+    "scikit-learn>=1.0.0",
+    "datasets>=2.0.0",
+]
+
+[project.scripts]
+pulse = "pulse.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/reicalasso/beyond_transformer"
@@ -59,7 +69,7 @@ Repository = "https://github.com/reicalasso/beyond_transformer"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["nsm*"]
+include = ["pulse*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -73,11 +83,11 @@ markers = [
 ]
 
 [tool.black]
-line-length = 88
-target-version = ['py38']
+line-length == 88
+target-version == ['py38']
 
 [tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["nsm"]
+profile == "black"
+multi_line_output == 3
+line_length == 88
+known_first_party == ["pulse"]

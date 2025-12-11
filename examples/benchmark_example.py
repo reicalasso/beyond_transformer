@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Example Benchmark Usage for Neural State Machine Models
+Example Benchmark Usage for PULSE Models
 """
 
 import sys
@@ -9,12 +9,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import torch
 import torch.nn as nn
-from nsm.benchmarks.comprehensive_benchmark import ComprehensiveBenchmark
+from pulse.benchmarks.comprehensive_benchmark import ComprehensiveBenchmark
 
 
-class ExampleNSMModel(nn.Module):
+class ExamplePulseModel(nn.Module):
     """
-    Example Neural State Machine Model for benchmarking.
+    Example PULSE Model for benchmarking.
     """
     
     def __init__(self, vocab_size=10000, embed_dim=128, hidden_dim=256, output_dim=100):
@@ -65,12 +65,12 @@ def run_example_benchmarks():
     """
     Run example benchmarks to demonstrate usage.
     """
-    print("Neural State Machine - Benchmark Example")
+    print("PULSE - Benchmark Example")
     print("=" * 50)
     
     # Create example model
-    print("Creating example NSM model...")
-    model = ExampleNSMModel()
+    print("Creating example PULSE model...")
+    model = ExamplePulseModel()
     print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
     
     # Create benchmark suite

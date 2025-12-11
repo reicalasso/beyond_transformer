@@ -2,14 +2,14 @@
 
 ## 1. Executive Summary
 
-This research investigates alternatives to the Transformer architecture, focusing on efficiency, performance, and interpretability. Our analysis covers established approaches like efficient Transformers, RNN-based models (RWKV), structured state space models (Mamba/S4), and novel architectures like Neural State Machines (NSM).
+This research investigates alternatives to the Transformer architecture, focusing on efficiency, performance, and interpretability. Our analysis covers established approaches like efficient Transformers, RNN-based models (RWKV), structured state space models (Mamba/S4), and novel architectures like PULSEs (PULSE).
 
 Key findings:
 1. Transformers excel in performance but suffer from quadratic complexity and memory requirements
 2. Efficient Transformers reduce computational burden but may sacrifice some performance
 3. RNN-based approaches (RWKV) offer linear inference time with constant memory
 4. State space models (Mamba/S4) provide strong long-sequence performance with linear complexity
-5. Neural State Machines present a novel hybrid approach with potential for improved interpretability
+5. PULSEs present a novel hybrid approach with potential for improved interpretability
 
 ## 2. Current State Analysis
 
@@ -22,16 +22,16 @@ Key findings:
 
 ### 2.2 Experimental Results Summary
 Based on our baseline experiments:
-- NSM shows competitive training efficiency with lower memory usage
+- PULSE shows competitive training efficiency with lower memory usage
 - Traditional RNNs (LSTM/GRU) perform well on image classification tasks
 - Transformers struggle with our current implementation but are known to be powerful with proper tuning
-- NSM demonstrates faster training times compared to baseline models
+- PULSE demonstrates faster training times compared to baseline models
 
 ### 2.3 Open Source Landscape
 - Mamba and RWKV have active communities and optimized implementations
 - Efficient Transformers are well-supported in major libraries
 - Graph neural networks have mature ecosystems
-- NSM represents a novel approach with limited existing implementations
+- PULSE represents a novel approach with limited existing implementations
 
 ## 3. Comparative Analysis Framework
 
@@ -50,9 +50,9 @@ We've established a framework for comparing architectures across key dimensions:
 3. **Interpretability**: Most efficient models sacrifice interpretability for performance
 4. **Hardware-Software Co-design**: Few architectures are explicitly designed for specific hardware constraints
 
-## 5. Neural State Machine Positioning
+## 5. PULSE Positioning
 
-Our Neural State Machine approach addresses these gaps by:
+Our PULSE approach addresses these gaps by:
 - Combining state-based memory with adaptive attention
 - Enabling efficient computation through token-to-state routing
 - Providing explicit state representations for interpretability
@@ -72,7 +72,7 @@ Our Neural State Machine approach addresses these gaps by:
    - Add more comprehensive evaluation metrics (F1, perplexity)
    - Include standard benchmarks like LRA for long-sequence evaluation
 
-3. **Enhance NSM implementation**:
+3. **Enhance PULSE implementation**:
    - Improve token-to-state routing mechanisms
    - Implement more sophisticated state management strategies
    - Add visualization tools for state evolution tracking
@@ -80,7 +80,7 @@ Our Neural State Machine approach addresses these gaps by:
 ### 6.2 Medium-term Actions (1-2 months)
 
 1. **Comprehensive benchmarking**:
-   - Compare NSM against Mamba, RWKV, and efficient Transformers
+   - Compare PULSE against Mamba, RWKV, and efficient Transformers
    - Evaluate on standard datasets (GLUE, ImageNet, LRA)
    - Measure efficiency metrics (FLOPs, memory usage, inference time)
 
@@ -90,19 +90,19 @@ Our Neural State Machine approach addresses these gaps by:
    - Explore graph-structured state networks
 
 3. **Hardware optimization**:
-   - Profile NSM performance on different hardware platforms
+   - Profile PULSE performance on different hardware platforms
    - Identify optimization opportunities
    - Compare with hardware-optimized baselines
 
 ### 6.3 Long-term Actions (3-6 months)
 
-1. **Advanced NSM features**:
+1. **Advanced PULSE features**:
    - Implement dynamic state allocation based on task complexity
    - Develop meta-learning approaches for routing mechanisms
    - Explore hierarchical state structures
 
 2. **Real-world deployment**:
-   - Test NSM on resource-constrained devices
+   - Test PULSE on resource-constrained devices
    - Evaluate edge deployment feasibility
    - Compare with production-ready alternatives
 
@@ -131,15 +131,15 @@ Our Neural State Machine approach addresses these gaps by:
 
 ## 8. Expected Contributions
 
-1. **Demonstrate NSM efficiency** in long-sequence tasks, showing significant improvements over Transformers
+1. **Demonstrate PULSE efficiency** in long-sequence tasks, showing significant improvements over Transformers
 2. **Show parameter efficiency** compared to Transformers, paving the way for more efficient AI models
 3. **Provide open-source, reproducible benchmarks** to accelerate research in this area
-4. **Establish NSM as a viable and promising alternative** to Transformers with broader implications for AI architecture design
+4. **Establish PULSE as a viable and promising alternative** to Transformers with broader implications for AI architecture design
 
 ## 9. Risk Assessment
 
 ### 9.1 Technical Risks
-- NSM may not achieve expected performance improvements
+- PULSE may not achieve expected performance improvements
 - Implementation challenges with complex architectures
 - Difficulty in reproducing baseline results
 
@@ -150,6 +150,6 @@ Our Neural State Machine approach addresses these gaps by:
 
 ## 10. Conclusion
 
-The exploration of Transformer alternatives is a rapidly evolving field with significant opportunities for innovation. Neural State Machines represent a promising direction that could combine the strengths of existing approaches while addressing key limitations. By systematically comparing with established baselines and focusing on interpretable, efficient architectures, this research has the potential to make meaningful contributions to the field of sequence modeling.
+The exploration of Transformer alternatives is a rapidly evolving field with significant opportunities for innovation. PULSEs represent a promising direction that could combine the strengths of existing approaches while addressing key limitations. By systematically comparing with established baselines and focusing on interpretable, efficient architectures, this research has the potential to make meaningful contributions to the field of sequence modeling.
 
-The next critical steps involve fixing current implementation issues, expanding experimental validation, and beginning systematic comparison with state-of-the-art alternatives. With focused effort, this work could establish NSM as a viable paradigm for next-generation AI systems.
+The next critical steps involve fixing current implementation issues, expanding experimental validation, and beginning systematic comparison with state-of-the-art alternatives. With focused effort, this work could establish PULSE as a viable paradigm for next-generation AI systems.

@@ -1,19 +1,19 @@
 Models
 ======
 
-This module contains the main NSM model implementations.
+This module contains the main pulse model implementations.
 
-.. automodule:: nsm.models
+.. automodule:: pulse.models
    :members:
    :undoc-members:
    :show-inheritance:
 
-Simple NSM
+Simple pulse
 ----------
 
-The basic Neural State Machine implementation.
+The basic Parallel Unified Linear State Engine implementation.
 
-.. automodule:: nsm.models.simple_nsm
+.. automodule:: pulse.models.simple_pulse
    :members:
    :undoc-members:
    :show-inheritance:
@@ -21,9 +21,9 @@ The basic Neural State Machine implementation.
 Hybrid Model
 ------------
 
-Hybrid models combining NSMs with attention mechanisms.
+Hybrid models combining pulses with attention mechanisms.
 
-.. automodule:: nsm.models.hybrid_model
+.. automodule:: pulse.models.hybrid_model
    :members:
    :undoc-members:
    :show-inheritance:

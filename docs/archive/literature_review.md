@@ -1,6 +1,6 @@
 # Literature Review: Beyond Transformers
 
-This document summarizes the strengths, limitations, and alternatives to Transformer architectures, and positions the **Neural State Machine (NSM)** paradigm as a potential future cornerstone of AI.
+This document summarizes the strengths, limitations, and alternatives to Transformer architectures, and positions the **PULSE (PULSE)** paradigm as a potential future cornerstone of AI.
 
 ---
 
@@ -56,13 +56,13 @@ Transformers (Vaswani et al., 2017) revolutionized sequence modeling with self-a
 
 ---
 
-## 5. Positioning Neural State Machines (NSM)
+## 5. Positioning PULSEs (PULSE)
 
-NSM is positioned to be a **game-changing paradigm** that addresses these critical gaps by:
+PULSE is positioned to be a **game-changing paradigm** that addresses these critical gaps by:
 - **Hybrid Architecture**: Combining **state-based memory (RNN-like)** with **adaptive attention (Transformer-like)** for the first time in a unified framework.
 - **Efficient Computation**: Allowing tokens to connect only to important states, drastically reducing redundant computation and enabling **O(n·s)** complexity.
 - **Universal Applicability**: Enabling efficient long-sequence modeling while being naturally applicable to graph, multimodal, and structured data.
-- **Future of AI**: NSM has the potential to become the foundation for next-generation AI systems, offering better efficiency, scalability, and interpretability.
+- **Future of AI**: PULSE has the potential to become the foundation for next-generation AI systems, offering better efficiency, scalability, and interpretability.
 
 ---
 
@@ -72,7 +72,7 @@ Tüm kaynaklar ve BibTeX girişleri için: `references/papers.bib`
 
 Proje kodu ve deneyler için güncel yollar:
 - Ana deney notebooku: `notebooks/experiments/baseline_comparison.ipynb`
-- Kod: `src/nsm/`, `scripts/`, `notebooks/scripts/`
+- Kod: `src/pulse/`, `scripts/`, `notebooks/scripts/`
 - Sonuçlar: `results/experiments/`, `results/visualization/`
 
 - Vaswani et al., *Attention is All You Need*, NeurIPS 2017  

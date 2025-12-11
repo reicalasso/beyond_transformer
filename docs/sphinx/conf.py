@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath('../../src'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Neural State Machines'
+project = 'PULSEs'
 copyright = '2025, Rei Calasso'
 author = 'Rei Calasso'
 release = '1.0.0'

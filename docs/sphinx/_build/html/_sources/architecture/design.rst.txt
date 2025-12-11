@@ -1,7 +1,7 @@
 Architecture Design
 ==================
 
-Neural State Machines represent a paradigm shift from attention-based models to state-based computation, achieving linear complexity while maintaining competitive performance.
+Parallel Unified Linear State Engines represent a paradigm shift from attention-based models to state-based computation, achieving linear complexity while maintaining competitive performance.
 
 Core Principles
 ---------------
@@ -9,20 +9,20 @@ Core Principles
 State-Based Computation
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Unlike Transformers that compute attention over all token pairs (O(n²) complexity), NSMs maintain a fixed number of state vectors that evolve over time:
+Unlike Transformers that compute attention over all token pairs (O(n²) complexity), pulses maintain a fixed number of state vectors that evolve over time:
 
 .. math::
 
    \text{Complexity}_{\text{Transformer}} = O(n^2 \cdot d)
    
-   \text{Complexity}_{\text{NSM}} = O(s \cdot d)
+   \text{Complexity}_{\text{pulse}} = O(s \cdot d)
 
 where :math:`n` is sequence length, :math:`s` is number of states, and :math:`d` is model dimension.
 
 Information Flow
 ~~~~~~~~~~~~~~~~
 
-The NSM architecture processes information through four key stages:
+The pulse architecture processes information through four key stages:
 
 1. **Token-to-State Routing**: Maps input tokens to state vectors
 2. **State Propagation**: Updates states using gated mechanisms  
@@ -115,10 +115,10 @@ Maps final state representations back to output vocabulary:
 Architectural Variants
 ----------------------
 
-Simple NSM
+Simple pulse
 ~~~~~~~~~~
 
-The basic NSM implementation with minimal components:
+The basic pulse implementation with minimal components:
 
 * Fixed number of states (typically 32-128)
 * GRU-based state propagation
@@ -127,19 +127,19 @@ The basic NSM implementation with minimal components:
 
 **Use Cases:** Text classification, simple sequence modeling
 
-Hybrid NSM
+Hybrid pulse
 ~~~~~~~~~~
 
-Combines NSMs with attention mechanisms:
+Combines pulses with attention mechanisms:
 
-* NSM layers for efficient long-range modeling
+* pulse layers for efficient long-range modeling
 * Transformer layers for complex reasoning
 * Flexible layer ordering and configurations
 * Shared or separate embeddings
 
 **Use Cases:** Complex reasoning tasks, machine translation
 
-Memory-Augmented NSM
+Memory-Augmented pulse
 ~~~~~~~~~~~~~~~~~~~
 
 Incorporates external memory mechanisms:
@@ -163,7 +163,7 @@ Complexity Analysis
 
    * - Operation
      - Transformer
-     - NSM
+     - pulse
    * - Self-Attention
      - O(n²·d)
      - O(s·d) routing
@@ -180,7 +180,7 @@ Complexity Analysis
 Memory Efficiency
 ~~~~~~~~~~~~~~~~
 
-NSMs achieve significant memory savings through:
+pulses achieve significant memory savings through:
 
 * **Constant State Size**: Fixed memory regardless of sequence length
 * **No Attention Matrices**: Eliminates O(n²) attention storage
@@ -193,8 +193,8 @@ Scalability Properties
 **Sequence Length Scaling:**
 
 * Transformers: Quadratic degradation
-* NSMs: Constant or linear scaling
-* **Break-even Point**: NSMs become advantageous at ~500+ tokens
+* pulses: Constant or linear scaling
+* **Break-even Point**: pulses become advantageous at ~500+ tokens
 
 **State Count Scaling:**
 
@@ -250,6 +250,6 @@ Research Opportunities
 ~~~~~~~~~~~~~~~~~~~~~
 
 1. **Theoretical Analysis**: Formal complexity and capacity analysis
-2. **Architecture Search**: Automated NSM design optimization
+2. **Architecture Search**: Automated pulse design optimization
 3. **Multi-Modal Extensions**: Vision, audio, and cross-modal applications
 4. **Large-Scale Evaluation**: Scaling to billions of parameters

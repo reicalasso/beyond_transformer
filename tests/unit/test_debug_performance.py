@@ -11,22 +11,22 @@ import numpy as np
 import pytest
 import torch
 
-from nsm.utils.comparative_analyzer import ComparativePerformanceAnalyzer
-from nsm.utils.debugger import NSMDebugger
-from nsm.utils.performance_monitor import PerformanceMonitor
+from pulse.utils.comparative_analyzer import ComparativePerformanceAnalyzer
+from pulse.utils.debugger import PulseDebugger
+from pulse.utils.performance_monitor import PerformanceMonitor
 
 
-class TestNSMDebugger:
-    """Test suite for NSMDebugger."""
+class TestPulseDebugger:
+    """Test suite for PulseDebugger."""
 
     @pytest.fixture
     def debugger(self, temp_dir):
-        """Create a NSMDebugger for testing."""
-        return NSMDebugger(log_dir=str(temp_dir / "debug_logs"), verbose=False)
+        """Create a PulseDebugger for testing."""
+        return PulseDebugger(log_dir=str(temp_dir / "debug_logs"), verbose=False)
 
     def test_initialization(self, temp_dir):
-        """Test NSMDebugger initialization."""
-        debugger = NSMDebugger(log_dir=str(temp_dir / "test_logs"), verbose=True)
+        """Test PulseDebugger initialization."""
+        debugger = PulseDebugger(log_dir=str(temp_dir / "test_logs"), verbose=True)
 
         assert debugger.log_dir.exists()
         assert debugger.verbose is True
@@ -175,7 +175,7 @@ class TestNSMDebugger:
         debugger.print_summary()
 
         # Should contain summary information in logs
-        assert "NSM Debug Summary" in caplog.text
+        assert "PULSE Debug Summary" in caplog.text
         assert "Total steps logged:" in caplog.text
 
     def test_serialize_tensor(self, debugger):
@@ -369,7 +369,7 @@ class TestDebugAndPerformanceIntegration:
     def test_debug_performance_workflow(self, temp_dir):
         """Test complete debug and performance workflow."""
         # Create tools
-        debugger = NSMDebugger(log_dir=str(temp_dir / "debug_logs"), verbose=False)
+        debugger = PulseDebugger(log_dir=str(temp_dir / "debug_logs"), verbose=False)
         perf_monitor = PerformanceMonitor()
         analyzer = ComparativePerformanceAnalyzer()
 
@@ -427,7 +427,7 @@ class TestDebugAndPerformanceIntegration:
     def test_model_comparison_with_debugging(self, temp_dir):
         """Test model comparison with debugging enabled."""
         # Create debugger
-        debugger = NSMDebugger(log_dir=str(temp_dir / "comparison_logs"), verbose=False)
+        debugger = PulseDebugger(log_dir=str(temp_dir / "comparison_logs"), verbose=False)
         debugger.enable_debug()
 
         # Create analyzer
@@ -526,7 +526,7 @@ class TestDebugPerformance:
         import time
 
         # Without debugging
-        debugger_off = NSMDebugger(log_dir=str(temp_dir / "no_debug"), verbose=False)
+        debugger_off = PulseDebugger(log_dir=str(temp_dir / "no_debug"), verbose=False)
 
         class SimpleModel(torch.nn.Module):
             def __init__(self):
@@ -564,7 +564,7 @@ class TestDebugPerformance:
         """Test logging performance."""
         import time
 
-        debugger = NSMDebugger(log_dir=str(temp_dir / "perf_test"), verbose=False)
+        debugger = PulseDebugger(log_dir=str(temp_dir / "perf_test"), verbose=False)
         debugger.enable_debug()
 
         # Test logging many entries
@@ -587,7 +587,7 @@ class TestDebugPerformance:
         if not torch.cuda.is_available():
             pytest.skip("CUDA not available")
 
-        debugger = NSMDebugger(verbose=False)
+        debugger = PulseDebugger(verbose=False)
         debugger.enable_debug()
 
         # Allocate some GPU memory
@@ -612,7 +612,7 @@ class TestDebugUtilities:
         """Test logger configuration."""
         import logging
 
-        debugger = NSMDebugger(log_dir=str(temp_dir / "logger_test"), verbose=True)
+        debugger = PulseDebugger(log_dir=str(temp_dir / "logger_test"), verbose=True)
 
         # Check that logger is configured
         logger = debugger.logger
@@ -624,7 +624,7 @@ class TestDebugUtilities:
 
     def test_process_monitoring(self):
         """Test process monitoring capabilities."""
-        debugger = NSMDebugger(verbose=False)
+        debugger = PulseDebugger(verbose=False)
         debugger.enable_debug()
 
         # Record initial snapshot
@@ -636,7 +636,7 @@ class TestDebugUtilities:
 
     def test_gradient_tracking(self, temp_dir):
         """Test gradient tracking capabilities."""
-        debugger = NSMDebugger(log_dir=str(temp_dir / "grad_test"), verbose=False)
+        debugger = PulseDebugger(log_dir=str(temp_dir / "grad_test"), verbose=False)
         debugger.enable_debug()
 
         class SimpleModel(torch.nn.Module):

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from nsm import StateManager
+from pulse import StateManager
 
 
 class TestStateManager:

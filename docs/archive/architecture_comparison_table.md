@@ -13,11 +13,11 @@ Based on experiments conducted in `/workspaces/beyond_transformer/notebooks/expe
 | LSTM | MNIST | 67.90 | 14.0 | -2.01 | 4.31 |
 | GRU | MNIST | 73.30 | 16.5 | -10.02 | 1.75 |
 | Transformer | MNIST | 34.80 | 10.5 | 16.27 | 1.52 |
-| NSM | MNIST | 45.88 | 13.5 | 0.63 | 0.44 |
+| PULSE | MNIST | 45.88 | 13.5 | 0.63 | 0.44 |
 | LSTM | CIFAR-10 | 86.79 | 9.0 | 39.65 | 1.71 |
 | GRU | CIFAR-10 | 88.92 | 10.0 | 12.05 | 0.75 |
 | Transformer | CIFAR-10 | 68.18 | 9.5 | 8.38 | 1.16 |
-| NSM | CIFAR-10 | 88.64 | 11.0 | 0.00 | 0.48 |
+| PULSE | CIFAR-10 | 88.64 | 11.0 | 0.00 | 0.48 |
 
 ### 1.2 Hyperparameter Sensitivity Analysis
 
@@ -41,7 +41,7 @@ Based on hyperparameter sweep results in `/workspaces/beyond_transformer/results
 | **RNNs (LSTM/GRU)** | Natural sequential processing, low memory for inference | Difficulty with long-term dependencies |
 | **RWKV** | Linear inference time, constant memory usage | Different training paradigm |
 | **Mamba/S4** | Linear time complexity, strong long-sequence performance | Hardware dependencies for full efficiency |
-| **NSM (Proposed)** | Explicit state management, potential for interpretability | Early-stage development |
+| **PULSE (Proposed)** | Explicit state management, potential for interpretability | Early-stage development |
 
 ### 2.2 Efficiency Metrics
 
@@ -55,7 +55,7 @@ Based on hyperparameter sweep results in `/workspaces/beyond_transformer/results
 | **LSTM/GRU** | O(n) | O(1) | Low | High |
 | **RWKV** | O(n) | O(1) | Partial | High |
 | **Mamba** | O(n) | O(1) | Partial | Very High |
-| **NSM (Proposed)** | O(n·s) | O(s) | Medium-High | High |
+| **PULSE (Proposed)** | O(n·s) | O(s) | Medium-High | High |
 
 ### 2.3 Application Suitability
 
@@ -66,7 +66,7 @@ Based on hyperparameter sweep results in `/workspaces/beyond_transformer/results
 | **RNNs** | Limited | Limited | Limited | Low | Good |
 | **RWKV** | Excellent | Potential | Potential | Medium | Excellent |
 | **Mamba** | Excellent | Potential | Potential | Low | Excellent |
-| **NSM (Proposed)** | Good | Good | Good | High | Good |
+| **PULSE (Proposed)** | Good | Good | Good | High | Good |
 
 ## 3. Detailed Architecture Analysis
 
@@ -125,7 +125,7 @@ Based on hyperparameter sweep results in `/workspaces/beyond_transformer/results
 - May not match Transformer performance on shorter sequences
 - Hardware dependencies for full efficiency
 
-### 3.6 Neural State Machines (NSM)
+### 3.6 PULSEs (PULSE)
 **Advantages:**
 - Explicit state management for interpretability
 - Flexible token-to-state routing
@@ -147,4 +147,4 @@ Based on hyperparameter sweep results in `/workspaces/beyond_transformer/results
 
 ## 5. Conclusion
 
-The landscape of Transformer alternatives is rapidly evolving, with each approach offering different trade-offs between performance, efficiency, and interpretability. While Transformers remain the gold standard for many tasks, alternatives like RWKV and Mamba show significant promise for specific applications, particularly where efficiency is paramount. Neural State Machines represent a novel approach that combines the strengths of both paradigms while potentially offering improved interpretability and flexibility.
+The landscape of Transformer alternatives is rapidly evolving, with each approach offering different trade-offs between performance, efficiency, and interpretability. While Transformers remain the gold standard for many tasks, alternatives like RWKV and Mamba show significant promise for specific applications, particularly where efficiency is paramount. PULSEs represent a novel approach that combines the strengths of both paradigms while potentially offering improved interpretability and flexibility.

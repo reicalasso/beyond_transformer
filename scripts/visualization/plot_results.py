@@ -20,7 +20,7 @@ training_times = results['training_times']
 
 # Create plots
 fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-fig.suptitle('NSM State Count Hyperparameter Sweep Results', fontsize=16, fontweight='bold')
+fig.suptitle('PULSE State Count Hyperparameter Sweep Results', fontsize=16, fontweight='bold')
 
 # Plot 1: Training Accuracy vs State Count
 ax = axes[0, 0]
@@ -59,7 +59,7 @@ ax.grid(True, alpha=0.3)
 ax.set_xticks(state_counts)
 
 plt.tight_layout()
-plt.savefig('results/visualization/nsm_hyperparameter_sweep_results.png', dpi=300, bbox_inches='tight')
+plt.savefig('results/visualization/pulse_hyperparameter_sweep_results.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-print("Plot saved to results/visualization/nsm_hyperparameter_sweep_results.png")
+print("Plot saved to results/visualization/pulse_hyperparameter_sweep_results.png")

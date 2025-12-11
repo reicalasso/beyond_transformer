@@ -1,5 +1,5 @@
 """
-Setup script for Neural State Machine (NSM) package.
+Setup script for PULSE (PULSE) package.
 """
 
 from setuptools import setup, find_packages
@@ -14,7 +14,7 @@ setup(
     version="0.1.0",
     author="Rei Calasso",
     author_email="reicalasso@gmail.com",
-    description="Neural State Machines as an alternative to Transformer architectures",
+    description="PULSEs as an alternative to Transformer architectures",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/reicalasso/beyond_transformer",
@@ -62,9 +62,9 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "nsm-train=scripts.train_model:main",
-            "nsm-evaluate=scripts.evaluate_model:main",
-            "nsm-visualize=scripts.visualize_results:main",
+            "pulse-train=scripts.train_model:main",
+            "pulse-evaluate=scripts.evaluate_model:main",
+            "pulse-visualize=scripts.visualize_results:main",
         ],
     },
     include_package_data=True,

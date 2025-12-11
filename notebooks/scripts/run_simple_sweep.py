@@ -19,7 +19,7 @@ import json
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from nsm.state_propagator import StatePropagator
+from pulse.state_propagator import StatePropagator
 
 # For reproducibility
 torch.manual_seed(42)
@@ -30,11 +30,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 
 
-class SimpleNSMModel(nn.Module):
+class SimplePulseModel(nn.Module):
     """A simple model using StatePropagator for hyperparameter testing."""
     
     def __init__(self, input_dim, state_dim, num_states, output_dim, gate_type='gru'):
-        super(SimpleNSMModel, self).__init__()
+        super(SimplePulseModel, self).__init__()
         self.input_dim = input_dim
         self.state_dim = state_dim
         self.num_states = num_states
@@ -201,7 +201,7 @@ def run_hyperparameter_sweep():
         print(f"  Testing with {num_states} states...")
         
         # Create model
-        model = SimpleNSMModel(
+        model = SimplePulseModel(
             input_dim=input_dim,
             state_dim=state_dim,
             num_states=num_states,

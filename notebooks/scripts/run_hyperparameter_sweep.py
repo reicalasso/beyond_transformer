@@ -23,7 +23,7 @@ from collections import defaultdict
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from nsm.modules.state_propagator import StatePropagator
+from pulse.modules.state_propagator import StatePropagator
 
 # For reproducibility
 torch.manual_seed(42)
@@ -34,11 +34,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 
 
-class SimpleNSMModel(nn.Module):
+class SimplePulseModel(nn.Module):
     """A simple model using StatePropagator for hyperparameter testing."""
     
     def __init__(self, input_dim, state_dim, num_states, output_dim, gate_type='gru'):
-        super(SimpleNSMModel, self).__init__()
+        super(SimplePulseModel, self).__init__()
         self.input_dim = input_dim
         self.state_dim = state_dim
         self.num_states = num_states
@@ -254,7 +254,7 @@ def run_hyperparameter_sweep():
             print(f"  Testing with {num_states} states...")
             
             # Create model
-            model = SimpleNSMModel(
+            model = SimplePulseModel(
                 input_dim=dataset_config['input_dim'],
                 state_dim=state_dim,
                 num_states=num_states,
@@ -356,5 +356,5 @@ if __name__ == "__main__":
     plot_results(results)
     
     print("Results saved to results/experiments/hyperparameter_sweep_results.json")
-    print("Plot saved to results/visualization/nsm_hyperparameter_sweep_results.png")
+    print("Plot saved to results/visualization/pulse_hyperparameter_sweep_results.png")
     print("Hyperparameter sweep completed successfully!")

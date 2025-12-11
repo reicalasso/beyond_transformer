@@ -1,7 +1,7 @@
 # Experiments Plan
 
 
-This document describes the experimental roadmap for exploring **Neural State Machines (NSM)** as a paradigm beyond Transformers. The project yapısı ve kodlar için güncel referanslar aşağıdadır:
+This document describes the experimental roadmap for exploring **PULSEs (PULSE)** as a paradigm beyond Transformers. The project yapısı ve kodlar için güncel referanslar aşağıdadır:
 
 ## Project Directory Structure (2025)
 
@@ -55,7 +55,7 @@ We will start with small and mid-size datasets to validate accuracy and efficien
 
 ## 2. Baseline Models
 
-NSM will be rigorously compared against existing architectures:
+PULSE will be rigorously compared against existing architectures:
 
 - **Vanilla Transformer** (Vaswani et al., 2017)
 - **LSTM / GRU** (classic RNNs)
@@ -83,7 +83,7 @@ Evaluation will focus on accuracy, efficiency, and interpretability:
 
 Visual tools will be created for interpretability:
 
-- **Attention maps vs NSM state maps**
+- **Attention maps vs PULSE state maps**
 - **State propagation diagrams**
 - **Efficiency trade-offs** (accuracy vs compute)
 - **Token-to-state routing visualization**
@@ -93,8 +93,8 @@ Visual tools will be created for interpretability:
 ## 5. Experiment Phases
 
 - **Phase 1:** Baseline reproduction (Transformer, RNN, Efficient Transformers)
-- **Phase 2:** NSM prototype and toy dataset tests
-- **Phase 3:** Benchmarking NSM and baselines on LRA + CIFAR-10
+- **Phase 2:** PULSE prototype and toy dataset tests
+- **Phase 3:** Benchmarking PULSE and baselines on LRA + CIFAR-10
 - **Phase 4:** Visualization and interpretability study
 - **Phase 5:** Paper-style write-up and open-source release
 
@@ -102,10 +102,10 @@ Visual tools will be created for interpretability:
 
 ## 6. Expected Contributions
 
-- **Demonstrate NSM efficiency** in long-sequence tasks, showing significant improvements over Transformers.
+- **Demonstrate PULSE efficiency** in long-sequence tasks, showing significant improvements over Transformers.
 - **Show parameter efficiency** compared to Transformers, paving the way for more efficient AI models.
 - **Provide open-source, reproducible benchmarks** to accelerate research in this area.
-- **Establish NSM as a viable and promising alternative** to Transformers, with the potential to shape the future of AI architecture design.
+- **Establish PULSE as a viable and promising alternative** to Transformers, with the potential to shape the future of AI architecture design.
 
 ---
-This plan will evolve as we gather insights from initial experiments. The goal is to establish NSM as a viable and potentially superior alternative to Transformers for various sequence modeling tasks, with broader implications for AI efficiency and capability.
+This plan will evolve as we gather insights from initial experiments. The goal is to establish PULSE as a viable and potentially superior alternative to Transformers for various sequence modeling tasks, with broader implications for AI efficiency and capability.

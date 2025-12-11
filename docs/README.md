@@ -1,4 +1,4 @@
-# Neural State Machines: Complete Documentation Index
+# PULSEs: Complete Documentation Index
 ## Your Guide to Revolutionary AI Architecture
 
 ---
@@ -42,7 +42,7 @@
 ### 🔧 **Development Resources**
 1. **[📁 API Reference](api/)** - Complete function documentation
 2. **[🧪 Examples & Tutorials](../notebooks/)** - Interactive Jupyter notebooks
-3. **[🛠️ Integration Strategy](integration_strategy.md)** - How to integrate NSM
+3. **[🛠️ Integration Strategy](integration_strategy.md)** - How to integrate PULSE
 
 ## Table of Contents
 
@@ -82,21 +82,21 @@ python scripts/train_model.py --config configs/default_config.json
 
 ### Running Experiments
 
-To run experiments, check the `notebooks/` directory for Jupyter notebooks or use the experiment scripts in `src/nsm/experiments/`.
+To run experiments, check the `notebooks/` directory for Jupyter notebooks or use the experiment scripts in `src/pulse/experiments/`.
 
 ## Architecture
 
-The core of this project is the Neural State Machine (NSM) architecture. Key components include:
+The core of this project is the PULSE (PULSE) architecture. Key components include:
 
 - **StatePropagator**: Implements gated updates for state vectors.
 - **TokenToStateRouter**: Routes input tokens to appropriate state nodes.
 - **StateManager**: Manages state nodes with dynamic allocation and pruning.
-- **NSMLayer**: Combines state updates with token-to-state routing.
+- **PulseLayer**: Combines state updates with token-to-state routing.
 - **HybridAttention**: Combines token-to-state routing with content-based attention.
 
 ## Experiments
 
-The project includes several experiments to evaluate the NSM architecture:
+The project includes several experiments to evaluate the PULSE architecture:
 
 - **State Count Sweep**: Tests different numbers of state nodes.
 - **Dynamic State Allocation**: Evaluates dynamic state allocation and pruning.

@@ -13,7 +13,7 @@ import pandas as pd
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from nsm.experiments.experiment_results import ExperimentResults
+from pulse.experiments.experiment_results import ExperimentResults
 
 
 def test_experiment_results_basic():

@@ -11,8 +11,8 @@ import torch
 # Add src to path
 sys.path.insert(0, "src")
 
-from nsm import StateManager, TokenToStateRouter
-from nsm import SimpleNSM
+from pulse import StateManager, TokenToStateRouter
+from pulse import SimplePulse
 
 
 def test_routing_visualization():
@@ -23,12 +23,12 @@ def test_routing_visualization():
     torch.manual_seed(42)
     np.random.seed(42)
 
-    # Test 1: SimpleNSM model
-    print("1. Testing SimpleNSM model...")
-    model = SimpleNSM(
+    # Test 1: SimplePulse model
+    print("1. Testing SimplePulse model...")
+    model = SimplePulse(
         input_dim=128, state_dim=64, num_states=16, output_dim=10, gate_type="gru"
     )
-    print("   SimpleNSM created successfully!")
+    print("   SimplePulse created successfully!")
 
     # Test 2: TokenToStateRouter
     print("2. Testing TokenToStateRouter...")

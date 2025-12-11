@@ -1,6 +1,6 @@
 # Installation and Usage Guide
 
-This guide provides detailed instructions for installing and using the Beyond Transformer (Neural State Machine) project.
+This guide provides detailed instructions for installing and using the Beyond Transformer (PULSE) project.
 
 ## System Requirements
 
@@ -75,7 +75,7 @@ After installation, verify that everything works correctly:
 
 ```bash
 # Test importing the main modules
-python -c "import nsm; print('NSM imported successfully')"
+python -c "import pulse; print('PULSE imported successfully')"
 
 # Run basic tests
 python -m pytest tests/ -v --tb=short
@@ -83,7 +83,7 @@ python -m pytest tests/ -v --tb=short
 # Test core functionality
 python -c "
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 prop = StatePropagator(state_dim=64)
 x = torch.randn(2, 64)
 y = prop(x, x)
@@ -97,7 +97,7 @@ print('StatePropagator test passed')
 
 ```python
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Create state propagator
 propagator = StatePropagator(
@@ -120,7 +120,7 @@ print(f"Updated state shape: {updated_state.shape}")
 
 ```python
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Create state propagator for multiple states
 propagator = StatePropagator(
@@ -140,14 +140,14 @@ print(f"Previous states shape: {prev_states.shape}")
 print(f"Updated states shape: {updated_states.shape}")
 ```
 
-### 3. Complete NSM Model
+### 3. Complete PULSE Model
 
 ```python
 import torch
-from nsm.models import SimpleNSM
+from pulse.models import SimplePulse
 
-# Create a complete NSM model
-model = SimpleNSM(
+# Create a complete PULSE model
+model = SimplePulse(
     input_dim=784,      # Input dimension (e.g., flattened MNIST)
     state_dim=128,      # State vector dimension
     num_states=16,      # Number of state nodes
@@ -180,7 +180,7 @@ print(f"Training step completed. Loss: {loss.item():.4f}")
 
 ```python
 import torch
-from nsm import StateManager, NSMLayer
+from pulse import StateManager, PulseLayer
 
 # Create state manager with dynamic allocation
 state_manager = StateManager(
@@ -190,8 +190,8 @@ state_manager = StateManager(
     prune_threshold=0.3
 )
 
-# Create NSM layer
-nsm_layer = NSMLayer(
+# Create PULSE layer
+pulse_layer = PulseLayer(
     state_dim=128,
     token_dim=64,
     num_heads=4
@@ -220,7 +220,7 @@ print(f"Final active states: {state_manager.get_active_count()}")
 
 ```python
 import json
-from nsm.config import Config
+from pulse.config import Config
 
 # Load configuration
 config = Config("configs/default_config.json")
@@ -247,7 +247,7 @@ config.save("configs/custom_config.json")
 
 ```python
 import torch
-from nsm.experiment import ExperimentRunner
+from pulse.experiment import ExperimentRunner
 
 # Create experiment runner
 runner = ExperimentRunner(
@@ -275,10 +275,10 @@ for state_count in state_counts:
 
 ```python
 import torch
-from nsm.visualization import NSMVisualizer
+from pulse.visualization import PULSEVisualizer
 
 # Create visualizer
-visualizer = NSMVisualizer()
+visualizer = PULSEVisualizer()
 
 # Generate sample data for visualization
 attention_weights = torch.softmax(torch.randn(8, 8), dim=-1)
@@ -338,10 +338,10 @@ Several pre-built experiment scripts are available:
 
 ```bash
 # Run state count hyperparameter sweep
-python src/nsm/experiments/state_count_sweep.py
+python src/pulse/experiments/state_count_sweep.py
 
 # Run dynamic state allocation experiment
-python src/nsm/experiments/dynamic_state_allocation.py
+python src/pulse/experiments/dynamic_state_allocation.py
 
 # Run baseline comparison
 python notebooks/experiments/baseline_comparison.py
@@ -354,10 +354,10 @@ python notebooks/experiments/hyperparameter_sweep.py
 
 ```python
 import logging
-from nsm.utils.logger import NSMLogger
+from pulse.utils.logger import PULSELogger
 
 # Setup logging
-logger = NSMLogger(
+logger = PULSELogger(
     log_dir="experiment_logs",
     experiment_name="training_experiment"
 )
@@ -506,8 +506,8 @@ if torch.cuda.is_available():
 ## Next Steps
 
 1. **Explore Examples**: Check the `notebooks/` directory for Jupyter notebooks with detailed examples
-2. **Run Experiments**: Try the experiment scripts in `src/nsm/experiments/`
+2. **Run Experiments**: Try the experiment scripts in `src/pulse/experiments/`
 3. **Read Documentation**: Review the detailed documentation in `docs/`
 4. **Contribute**: Follow our [Contributing Guidelines](CONTRIBUTING.md) to help improve the project
 
-Happy coding with Neural State Machines!
+Happy coding with PULSEs!

@@ -1,6 +1,6 @@
 # Updated Comparative Performance Table
 
-This document presents the updated comparative performance analysis of Neural State Machine models and baseline architectures.
+This document presents the updated comparative performance analysis of PULSE models and baseline architectures.
 
 ## Performance Metrics Legend
 
@@ -15,7 +15,7 @@ This document presents the updated comparative performance analysis of Neural St
 
 | Model | Parameters | FLOPs | Forward Time (ms) | Backward Time (ms) | Memory (MB) | Grad Norm |
 |-------|------------|-------|-------------------|--------------------|-------------|-----------|
-| SimpleNSM | 174,218 | 2,834,944 | 1.23±0.05 | 2.45±0.12 | 45.2 | 0.0234 |
+| SimplePULSE | 174,218 | 2,834,944 | 1.23±0.05 | 2.45±0.12 | 45.2 | 0.0234 |
 | AdvancedHybrid | 447,820 | 7,289,344 | 2.67±0.08 | 5.34±0.18 | 78.5 | 0.0456 |
 | SequentialHybrid | 1,203,456 | 19,567,104 | 4.89±0.15 | 9.78±0.32 | 156.3 | 0.0678 |
 | LSTM (Baseline) | 98,304 | 1,259,520 | 0.89±0.03 | 1.78±0.09 | 32.1 | 0.0345 |
@@ -24,20 +24,20 @@ This document presents the updated comparative performance analysis of Neural St
 ## Key Performance Insights
 
 ### 1. Parameter Efficiency
-- **SimpleNSM**: Most parameter-efficient with ~174K parameters
+- **SimplePulse**: Most parameter-efficient with ~174K parameters
 - **SequentialHybrid**: Highest parameter count (~1.2M) but with complex architecture
 - **LSTM**: Most efficient baseline with ~98K parameters
 
 ### 2. Computational Efficiency
 - **LSTM**: Fastest forward and backward passes
-- **SimpleNSM**: Competitive performance with ~1.2ms forward time
+- **SimplePulse**: Competitive performance with ~1.2ms forward time
 - **AdvancedHybrid**: Moderate performance with balanced complexity
 - **SequentialHybrid**: Slowest due to complex multi-component architecture
 - **Transformer**: Slower than LSTM but faster than hybrid models
 
 ### 3. Memory Usage
 - **LSTM**: Lowest memory footprint (~32MB)
-- **SimpleNSM**: Moderate memory usage (~45MB)
+- **SimplePulse**: Moderate memory usage (~45MB)
 - **AdvancedHybrid**: Higher memory usage (~78MB)
 - **Transformer**: Significant memory usage (~90MB)
 - **SequentialHybrid**: Highest memory usage (~156MB)
@@ -45,11 +45,11 @@ This document presents the updated comparative performance analysis of Neural St
 ### 4. Gradient Flow Quality
 - **All models**: Show healthy gradient norms indicating good backpropagation
 - **SequentialHybrid**: Highest gradient norms due to complex architecture
-- **SimpleNSM**: Stable gradient flow with moderate norms
+- **SimplePulse**: Stable gradient flow with moderate norms
 
 ## Performance Trade-offs
 
-### SimpleNSM
+### SimplePulse
 ✅ **Advantages**: Parameter efficient, fast inference, low memory usage
 ⚠️ **Trade-offs**: Limited complexity compared to hybrid models
 
@@ -90,7 +90,7 @@ This document presents the updated comparative performance analysis of Neural St
 
 ### CPU Utilization
 - **LSTM**: Highest CPU efficiency
-- **SimpleNSM**: Good CPU utilization
+- **SimplePulse**: Good CPU utilization
 - **Hybrid Models**: Moderate CPU usage due to complex operations
 
 ### GPU Utilization
@@ -101,7 +101,7 @@ This document presents the updated comparative performance analysis of Neural St
 ## Scalability Analysis
 
 ### Small Models (<1M parameters)
-- **Recommendation**: SimpleNSM or LSTM for resource-constrained environments
+- **Recommendation**: SimplePULSE or LSTM for resource-constrained environments
 - **Performance**: Excellent efficiency with acceptable accuracy
 
 ### Medium Models (1M-5M parameters)
@@ -131,11 +131,11 @@ This document presents the updated comparative performance analysis of Neural St
 
 ## Conclusion
 
-The performance analysis reveals that Neural State Machine models offer competitive alternatives to traditional architectures with unique trade-offs:
+The performance analysis reveals that PULSE models offer competitive alternatives to traditional architectures with unique trade-offs:
 
-- **SimpleNSM** provides excellent efficiency for resource-constrained applications
+- **SimplePulse** provides excellent efficiency for resource-constrained applications
 - **AdvancedHybrid** offers balanced performance for general use cases
 - **SequentialHybrid** delivers maximum capability for complex tasks
 - **Baseline models** (LSTM, Transformer) remain competitive in their respective domains
 
-The updated performance table demonstrates that NSM architectures can achieve favorable performance characteristics while providing novel capabilities in memory management and interpretability.
+The updated performance table demonstrates that PULSE architectures can achieve favorable performance characteristics while providing novel capabilities in memory management and interpretability.

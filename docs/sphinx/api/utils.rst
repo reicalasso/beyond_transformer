@@ -3,7 +3,7 @@ Utilities
 
 Utility modules for visualization, debugging, and performance monitoring.
 
-.. automodule:: nsm.utils
+.. automodule:: pulse.utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -14,7 +14,7 @@ Visualization
 Basic Visualizer
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: nsm.utils.visualizer
+.. automodule:: pulse.utils.visualizer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,7 +22,7 @@ Basic Visualizer
 Advanced Visualizer
 ~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: nsm.utils.advanced_visualizer
+.. automodule:: pulse.utils.advanced_visualizer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -33,7 +33,7 @@ Performance Monitoring
 Performance Monitor
 ~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: nsm.utils.performance_monitor
+.. automodule:: pulse.utils.performance_monitor
    :members:
    :undoc-members:
    :show-inheritance:
@@ -41,7 +41,7 @@ Performance Monitor
 Comparative Analyzer
 ~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: nsm.utils.comparative_analyzer
+.. automodule:: pulse.utils.comparative_analyzer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -49,7 +49,7 @@ Comparative Analyzer
 Debugging
 ---------
 
-.. automodule:: nsm.utils.debugger
+.. automodule:: pulse.utils.debugger
    :members:
    :undoc-members:
    :show-inheritance:
@@ -57,7 +57,7 @@ Debugging
 Logging
 -------
 
-.. automodule:: nsm.utils.logger
+.. automodule:: pulse.utils.logger
    :members:
    :undoc-members:
    :show-inheritance:

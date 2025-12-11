@@ -1,28 +1,28 @@
 """
-Unit tests for NSM models.
+Unit tests for PULSE models.
 """
 
 import numpy as np
 import pytest
 import torch
 
-from nsm.models.hybrid_model import AdvancedHybridModel, SequentialHybridModel
-from nsm import SimpleNSM
+from pulse.models.hybrid_model import AdvancedHybridModel, SequentialHybridModel
+from pulse import SimplePulse
 
 
-class TestSimpleNSM:
-    """Test suite for SimpleNSM model."""
+class TestSimplePulse:
+    """Test suite for SimplePulse model."""
 
     @pytest.fixture
-    def simple_nsm(self):
-        """Create a SimpleNSM for testing."""
-        return SimpleNSM(
+    def simple_pulse(self):
+        """Create a SimplePulse for testing."""
+        return SimplePulse(
             input_dim=64, state_dim=32, num_states=8, output_dim=10, gate_type="gru"
         )
 
     def test_initialization(self):
-        """Test SimpleNSM initialization."""
-        model = SimpleNSM(
+        """Test SimplePulse initialization."""
+        model = SimplePulse(
             input_dim=64, state_dim=32, num_states=8, output_dim=10, gate_type="gru"
         )
 
@@ -38,20 +38,20 @@ class TestSimpleNSM:
         assert hasattr(model, "output_projection")
         assert hasattr(model, "initial_states")
 
-    def test_forward_pass(self, simple_nsm, sample_batch_size):
-        """Test forward pass of SimpleNSM."""
+    def test_forward_pass(self, simple_pulse, sample_batch_size):
+        """Test forward pass of SimplePulse."""
         x = torch.randn(sample_batch_size, 64)
 
-        output = simple_nsm(x)
+        output = simple_pulse(x)
 
         assert output.shape == (sample_batch_size, 10)
         assert torch.isfinite(output).all()
 
     def test_different_input_sizes(self):
-        """Test SimpleNSM with different input sizes."""
+        """Test SimplePulse with different input sizes."""
         # Test with different input dimensions
         for input_dim in [32, 64, 128]:
-            model = SimpleNSM(
+            model = SimplePulse(
                 input_dim=input_dim,
                 state_dim=32,
                 num_states=8,
@@ -67,9 +67,9 @@ class TestSimpleNSM:
             assert torch.isfinite(output).all()
 
     def test_different_gate_types(self):
-        """Test SimpleNSM with different gate types."""
+        """Test SimplePulse with different gate types."""
         for gate_type in ["gru", "lstm"]:
-            model = SimpleNSM(
+            model = SimplePulse(
                 input_dim=64,
                 state_dim=32,
                 num_states=8,
@@ -84,11 +84,11 @@ class TestSimpleNSM:
             assert output.shape == (batch_size, 10)
             assert torch.isfinite(output).all()
 
-    def test_parameter_count(self, simple_nsm):
+    def test_parameter_count(self, simple_pulse):
         """Test that model has reasonable parameter count."""
-        total_params = sum(p.numel() for p in simple_nsm.parameters())
+        total_params = sum(p.numel() for p in simple_pulse.parameters())
         trainable_params = sum(
-            p.numel() for p in simple_nsm.parameters() if p.requires_grad
+            p.numel() for p in simple_pulse.parameters() if p.requires_grad
         )
 
         # Should have parameters
@@ -96,43 +96,43 @@ class TestSimpleNSM:
         assert trainable_params > 0
         assert total_params == trainable_params  # All should be trainable
 
-    def test_backward_pass(self, simple_nsm, sample_batch_size):
-        """Test backward pass of SimpleNSM."""
+    def test_backward_pass(self, simple_pulse, sample_batch_size):
+        """Test backward pass of SimplePulse."""
         x = torch.randn(sample_batch_size, 64)
 
         # Forward pass
-        output = simple_nsm(x)
+        output = simple_pulse(x)
 
         # Compute loss and backward pass
         loss = output.sum()
         loss.backward()
 
         # Check that gradients exist and are finite
-        for param in simple_nsm.parameters():
+        for param in simple_pulse.parameters():
             assert param.grad is not None
             assert torch.isfinite(param.grad).all()
 
-    def test_state_initialization(self, simple_nsm):
+    def test_state_initialization(self, simple_pulse):
         """Test state initialization."""
-        initial_states = simple_nsm.initial_states
+        initial_states = simple_pulse.initial_states
 
-        assert initial_states.shape == (1, simple_nsm.num_states, simple_nsm.state_dim)
+        assert initial_states.shape == (1, simple_pulse.num_states, simple_pulse.state_dim)
         assert torch.isfinite(initial_states).all()
 
-    def test_model_device_movement(self, simple_nsm):
+    def test_model_device_movement(self, simple_pulse):
         """Test moving model between devices."""
         # Test CPU (always available)
-        simple_nsm.cpu()
-        assert next(simple_nsm.parameters()).device.type == "cpu"
+        simple_pulse.cpu()
+        assert next(simple_pulse.parameters()).device.type == "cpu"
 
         # Test CUDA if available
         if torch.cuda.is_available():
-            simple_nsm.cuda()
-            assert next(simple_nsm.parameters()).device.type == "cuda"
+            simple_pulse.cuda()
+            assert next(simple_pulse.parameters()).device.type == "cuda"
 
     def test_batch_independence(self, sample_batch_size):
         """Test that batches are processed independently."""
-        model = SimpleNSM(
+        model = SimplePulse(
             input_dim=64, state_dim=32, num_states=8, output_dim=10, gate_type="gru"
         )
 
@@ -274,12 +274,12 @@ class TestSequentialHybridModel:
 
 # Integration tests
 class TestModelIntegration:
-    """Integration tests for NSM models."""
+    """Integration tests for PULSE models."""
 
     @pytest.mark.integration
     def test_training_loop_basic(self):
-        """Test basic training loop with SimpleNSM."""
-        model = SimpleNSM(
+        """Test basic training loop with SimplePulse."""
+        model = SimplePulse(
             input_dim=32, state_dim=16, num_states=4, output_dim=3, gate_type="gru"
         )
 
@@ -306,9 +306,9 @@ class TestModelIntegration:
 
     @pytest.mark.integration
     def test_model_comparison(self):
-        """Compare different NSM models."""
+        """Compare different PULSE models."""
         # Create models
-        simple_model = SimpleNSM(
+        simple_model = SimplePulse(
             input_dim=32, state_dim=16, num_states=4, output_dim=3, gate_type="gru"
         )
 
@@ -331,11 +331,11 @@ class TestModelIntegration:
     @pytest.mark.slow
     def test_parameter_scaling(self):
         """Test that parameter count scales reasonably."""
-        small_model = SimpleNSM(
+        small_model = SimplePulse(
             input_dim=32, state_dim=16, num_states=4, output_dim=10, gate_type="gru"
         )
 
-        large_model = SimpleNSM(
+        large_model = SimplePulse(
             input_dim=64, state_dim=32, num_states=8, output_dim=10, gate_type="gru"
         )
 
@@ -352,12 +352,12 @@ class TestModelIntegration:
 
 # Performance tests
 class TestModelPerformance:
-    """Performance tests for NSM models."""
+    """Performance tests for PULSE models."""
 
     @pytest.mark.slow
     def test_forward_pass_speed(self):
         """Test forward pass performance."""
-        model = SimpleNSM(
+        model = SimplePulse(
             input_dim=64, state_dim=32, num_states=8, output_dim=10, gate_type="gru"
         )
 
@@ -388,7 +388,7 @@ class TestModelPerformance:
         if not torch.cuda.is_available():
             pytest.skip("CUDA not available")
 
-        model = SimpleNSM(
+        model = SimplePulse(
             input_dim=64, state_dim=32, num_states=8, output_dim=10, gate_type="gru"
         )
 

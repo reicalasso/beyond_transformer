@@ -54,10 +54,10 @@ This script will:
 
 ## Data Loading in Models
 
-To load data in your models, use the data loaders in `src/nsm/data_loaders.py`:
+To load data in your models, use the data loaders in `src/pulse/data_loaders.py`:
 
 ```python
-from nsm.data_loaders import get_mnist_dataloaders
+from pulse.data_loaders import get_mnist_dataloaders
 
 # Get data loaders
 train_loader, test_loader = get_mnist_dataloaders("data/", batch_size=32)
@@ -80,7 +80,7 @@ To add a new dataset to the project:
    - Add preprocessing logic
    - Save processed data in a consistent format
 
-3. **Update `src/nsm/data_loaders.py`**:
+3. **Update `src/pulse/data_loaders.py`**:
    - Add a new Dataset class if needed
    - Add functions to create data loaders
 

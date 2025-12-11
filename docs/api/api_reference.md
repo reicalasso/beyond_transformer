@@ -1,10 +1,10 @@
 # API Reference
 
-This document provides detailed documentation for all public APIs in the Neural State Machine (NSM) library.
+This document provides detailed documentation for all public APIs in the PULSE (PULSE) library.
 
 ## Core Modules
 
-### nsm.StatePropagator
+### pulse.StatePropagator
 
 ```python
 class StatePropagator(nn.Module):
@@ -62,7 +62,7 @@ Applies gated update to propagate state.
 
 ```python
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Single state propagation
 propagator = StatePropagator(state_dim=128, gate_type='gru')
@@ -77,7 +77,7 @@ new_inputs = torch.randn(32, 16, 128)
 updated_states = propagator_multi(prev_states, new_inputs)
 ```
 
-### nsm.TokenToStateRouter
+### pulse.TokenToStateRouter
 
 ```python
 class TokenToStateRouter(nn.Module):
@@ -130,7 +130,7 @@ Route tokens to states.
   - **Routed tokens**: `[batch_size, num_states, state_dim]`
   - **Routing weights**: `[batch_size, seq_len, num_states]`
 
-### nsm.StateManager
+### pulse.StateManager
 
 ```python
 class StateManager(nn.Module):
@@ -238,13 +238,13 @@ Allocate additional state nodes.
 **Returns:**
 - `int`: Number of states actually allocated
 
-### nsm.NSMLayer
+### pulse.PulseLayer
 
 ```python
-class NSMLayer(nn.Module):
+class PulseLayer(nn.Module):
     def __init__(self, state_dim: int, token_dim: int, num_heads: int = 4):
         """
-        Initialize the NSMLayer.
+        Initialize the PulseLayer.
         
         Args:
             state_dim (int): Dimension of state vectors
@@ -256,7 +256,7 @@ class NSMLayer(nn.Module):
     def forward(self, states: torch.Tensor, tokens: torch.Tensor, 
                 attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
-        Forward pass of the NSMLayer.
+        Forward pass of the PulseLayer.
         
         Args:
             states (torch.Tensor): State vectors [batch_size, num_states, state_dim]
@@ -278,7 +278,7 @@ class NSMLayer(nn.Module):
 #### Methods
 
 ##### `forward(states, tokens, attention_mask=None)`
-Forward pass of the NSMLayer.
+Forward pass of the PulseLayer.
 
 **Parameters:**
 - **states** (`torch.Tensor`): State vectors with shape `[batch_size, num_states, state_dim]`
@@ -290,13 +290,13 @@ Forward pass of the NSMLayer.
 
 ## Models
 
-### nsm.models.SimpleNSM
+### pulse.models.SimplePulse
 
 ```python
-class SimpleNSM(nn.Module):
+class SimplePulse(nn.Module):
     def __init__(self, input_dim: int, state_dim: int, num_states: int, output_dim: int, gate_type: str = 'gru'):
         """
-        Initialize the SimpleNSM model.
+        Initialize the SimplePULSE model.
         
         Args:
             input_dim (int): Dimension of input features
@@ -341,13 +341,13 @@ Forward pass of the model.
 
 ## Utilities
 
-### nsm.utils.debugger.NSMDebugger
+### pulse.utils.debugger.PulseDebugger
 
 ```python
-class NSMDebugger:
+class PulseDebugger:
     def __init__(self, log_dir: str = "debug_logs", verbose: bool = True):
         """
-        Initialize NSM debugger.
+        Initialize PULSE debugger.
         
         Args:
             log_dir (str): Directory to save debug logs
@@ -407,6 +407,6 @@ class NSMDebugger:
         pass
 ```
 
-This API reference provides comprehensive documentation for all public classes and methods in the NSM library. Each component includes detailed parameter descriptions, return value information, and usage examples.
+This API reference provides comprehensive documentation for all public classes and methods in the PULSE library. Each component includes detailed parameter descriptions, return value information, and usage examples.
 
 For more detailed information about specific components, please refer to their respective module documentation.

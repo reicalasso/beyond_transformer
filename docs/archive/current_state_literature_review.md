@@ -86,7 +86,7 @@ To systematically evaluate these architectures, we consider the following key me
 | RWKV | High | Low | Medium | Low | Medium |
 | Mamba/S4 | High | Low | Medium | Low | Low-Medium |
 | Graph Networks | Task-dependent | Medium | Medium | Medium | High |
-| NSM (Proposed) | ? | ? | ? | ? | High |
+| PULSE (Proposed) | ? | ? | ? | ? | High |
 
 ## 5. Open Source Implementations and Availability
 
@@ -110,8 +110,8 @@ Key features:
 - Keras implementation of NTM concepts
 - Educational implementation with detailed documentation
 
-### 5.4 Neural State Machine (NSM)
-Located at: `/workspaces/beyond_transformer/src/nsm`
+### 5.4 PULSE (PULSE)
+Located at: `/workspaces/beyond_transformer/src/pulse`
 Key features:
 - Token-to-state routing mechanism
 - Dynamic state allocation and pruning
@@ -127,9 +127,9 @@ Key features:
 
 4. **Hardware-Software Co-design**: Limited exploration of architectures optimized for specific hardware constraints.
 
-## 7. Positioning of Neural State Machines (NSM)
+## 7. Positioning of PULSEs (PULSE)
 
-Neural State Machines are positioned to address these critical gaps by:
+PULSEs are positioned to address these critical gaps by:
 
 1. **Hybrid Architecture**: Combining state-based memory (RNN-like) with adaptive attention (Transformer-like) in a unified framework.
 

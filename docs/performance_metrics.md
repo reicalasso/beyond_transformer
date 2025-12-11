@@ -1,4 +1,4 @@
-# Neural State Machines: Rigorous Performance Analysis & Benchmarking Report
+# PULSEs: Rigorous Performance Analysis & Benchmarking Report
 ## Comprehensive Technical Validation for Enterprise AI Infrastructure
 
 ---
@@ -7,7 +7,7 @@
 
 ### **Statistical Overview**
 
-This comprehensive performance analysis provides **statistically rigorous validation** of Neural State Machine (NSM) architecture superiority across all critical enterprise metrics. Our methodology follows **IEEE standards** for AI system evaluation with **peer-reviewed experimental design**.
+This comprehensive performance analysis provides **statistically rigorous validation** of PULSE (PULSE) architecture superiority across all critical enterprise metrics. Our methodology follows **IEEE standards** for AI system evaluation with **peer-reviewed experimental design**.
 
 **Key Statistical Results**:
 - **Sample Size**: 2,500+ independent trials across 15 benchmark suites
@@ -30,7 +30,7 @@ This comprehensive performance analysis provides **statistically rigorous valida
 | **Performer** | 1.5GB | 3.0GB | 6.0GB | 12.0GB | 24.0GB |
 | **RWKV** | 1.2GB | 2.4GB | 4.8GB | 9.6GB | 19.2GB |
 | **Mamba** | 1.0GB | 2.0GB | 4.0GB | 8.0GB | 16.0GB |
-| **NSM (Ours)** | **0.8GB** | **1.2GB** | **2.0GB** | **3.2GB** | **5.6GB** ✅ |
+| **PULSE (Ours)** | **0.8GB** | **1.2GB** | **2.0GB** | **3.2GB** | **5.6GB** ✅ |
 
 #### **1.2 Training Time Analysis**
 
@@ -45,10 +45,10 @@ Sequence Length: 8K Tokens
 │ Efficient Trans │   6.2h   │   62h    │   620h   │
 │ RWKV           │   4.1h   │   41h    │   410h   │
 │ Mamba          │   3.8h   │   38h    │   380h   │
-│ NSM (Ours)     │   2.9h   │   29h    │   290h   │
+│ PULSE (Ours)     │   2.9h   │   29h    │   290h   │
 └─────────────────┴──────────┴──────────┴──────────┘
 
-💡 NSM is 66% faster than standard transformers!
+💡 PULSE is 66% faster than standard transformers!
 ```
 
 #### **1.3 Inference Speed Benchmarks**
@@ -60,7 +60,7 @@ Sequence Length: 8K Tokens
 | **BERT-Large** | 120 | 333 | 8.9 |
 | **RWKV-7B** | 180 | 222 | 6.4 |
 | **Mamba-7B** | 220 | 182 | 5.1 |
-| **NSM-7B** | **340** | **118** | **3.8** ✅ |
+| **PULSE-7B** | **340** | **118** | **3.8** ✅ |
 **Definition**: Fraction of relevant items among top-K retrieved
 **Formula**: (Number of relevant items in top-K / K)
 **Applicable Tasks**:
@@ -268,7 +268,7 @@ Sequence Length: 8K Tokens
 
 ## 10. Conclusion
 
-This comprehensive set of metrics will enable thorough evaluation of Neural State Machines across:
+This comprehensive set of metrics will enable thorough evaluation of PULSEs across:
 - Task performance
 - Computational efficiency
 - Memory usage
@@ -276,4 +276,4 @@ This comprehensive set of metrics will enable thorough evaluation of Neural Stat
 - Robustness
 - Hardware utilization
 
-The metrics are designed to provide both quantitative comparisons with baseline models and qualitative insights into the unique characteristics of the NSM architecture.
+The metrics are designed to provide both quantitative comparisons with baseline models and qualitative insights into the unique characteristics of the PULSE architecture.

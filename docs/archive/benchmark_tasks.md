@@ -1,6 +1,6 @@
-# Benchmark Tasks for Neural State Machine Evaluation
+# Benchmark Tasks for PULSE Evaluation
 
-This document identifies benchmark tasks that require long-term memory and are suitable for evaluating Neural State Machines.
+This document identifies benchmark tasks that require long-term memory and are suitable for evaluating PULSEs.
 
 ## 1. Long-term Memory Requiring Tasks
 
@@ -14,7 +14,7 @@ This document identifies benchmark tasks that require long-term memory and are s
 - Pathfinder: Path detection in images with varying path lengths
 - PathX: More complex path detection with cluttered backgrounds
 
-**Why it's suitable for NSM**:
+**Why it's suitable for PULSE**:
 - Tests long-sequence processing capabilities
 - Requires memory retention across long contexts
 - Diverse task types evaluate different aspects of memory
@@ -29,7 +29,7 @@ This document identifies benchmark tasks that require long-term memory and are s
 - Task 18: Reasoning about size
 - Task 19: Path finding
 
-**Why it's suitable for NSM**:
+**Why it's suitable for PULSE**:
 - Explicitly tests memory and reasoning capabilities
 - Requires tracking information across multiple sentences
 - Well-defined evaluation metrics
@@ -41,7 +41,7 @@ This document identifies benchmark tasks that require long-term memory and are s
 - Sequences up to 1 million tokens
 - Language modeling benchmark for long-context understanding
 
-**Why it's suitable for NSM**:
+**Why it's suitable for PULSE**:
 - Extremely long sequences test memory scalability
 - Real-world text complexity
 - Evaluates long-term dependency modeling
@@ -55,7 +55,7 @@ This document identifies benchmark tasks that require long-term memory and are s
 - Conjunction QA
 - Time reasoning QA
 
-**Why it's suitable for NSM**:
+**Why it's suitable for PULSE**:
 - Explicitly designed to test memory mechanisms
 - Controlled difficulty levels
 - Direct comparison with memory-based architectures
@@ -71,7 +71,7 @@ This document identifies benchmark tasks that require long-term memory and are s
 - ContractNLI: Natural language inference on legal contracts
 - GovReport: Summarization of government reports
 
-**Why it's suitable for NSM**:
+**Why it's suitable for PULSE**:
 - Real-world long document understanding
 - Diverse task formats
 - Standardized evaluation
@@ -83,7 +83,7 @@ Tasks used in the BigBird paper:
 - AG News classification
 - Long-range language modeling
 
-**Why it's suitable for NSM**:
+**Why it's suitable for PULSE**:
 - Established benchmark for long-sequence models
 - Document-level understanding tasks
 
@@ -93,7 +93,7 @@ Tasks that require adaptive computation:
 - Neural Turing Machine tasks
 - Differentiable neural computer tasks
 
-**Why it's suitable for NSM**:
+**Why it's suitable for PULSE**:
 - Tests dynamic state management
 - Evaluates computational efficiency
 
@@ -188,4 +188,4 @@ The selected benchmarks provide a comprehensive evaluation of long-term memory c
 - Extreme long-sequence processing
 - Diverse task formats (classification, QA, generation)
 
-This benchmark suite will enable us to thoroughly evaluate the Neural State Machine's capabilities in comparison to existing approaches.
+This benchmark suite will enable us to thoroughly evaluate the PULSE's capabilities in comparison to existing approaches.

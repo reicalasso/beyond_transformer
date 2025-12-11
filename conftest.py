@@ -1,5 +1,5 @@
 """
-pytest configuration and fixtures for Neural State Machine tests.
+pytest configuration and fixtures for PULSE tests.
 """
 
 import sys

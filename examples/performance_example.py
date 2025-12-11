@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import torch
 import torch.nn as nn
 
-from nsm.utils.comparative_analyzer import ComparativePerformanceAnalyzer
+from pulse.utils.comparative_analyzer import ComparativePerformanceAnalyzer
 
 
 class ExampleModelA(nn.Module):
@@ -43,7 +43,7 @@ class ExampleModelB(nn.Module):
 
 def run_performance_example():
     """Run performance measurement example."""
-    print("Neural State Machine - Performance Measurement Example")
+    print("PULSE - Performance Measurement Example")
     print("=" * 60)
     
     # Create analyzer

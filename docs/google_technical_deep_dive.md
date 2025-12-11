@@ -1,4 +1,4 @@
-# 🔬 Neural State Machines: Comprehensive Technical Deep Dive for Google Engineering Teams
+# 🔬 PULSEs: Comprehensive Technical Deep Dive for Google Engineering Teams
 ## Advanced Architecture Analysis, Implementation Details & Production Deployment Guide
 
 ---
@@ -20,7 +20,7 @@
 
 ### **Performance Specifications Summary**
 ```python
-NSM_PERFORMANCE_SPECS = {
+PULSE_PERFORMANCE_SPECS = {
     "computational_complexity": "O(s) where s ≪ n, eliminating O(n²) scaling",
     "memory_efficiency": "10.3x reduction vs transformer baseline",
     "throughput": "15,347 tokens/second per TPU v5 pod",
@@ -37,7 +37,7 @@ NSM_PERFORMANCE_SPECS = {
 
 ### **Fundamental Theorem: Quadratic Complexity Elimination**
 
-**Theorem 1** (*NSM Complexity Bound*): *Neural State Machines achieve O(s·n + s²) computational complexity for sequence length n and state count s, where s is bounded by a logarithmic function of n in optimal configurations, eliminating the O(n²) scaling bottleneck of transformer architectures.*
+**Theorem 1** (*PULSE Complexity Bound*): *PULSEs achieve O(s·n + s²) computational complexity for sequence length n and state count s, where s is bounded by a logarithmic function of n in optimal configurations, eliminating the O(n²) scaling bottleneck of transformer architectures.*
 
 **Rigorous Mathematical Proof**:
 
@@ -57,9 +57,9 @@ T_transformer(n) = Σ[i=1 to L] (
 ) = O(L · n² · d)       // Quadratic in sequence length
 ```
 
-**NSM Complexity Analysis**:
+**PULSE Complexity Analysis**:
 ```mathematica
-T_NSM(n,s) = Σ[i=1 to L] (
+T_PULSE(n,s) = Σ[i=1 to L] (
     O(n · s · d)        // Token-to-state routing (sparse)
     + O(s² · d)         // Inter-state attention
     + O(s · d²)         // State processing network
@@ -68,22 +68,22 @@ T_NSM(n,s) = Σ[i=1 to L] (
 ) = O(L · (n·s + s² + n·k) · d)
 
 Since s = O(log n) in optimal configurations and k is constant:
-T_NSM(n) = O(L · n · log(n) · d)  // Quasi-linear in sequence length
+T_PULSE(n) = O(L · n · log(n) · d)  // Quasi-linear in sequence length
 ```
 
 **Complexity Bound Proof**:
 ```
-Theorem: For NSM with optimal state allocation, s ≤ C·log(n) for some constant C.
+Theorem: For PULSE with optimal state allocation, s ≤ C·log(n) for some constant C.
 
 Proof by Construction:
 1. Information-theoretic lower bound: s ≥ log₂(V) where V is vocabulary size
 2. Sequence entropy upper bound: s ≤ H(X) + log(n) where H(X) is sequence entropy
 3. Empirical validation: s ∈ [log(n), 2·log(n)] across all tested configurations
-4. Therefore: T_NSM(n) ∈ O(n·log(n)) vs T_transformer(n) ∈ O(n²)
+4. Therefore: T_PULSE(n) ∈ O(n·log(n)) vs T_transformer(n) ∈ O(n²)
 
 Asymptotic Improvement Factor: lim[n→∞] (n²)/(n·log(n)) = lim[n→∞] n/log(n) = ∞
 
-QED: NSM provides unbounded asymptotic improvement over transformers. ∎
+QED: PULSE provides unbounded asymptotic improvement over transformers. ∎
 ```
 
 ### **Advanced Optimization Theory**
@@ -129,7 +129,7 @@ def optimal_state_allocation_proof():
 
 def advanced_complexity_bounds():
     """
-    Derive tight complexity bounds for NSM operations.
+    Derive tight complexity bounds for PULSE operations.
     """
     
     complexity_analysis = {
@@ -166,7 +166,7 @@ def advanced_complexity_bounds():
 
 ## 🏗️ **Advanced Architecture Implementation**
 
-### **Production-Grade NSM Core Implementation**
+### **Production-Grade PULSE Core Implementation**
 
 ```python
 import torch
@@ -177,9 +177,9 @@ from typing import Optional, Tuple, Dict, List
 import triton
 import triton.language as tl
 
-class ProductionNSMCore(nn.Module):
+class ProductionPULSECore(nn.Module):
     """
-    Production-optimized Neural State Machine implementation.
+    Production-optimized PULSE implementation.
     
     Optimizations:
     - Custom CUDA/Triton kernels for state operations
@@ -190,7 +190,7 @@ class ProductionNSMCore(nn.Module):
     - Hardware-specific optimizations (A100, H100, TPU v5)
     """
     
-    def __init__(self, config: NSMConfig):
+    def __init__(self, config: PULSEConfig):
         super().__init__()
         self.config = config
         
@@ -227,7 +227,7 @@ class ProductionNSMCore(nn.Module):
         
         batch_size, seq_len = input_ids.shape
         
-        with self.profiler.trace("nsm_forward"):
+        with self.profiler.trace("pulse_forward"):
             # Step 1: Dynamic state allocation with complexity estimation
             with self.profiler.trace("state_allocation"):
                 complexity_estimate = self._estimate_sequence_complexity(input_ids)
@@ -358,7 +358,7 @@ class OptimizedRoutingEngine(nn.Module):
     Highly optimized token-to-state routing with custom kernels.
     """
     
-    def __init__(self, config: NSMConfig):
+    def __init__(self, config: PULSEConfig):
         super().__init__()
         self.config = config
         
@@ -452,7 +452,7 @@ class StateProcessor(nn.Module):
     Optimized state processing with inter-state attention and updates.
     """
     
-    def __init__(self, config: NSMConfig):
+    def __init__(self, config: PULSEConfig):
         super().__init__()
         self.config = config
         self.layers = nn.ModuleList([
@@ -483,7 +483,7 @@ class StateProcessingLayer(nn.Module):
     Individual state processing layer with optimized attention and MLP.
     """
     
-    def __init__(self, config: NSMConfig):
+    def __init__(self, config: PULSEConfig):
         super().__init__()
         self.config = config
         
@@ -554,13 +554,13 @@ class StateProcessingLayer(nn.Module):
 ### **Hardware-Specific Optimizations**
 
 ```python
-class HardwareOptimizedNSM:
+class HardwareOptimizedPULSE:
     """
     Hardware-specific optimizations for different deployment targets.
     """
     
     @staticmethod
-    def optimize_for_tpu_v5(model: ProductionNSMCore) -> ProductionNSMCore:
+    def optimize_for_tpu_v5(model: ProductionPULSECore) -> ProductionPULSECore:
         """
         Apply TPU v5-specific optimizations.
         """
@@ -596,7 +596,7 @@ class HardwareOptimizedNSM:
         return model
     
     @staticmethod  
-    def optimize_for_h100(model: ProductionNSMCore) -> ProductionNSMCore:
+    def optimize_for_h100(model: ProductionPULSECore) -> ProductionPULSECore:
         """
         Apply H100 GPU-specific optimizations.
         """
@@ -620,9 +620,9 @@ class HardwareOptimizedNSM:
     total_ops = attention_ops + ff_ops + norm_ops
     return "O(n²dhL)"  # Quadratic in sequence length
 
-def nsm_complexity_proof():
+def pulse_complexity_proof():
     """
-    NSM Forward Pass Complexity Analysis
+    PULSE Forward Pass Complexity Analysis
     
     Given:
     - n: sequence length
@@ -651,13 +651,13 @@ def nsm_complexity_proof():
 def complexity_improvement(n, s=8, k=64):
     """Calculate theoretical improvement factor."""
     transformer_cost = n * n  # Simplified for analysis
-    nsm_cost = n * s + s * s + n * k
+    pulse_cost = n * s + s * s + n * k
     
     # For large n, dominated by quadratic vs linear terms
     asymptotic_improvement = n // (2 * s)  # Approximately n/2s
     
     return {
-        "exact_improvement": transformer_cost / nsm_cost,
+        "exact_improvement": transformer_cost / pulse_cost,
         "asymptotic_improvement": asymptotic_improvement,
         "example_100k_tokens": 100000 // (2 * 8)  # ≈ 6,250x improvement
     }
@@ -665,15 +665,15 @@ def complexity_improvement(n, s=8, k=64):
 
 ### **Convergence Analysis & Training Dynamics**
 
-**Theorem 2**: *NSM training converges faster than transformers due to improved gradient flow through state propagation.*
+**Theorem 2**: *PULSE training converges faster than transformers due to improved gradient flow through state propagation.*
 
 ```python
 class ConvergenceAnalysis:
-    """Mathematical analysis of NSM training dynamics."""
+    """Mathematical analysis of PULSE training dynamics."""
     
     def gradient_flow_analysis(self):
         """
-        NSM exhibits superior gradient flow properties:
+        PULSE exhibits superior gradient flow properties:
         
         1. State Persistence: Long-term dependencies maintained without
            vanishing gradients through direct state connections
@@ -696,7 +696,7 @@ class ConvergenceAnalysis:
     
     def loss_landscape_analysis(self):
         """
-        NSM loss landscape characteristics:
+        PULSE loss landscape characteristics:
         
         - Smoother loss surface due to state regularization
         - Fewer local minima due to routing mechanism
@@ -714,7 +714,7 @@ class ConvergenceAnalysis:
 
 ## 🏗️ **Advanced Architecture Implementation**
 
-### **Complete NSM Layer: Production-Grade Implementation**
+### **Complete PULSE Layer: Production-Grade Implementation**
 
 ```python
 import torch
@@ -724,9 +724,9 @@ import math
 from typing import Optional, Tuple, Dict, Any
 from torch.utils.checkpoint import checkpoint
 
-class ProductionNSMLayer(nn.Module):
+class ProductionPulseLayer(nn.Module):
     """
-    Production-ready Neural State Machine layer with enterprise-grade optimizations.
+    Production-ready PULSE layer with enterprise-grade optimizations.
     
     Features:
     - Memory-efficient gradient checkpointing
@@ -1139,9 +1139,9 @@ class AdaptiveRoutingNetwork(nn.Module):
 ### **Comprehensive Benchmark Suite**
 
 ```python
-class EnterpriseNSMBenchmark:
+class EnterprisePULSEBenchmark:
     """
-    Enterprise-grade benchmarking suite for NSM validation.
+    Enterprise-grade benchmarking suite for PULSE validation.
     
     Methodology:
     - Statistical rigor with confidence intervals
@@ -1180,7 +1180,7 @@ class EnterpriseNSMBenchmark:
             Comprehensive benchmark results with statistical analysis
         """
         
-        print("🔬 Starting Enterprise NSM Benchmark Suite")
+        print("🔬 Starting Enterprise PULSE Benchmark Suite")
         print(f"📊 Configuration: {num_trials} trials, {confidence_level*100}% confidence")
         print("="*80)
         
@@ -1228,20 +1228,20 @@ class EnterpriseNSMBenchmark:
         import numpy as np
         
         # Extract performance metrics
-        nsm_performance = [r['nsm_metrics']['latency'] for r in trial_results]
+        pulse_performance = [r['pulse_metrics']['latency'] for r in trial_results]
         transformer_performance = [r['transformer_metrics']['latency'] for r in trial_results]
         
         # Paired t-test
-        t_stat, t_pvalue = stats.ttest_rel(transformer_performance, nsm_performance)
+        t_stat, t_pvalue = stats.ttest_rel(transformer_performance, pulse_performance)
         
         # Wilcoxon signed-rank test (non-parametric)
-        w_stat, w_pvalue = stats.wilcoxon(transformer_performance, nsm_performance)
+        w_stat, w_pvalue = stats.wilcoxon(transformer_performance, pulse_performance)
         
         # Effect size (Cohen's d)
         pooled_std = np.sqrt(
-            (np.var(nsm_performance) + np.var(transformer_performance)) / 2
+            (np.var(pulse_performance) + np.var(transformer_performance)) / 2
         )
-        cohens_d = (np.mean(transformer_performance) - np.mean(nsm_performance)) / pooled_std
+        cohens_d = (np.mean(transformer_performance) - np.mean(pulse_performance)) / pooled_std
         
         return {
             "t_test_pvalue": t_pvalue,
@@ -1567,9 +1567,9 @@ class ScalabilityBenchmark:
 ### **Google Cloud Integration Strategy**
 
 ```python
-class GoogleCloudNSMDeployment:
+class GoogleCloudPULSEDeployment:
     """
-    Production deployment architecture for NSM on Google Cloud Platform.
+    Production deployment architecture for PULSE on Google Cloud Platform.
     
     Features:
     - Auto-scaling with TPU/GPU orchestration
@@ -1591,17 +1591,17 @@ class GoogleCloudNSMDeployment:
         # Deployment configuration
         self.deployment_config = self._load_deployment_config()
     
-    def deploy_nsm_service(
+    def deploy_pulse_service(
         self,
         model_config: Dict[str, Any],
         deployment_strategy: str = "canary",
         target_environments: List[str] = ["staging", "production"]
     ) -> Dict[str, Any]:
         """
-        Deploy NSM service with enterprise-grade orchestration.
+        Deploy PULSE service with enterprise-grade orchestration.
         
         Args:
-            model_config: NSM model configuration
+            model_config: PULSE model configuration
             deployment_strategy: Deployment strategy (canary, blue-green, rolling)
             target_environments: Target deployment environments
             
@@ -1612,7 +1612,7 @@ class GoogleCloudNSMDeployment:
         deployment_results = {}
         
         for environment in target_environments:
-            print(f"🚀 Deploying NSM to {environment} environment...")
+            print(f"🚀 Deploying PULSE to {environment} environment...")
             
             # Prepare deployment manifests
             manifests = self._generate_deployment_manifests(
@@ -1653,7 +1653,7 @@ class GoogleCloudNSMDeployment:
         
         # Base configuration
         base_config = {
-            "namespace": f"nsm-{environment}",
+            "namespace": f"pulse-{environment}",
             "replicas": self.deployment_config[environment]["replicas"],
             "resources": self.deployment_config[environment]["resources"],
             "model_config": model_config
@@ -1683,19 +1683,19 @@ class GoogleCloudNSMDeployment:
                 "apiVersion": "apps/v1",
                 "kind": "Deployment",
                 "metadata": {
-                    "name": "nsm-stable",
+                    "name": "pulse-stable",
                     "namespace": base_config["namespace"],
-                    "labels": {"version": "stable", "app": "nsm"}
+                    "labels": {"version": "stable", "app": "pulse"}
                 },
                 "spec": {
                     "replicas": int(base_config["replicas"] * 0.95),  # 95% stable
-                    "selector": {"matchLabels": {"app": "nsm", "version": "stable"}},
+                    "selector": {"matchLabels": {"app": "pulse", "version": "stable"}},
                     "template": {
-                        "metadata": {"labels": {"app": "nsm", "version": "stable"}},
+                        "metadata": {"labels": {"app": "pulse", "version": "stable"}},
                         "spec": {
                             "containers": [{
-                                "name": "nsm-server",
-                                "image": "gcr.io/{}/nsm-server:stable".format(self.project_id),
+                                "name": "pulse-server",
+                                "image": "gcr.io/{}/pulse-server:stable".format(self.project_id),
                                 "ports": [{"containerPort": 8080}],
                                 "resources": base_config["resources"]["stable"],
                                 "env": [
@@ -1712,19 +1712,19 @@ class GoogleCloudNSMDeployment:
                 "apiVersion": "apps/v1", 
                 "kind": "Deployment",
                 "metadata": {
-                    "name": "nsm-canary",
+                    "name": "pulse-canary",
                     "namespace": base_config["namespace"],
-                    "labels": {"version": "canary", "app": "nsm"}
+                    "labels": {"version": "canary", "app": "pulse"}
                 },
                 "spec": {
                     "replicas": int(base_config["replicas"] * 0.05),  # 5% canary
-                    "selector": {"matchLabels": {"app": "nsm", "version": "canary"}},
+                    "selector": {"matchLabels": {"app": "pulse", "version": "canary"}},
                     "template": {
-                        "metadata": {"labels": {"app": "nsm", "version": "canary"}},
+                        "metadata": {"labels": {"app": "pulse", "version": "canary"}},
                         "spec": {
                             "containers": [{
-                                "name": "nsm-server",
-                                "image": "gcr.io/{}/nsm-server:canary".format(self.project_id),
+                                "name": "pulse-server",
+                                "image": "gcr.io/{}/pulse-server:canary".format(self.project_id),
                                 "ports": [{"containerPort": 8080}],
                                 "resources": base_config["resources"]["canary"],
                                 "env": [
@@ -1741,11 +1741,11 @@ class GoogleCloudNSMDeployment:
                 "apiVersion": "v1",
                 "kind": "Service", 
                 "metadata": {
-                    "name": "nsm-service",
+                    "name": "pulse-service",
                     "namespace": base_config["namespace"]
                 },
                 "spec": {
-                    "selector": {"app": "nsm"},
+                    "selector": {"app": "pulse"},
                     "ports": [{"port": 80, "targetPort": 8080}],
                     "type": "LoadBalancer"
                 }
@@ -1755,16 +1755,16 @@ class GoogleCloudNSMDeployment:
                 "apiVersion": "networking.istio.io/v1alpha3",
                 "kind": "VirtualService",
                 "metadata": {
-                    "name": "nsm-routing",
+                    "name": "pulse-routing",
                     "namespace": base_config["namespace"]
                 },
                 "spec": {
-                    "hosts": ["nsm-service"],
+                    "hosts": ["pulse-service"],
                     "http": [{
                         "match": [{"headers": {"canary": {"exact": "true"}}}],
-                        "route": [{"destination": {"host": "nsm-service", "subset": "canary"}}]
+                        "route": [{"destination": {"host": "pulse-service", "subset": "canary"}}]
                     }, {
-                        "route": [{"destination": {"host": "nsm-service", "subset": "stable"}}]
+                        "route": [{"destination": {"host": "pulse-service", "subset": "stable"}}]
                     }]
                 }
             }
@@ -1783,39 +1783,39 @@ class GoogleCloudNSMDeployment:
         return monitoring_config
     
     def _generate_prometheus_rules(self) -> Dict[str, Any]:
-        """Generate Prometheus alerting rules for NSM."""
+        """Generate Prometheus alerting rules for PULSE."""
         
         return {
             "groups": [{
-                "name": "nsm.rules",
+                "name": "pulse.rules",
                 "rules": [
                     {
-                        "alert": "NSMHighLatency",
-                        "expr": "histogram_quantile(0.95, nsm_request_duration_seconds) > 0.5",
+                        "alert": "PULSEHighLatency",
+                        "expr": "histogram_quantile(0.95, pulse_request_duration_seconds) > 0.5",
                         "for": "5m",
                         "labels": {"severity": "warning"},
                         "annotations": {
-                            "summary": "NSM high latency detected",
+                            "summary": "PULSE high latency detected",
                             "description": "95th percentile latency is {{ $value }}s"
                         }
                     },
                     {
-                        "alert": "NSMHighErrorRate", 
-                        "expr": "rate(nsm_errors_total[5m]) > 0.01",
+                        "alert": "PULSEHighErrorRate", 
+                        "expr": "rate(pulse_errors_total[5m]) > 0.01",
                         "for": "2m",
                         "labels": {"severity": "critical"},
                         "annotations": {
-                            "summary": "NSM high error rate",
+                            "summary": "PULSE high error rate",
                             "description": "Error rate is {{ $value }} errors/sec"
                         }
                     },
                     {
-                        "alert": "NSMMemoryUsageHigh",
-                        "expr": "nsm_memory_usage_bytes / nsm_memory_limit_bytes > 0.9",
+                        "alert": "PULSEMemoryUsageHigh",
+                        "expr": "pulse_memory_usage_bytes / pulse_memory_limit_bytes > 0.9",
                         "for": "10m", 
                         "labels": {"severity": "warning"},
                         "annotations": {
-                            "summary": "NSM memory usage high",
+                            "summary": "PULSE memory usage high",
                             "description": "Memory usage is {{ $value }}% of limit"
                         }
                     }

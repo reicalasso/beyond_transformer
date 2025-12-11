@@ -48,7 +48,7 @@
         34.80113636363637
       ]
     },
-    "NSM": {
+    "PULSE": {
       "train_accuracy": 45.88068181818182,
       "test_accuracy": 13.5,
       "memory_usage": 0.625,
@@ -93,7 +93,7 @@
       "accuracies": [],
       "error": "too many values to unpack (expected 2)"
     },
-    "NSM": {
+    "PULSE": {
       "train_accuracy": 0.0,
       "test_accuracy": 0.0,
       "memory_usage": 0.0,
@@ -131,7 +131,7 @@
       "accuracies": [],
       "error": "too many values to unpack (expected 2)"
     },
-    "NSM": {
+    "PULSE": {
       "train_accuracy": 0.0,
       "test_accuracy": 0.0,
       "memory_usage": 0.0,
@@ -190,7 +190,7 @@
         68.18181818181819
       ]
     },
-    "NSM": {
+    "PULSE": {
       "train_accuracy": 88.63636363636364,
       "test_accuracy": 11.0,
       "memory_usage": 0.0,

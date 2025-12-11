@@ -68,12 +68,12 @@ data:
 
 ## Configuration Management API
 
-The project includes a `Config` class in `src/nsm/config.py` for managing configuration files.
+The project includes a `Config` class in `src/pulse/config.py` for managing configuration files.
 
 ### Loading Configuration
 
 ```python
-from nsm.config import Config
+from pulse.config import Config
 
 # Load configuration from file
 config = Config("configs/default_config.json")
@@ -117,11 +117,11 @@ Configuration files are used in training scripts to define model and training pa
 
 ```python
 import argparse
-from nsm.config import Config
-from nsm.models import SimpleNSM
+from pulse.config import Config
+from pulse.models import SimplePulse
 
 def main():
-    parser = argparse.ArgumentParser(description='Train NSM model')
+    parser = argparse.ArgumentParser(description='Train PULSE model')
     parser.add_argument('--config', type=str, required=True, 
                         help='Path to configuration file')
     args = parser.parse_args()
@@ -130,7 +130,7 @@ def main():
     config = Config(args.config)
     
     # Create model from configuration
-    model = SimpleNSM(
+    model = SimplePulse(
         input_dim=config['model.input_dim'],
         state_dim=config['model.state_dim'],
         num_states=config['model.num_states'],

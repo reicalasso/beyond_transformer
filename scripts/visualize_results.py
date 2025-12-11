@@ -12,7 +12,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from nsm.experiment_results import ExperimentResults
+from pulse.experiment_results import ExperimentResults
 
 
 def plot_state_count_sweep(results_manager: ExperimentResults, experiment_name: str = "state_count_sweep"):

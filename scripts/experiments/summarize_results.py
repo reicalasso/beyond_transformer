@@ -40,11 +40,11 @@ print("Key Findings:")
 print("-" * 15)
 
 # Overall observations
-print("1. CIFAR-10: NSM achieved competitive results with fastest training time")
-print("2. MNIST: GRU performed best, NSM showed good efficiency")
+print("1. CIFAR-10: PULSE achieved competitive results with fastest training time")
+print("2. MNIST: GRU performed best, PULSE showed good efficiency")
 print("3. Text datasets had implementation issues (data type mismatches)")
 print("4. Memory usage varied significantly across models and datasets")
-print("5. NSM generally showed efficient training times")
+print("5. PULSE generally showed efficient training times")
 
 print("\nNote: Text dataset results are incomplete due to implementation issues.")
 print("      These will be fixed in future iterations.")

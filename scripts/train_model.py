@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Training script for the NSM model.
+Training script for the PULSE model.
 """
 
 import argparse
@@ -11,15 +11,15 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import torch
-from nsm.config import Config
-from nsm.models import SimpleNSM
-from nsm.data_loaders import get_mnist_dataloaders
+from pulse.config import Config
+from pulse.models import SimplePulse
+from pulse.data_loaders import get_mnist_dataloaders
 
 
 def create_model(config):
     """Create model from configuration."""
     model_config = config['model']
-    return SimpleNSM(
+    return SimplePulse(
         input_dim=model_config['input_dim'],
         state_dim=model_config['state_dim'],
         num_states=model_config['num_states'],
@@ -67,7 +67,7 @@ def train_model(model, train_loader, config):
 
 def main():
     """Main function."""
-    parser = argparse.ArgumentParser(description='Train NSM model')
+    parser = argparse.ArgumentParser(description='Train PULSE model')
     parser.add_argument('--config', type=str, required=True, help='Path to configuration file')
     args = parser.parse_args()
     

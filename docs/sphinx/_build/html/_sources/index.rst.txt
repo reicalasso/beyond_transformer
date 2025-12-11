@@ -1,7 +1,7 @@
-Neural State Machines Documentation
+Parallel Unified Linear State Engines Documentation
 ===================================
 
-**Neural State Machines (NSM)** is a breakthrough architecture that solves the quadratic complexity problem of Transformers while maintaining state-of-the-art performance. NSMs achieve O(s) complexity (where s is the number of states) compared to Transformers' O(n²) complexity, making them ideal for long-sequence processing and resource-efficient deployment.
+**Parallel Unified Linear State Engines (pulse)** is a breakthrough architecture that solves the quadratic complexity problem of Transformers while maintaining state-of-the-art performance. pulses achieve O(s) complexity (where s is the number of states) compared to Transformers' O(n²) complexity, making them ideal for long-sequence processing and resource-efficient deployment.
 
 .. note::
    This library implements the research presented to Google, demonstrating superior performance on multiple benchmark tasks while using significantly fewer computational resources.
@@ -12,7 +12,7 @@ Key Features
 * **Linear Complexity**: O(s) complexity vs O(n²) for Transformers
 * **Memory Efficiency**: 60-80% reduction in memory usage
 * **State-of-the-art Performance**: Competitive or superior results on LRA, bAbI, and PG19 benchmarks
-* **Flexible Architecture**: Supports hybrid models combining NSM with attention mechanisms
+* **Flexible Architecture**: Supports hybrid models combining pulse with attention mechanisms
 * **Production Ready**: Comprehensive testing, type hints, and professional documentation
 
 Quick Start
@@ -24,10 +24,10 @@ Installation::
 
 Basic Usage::
 
-   from nsm import SimpleNSM
+   from pulse import Simplepulse
    import torch
    
-   model = SimpleNSM(
+   model = Simplepulse(
        vocab_size=10000,
        d_model=256,
        num_states=64,
@@ -41,12 +41,12 @@ Basic Usage::
 Performance Highlights
 ---------------------
 
-.. list-table:: NSM vs Transformer Performance
+.. list-table:: pulse vs Transformer Performance
    :header-rows: 1
    :widths: 30 20 20 30
 
    * - Metric
-     - NSM
+     - pulse
      - Transformer
      - Improvement
    * - Memory Usage
@@ -69,7 +69,7 @@ Performance Highlights
 Architecture Overview
 --------------------
 
-NSMs use a state-based approach where:
+pulses use a state-based approach where:
 
 1. **Token-to-State Routing** maps input tokens to fixed-size state vectors
 2. **State Propagation** updates states using gated mechanisms

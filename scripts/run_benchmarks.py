@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Benchmark Test Runner for Neural State Machine Models
+Benchmark Test Runner for PULSE Models
 """
 
 import sys
@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 
 import torch
 import torch.nn as nn
-from nsm.benchmarks.comprehensive_benchmark import ComprehensiveBenchmark
+from pulse.benchmarks.comprehensive_benchmark import ComprehensiveBenchmark
 
 
 def create_test_model():
@@ -57,7 +57,7 @@ def create_test_model():
 
 def main():
     """Run benchmark tests."""
-    print("Neural State Machine - Benchmark Test Runner")
+    print("PULSE - Benchmark Test Runner")
     print("=" * 50)
     
     # Create test model

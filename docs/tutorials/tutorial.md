@@ -1,10 +1,10 @@
-# Neural State Machine Tutorial
+# PULSE Tutorial
 
-This tutorial provides a hands-on introduction to Neural State Machines (NSM), covering basic concepts, implementation details, and practical usage examples.
+This tutorial provides a hands-on introduction to PULSEs (PULSE), covering basic concepts, implementation details, and practical usage examples.
 
 ## Table of Contents
 
-1. [Introduction to Neural State Machines](#introduction-to-neural-state-machines)
+1. [Introduction to PULSEs](#introduction-to-neural-state-machines)
 2. [Core Concepts](#core-concepts)
 3. [Installation and Setup](#installation-and-setup)
 4. [Basic Usage](#basic-usage)
@@ -13,18 +13,18 @@ This tutorial provides a hands-on introduction to Neural State Machines (NSM), c
 7. [Training and Evaluation](#training-and-evaluation)
 8. [Best Practices](#best-practices)
 
-## Introduction to Neural State Machines
+## Introduction to PULSEs
 
-Neural State Machines (NSM) are a novel approach to sequence modeling that maintain and update explicit state vectors, combining the strengths of recurrent models with Transformers while addressing their limitations.
+PULSEs (PULSE) are a novel approach to sequence modeling that maintain and update explicit state vectors, combining the strengths of recurrent models with Transformers while addressing their limitations.
 
-### Why NSM?
+### Why PULSE?
 
 Traditional Transformers face challenges with:
 - **Quadratic complexity**: O(n²) attention computation for sequence length n
 - **Limited interpretability**: Implicit attention patterns
 - **Memory inefficiency**: Full sequence storage required
 
-NSMs address these by:
+PULSE address these by:
 - **Explicit state management**: O(n·s) complexity where s ≪ n
 - **Interpretable states**: Learnable and trackable state evolution
 - **Efficient computation**: Linear scaling with sequence length
@@ -33,11 +33,11 @@ NSMs address these by:
 
 ### State Vectors
 
-State vectors are the fundamental units of memory in NSMs:
+State vectors are the fundamental units of memory in PULSE:
 
 ```python
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Create state vectors
 batch_size = 32
@@ -100,8 +100,8 @@ git clone https://github.com/yourusername/beyond_transformer.git
 cd beyond_transformer
 
 # Create virtual environment (recommended)
-python -m venv nsm_env
-source nsm_env/bin/activate  # On Windows: nsm_env\Scripts\activate
+python -m venv pulse_env
+source pulse_env/bin/activate  # On Windows: pulse_env\Scripts\activate
 
 # Install dependencies
 pip install -r requirements/requirements.txt
@@ -115,7 +115,7 @@ pip install -e .
 ```python
 # Test installation
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Simple test
 propagator = StatePropagator(state_dim=64)
@@ -133,7 +133,7 @@ Let's start with basic state propagation:
 
 ```python
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Create state propagator
 state_dim = 128
@@ -164,7 +164,7 @@ Process multiple states simultaneously:
 
 ```python
 import torch
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 # Create multi-state propagator
 state_dim = 128
@@ -199,7 +199,7 @@ Manage states dynamically:
 
 ```python
 import torch
-from nsm import StateManager
+from pulse import StateManager
 
 # Create state manager with dynamic allocation
 state_dim = 128
@@ -242,7 +242,7 @@ Route input tokens to appropriate state nodes:
 
 ```python
 import torch
-from nsm import TokenToStateRouter
+from pulse import TokenToStateRouter
 
 # Create token-to-state router
 token_dim = 64
@@ -276,26 +276,26 @@ print(f"Max routing weight: {torch.max(routing_weights).item():.3f}")
 print(f"Min routing weight: {torch.min(routing_weights).item():.3f}")
 ```
 
-### 2. Complete NSM Layer
+### 2. Complete PULSE Layer
 
-Combine all components in a complete NSM layer:
+Combine all components in a complete PULSE layer:
 
 ```python
 import torch
-from nsm import NSMLayer
+from pulse import PulseLayer
 
-# Create NSM layer
+# Create PULSE layer
 state_dim = 128
 token_dim = 64
 num_states = 8
 
-nsm_layer = NSMLayer(
+pulse_layer = PulseLayer(
     state_dim=state_dim,
     token_dim=token_dim,
     num_heads=4
 )
 
-# Process sequence through NSM layer
+# Process sequence through PULSE layer
 batch_size = 16
 seq_len = 20
 states = torch.randn(batch_size, num_states, state_dim)
@@ -304,8 +304,8 @@ tokens = torch.randn(batch_size, seq_len, token_dim)
 print(f"Initial states: {states.shape}")
 print(f"Input tokens: {tokens.shape}")
 
-# Process through NSM layer
-updated_states = nsm_layer(states, tokens)
+# Process through PULSE layer
+updated_states = pulse_layer(states, tokens)
 
 print(f"Updated states: {updated_states.shape}")
 
@@ -320,7 +320,7 @@ Track and analyze state importance:
 
 ```python
 import torch
-from nsm import StateManager
+from pulse import StateManager
 import matplotlib.pyplot as plt
 
 # Create state manager
@@ -365,17 +365,17 @@ print("State importance evolution plotted!")
 
 ## Building Complete Models
 
-### 1. Simple NSM Classifier
+### 1. Simple PULSE Classifier
 
-Build a complete classifier using NSM components:
+Build a complete classifier using PULSE components:
 
 ```python
 import torch
 import torch.nn as nn
-from nsm.models import SimpleNSM
+from pulse.models import SimplePulse
 
-# Create NSM classifier for MNIST-like data
-model = SimpleNSM(
+# Create PULSE classifier for MNIST-like data
+model = SimplePulse(
     input_dim=784,      # Flattened 28x28 images
     state_dim=128,
     num_states=16,
@@ -414,9 +414,9 @@ Build a model for sequence processing:
 ```python
 import torch
 import torch.nn as nn
-from nsm import NSMLayer, StateManager
+from pulse import PulseLayer, StateManager
 
-class SequenceNSM(nn.Module):
+class SequencePulse(nn.Module):
     def __init__(self, token_dim=64, state_dim=128, num_states=16, output_dim=10):
         super().__init__()
         self.token_dim = token_dim
@@ -432,9 +432,9 @@ class SequenceNSM(nn.Module):
             prune_threshold=0.3
         )
         
-        # NSM layers
-        self.nsm_layer1 = NSMLayer(state_dim, token_dim, num_heads=4)
-        self.nsm_layer2 = NSMLayer(state_dim, state_dim, num_heads=4)
+        # PULSE layers
+        self.pulse_layer1 = PulseLayer(state_dim, token_dim, num_heads=4)
+        self.pulse_layer2 = PulseLayer(state_dim, state_dim, num_heads=4)
         
         # Output projection
         self.output_projection = nn.Linear(state_dim * num_states, output_dim)
@@ -447,9 +447,9 @@ class SequenceNSM(nn.Module):
         # Expand states to batch dimension
         states = states.unsqueeze(0).expand(batch_size, -1, -1)
         
-        # Process through NSM layers
-        states = self.nsm_layer1(states, tokens)
-        states = self.nsm_layer2(states, states)  # Self-processing
+        # Process through PULSE layers
+        states = self.pulse_layer1(states, tokens)
+        states = self.pulse_layer2(states, states)  # Self-processing
         
         # Global pooling and output projection
         pooled_states = states.view(batch_size, -1)
@@ -458,7 +458,7 @@ class SequenceNSM(nn.Module):
         return output
 
 # Create and test model
-model = SequenceNSM(token_dim=64, state_dim=128, num_states=16, output_dim=5)
+model = SequencePulse(token_dim=64, state_dim=128, num_states=16, output_dim=5)
 
 # Test with sequence data
 batch_size = 8
@@ -507,8 +507,8 @@ train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
 # Create model
-from nsm.models import SimpleNSM
-model = SimpleNSM(input_dim=64, state_dim=64, num_states=8, output_dim=5)
+from pulse.models import SimplePulse
+model = SimplePulse(input_dim=64, state_dim=64, num_states=8, output_dim=5)
 
 # Setup training
 criterion = nn.CrossEntropyLoss()
@@ -596,7 +596,7 @@ from datetime import datetime
 import os
 
 class TrainingLogger:
-    def __init__(self, log_dir="runs", experiment_name="nsm_training"):
+    def __init__(self, log_dir="runs", experiment_name="pulse_training"):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.log_dir = os.path.join(log_dir, f"{experiment_name}_{timestamp}")
         os.makedirs(self.log_dir, exist_ok=True)
@@ -641,7 +641,7 @@ def advanced_train(model, train_loader, val_loader, epochs=50):
     optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     
-    logger = TrainingLogger(experiment_name="nsm_advanced_training")
+    logger = TrainingLogger(experiment_name="pulse_advanced_training")
     
     best_val_acc = 0
     
@@ -730,7 +730,7 @@ def advanced_train(model, train_loader, val_loader, epochs=50):
 ### 1. Model Design
 
 ```python
-# Good practices for NSM model design
+# Good practices for PULSE model design
 
 # 1. Choose appropriate state dimensions
 # Rule of thumb: state_dim ≈ 2-4 × typical token_dim
@@ -821,8 +821,8 @@ def monitor_memory():
 # Debugging and monitoring tools
 
 # 1. Use the built-in debugger
-from nsm.utils.debugger import NSMDebugger
-debugger = NSMDebugger(log_dir="debug_logs", verbose=True)
+from pulse.utils.debugger import PulseDebugger
+debugger = PulseDebugger(log_dir="debug_logs", verbose=True)
 debugger.enable_debug()
 
 # 2. Log important metrics during training
@@ -846,8 +846,8 @@ def check_gradients(model, threshold=10.0):
     return total_norm
 
 # 4. Visualization tools
-from nsm.visualization import NSMVisualizer
-visualizer = NSMVisualizer()
+from pulse.visualization import PULSEVisualizer
+visualizer = PULSEVisualizer()
 
 # Plot attention weights
 # visualizer.plot_attention_map(attention_weights)
@@ -856,4 +856,4 @@ visualizer = NSMVisualizer()
 # visualizer.plot_state_evolution(state_trajectories)
 ```
 
-This tutorial provides a comprehensive introduction to Neural State Machines, covering everything from basic concepts to advanced usage patterns. By following these examples and best practices, you'll be well-equipped to build and train your own NSM models for a variety of sequence processing tasks.
+This tutorial provides a comprehensive introduction to PULSEs, covering everything from basic concepts to advanced usage patterns. By following these examples and best practices, you'll be well-equipped to build and train your own PULSE models for a variety of sequence processing tasks.

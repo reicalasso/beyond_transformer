@@ -1,7 +1,7 @@
 """
 Comprehensive Performance Measurement Script
 
-This script measures training time, memory usage, and gradient flow for NSM models.
+This script measures training time, memory usage, and gradient flow for PULSE models.
 """
 
 import sys
@@ -14,8 +14,8 @@ from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 from typing import Dict, Any
 
-from nsm.utils.comparative_analyzer import ComparativePerformanceAnalyzer
-from nsm.models import SimpleNSM, AdvancedHybridModel, SequentialHybridModel
+from pulse.utils.comparative_analyzer import ComparativePerformanceAnalyzer
+from pulse.models import SimplePulse, AdvancedHybridModel, SequentialHybridModel
 
 
 class PerformanceMeasurementSuite:
@@ -42,18 +42,18 @@ class PerformanceMeasurementSuite:
         """
         models = {}
         
-        # SimpleNSM
+        # SimplePulse
         try:
-            simple_nsm = SimpleNSM(
+            simple_pulse = SimplePulse(
                 input_dim=784,
                 state_dim=128,
                 num_states=16,
                 output_dim=10,
                 gate_type='gru'
             )
-            models["SimpleNSM"] = (simple_nsm, (32, 784))
+            models["SimplePulse"] = (simple_pulse, (32, 784))
         except Exception as e:
-            print(f"Warning: Could not create SimpleNSM: {e}")
+            print(f"Warning: Could not create SimplePulse: {e}")
         
         # AdvancedHybridModel
         try:
@@ -278,7 +278,7 @@ class PerformanceMeasurementSuite:
         report.append("3. ANALYSIS SUMMARY")
         report.append("-"*30)
         report.append("This report provides comparative performance metrics for")
-        report.append("Neural State Machine models and baseline architectures.")
+        report.append("PULSE models and baseline architectures.")
         report.append("Metrics include parameter count, FLOPs estimation,")
         report.append("forward/backward pass times, memory usage, and gradient norms.")
         
@@ -311,7 +311,7 @@ class PerformanceMeasurementSuite:
 
 # Example usage
 if __name__ == "__main__":
-    print("Neural State Machine - Performance Measurement Suite")
+    print("PULSE - Performance Measurement Suite")
     print("="*60)
     
     # Create measurement suite

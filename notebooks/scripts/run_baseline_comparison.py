@@ -2,7 +2,7 @@
 """
 Extended Baseline Experiments
 
-This script compares Neural State Machines (NSM) against various baseline architectures:
+This script compares PULSEs (PULSE) against various baseline architectures:
 - Transformers
 - LSTM/GRU
 - RWKV (conceptual)
@@ -29,7 +29,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # Import our components
-from nsm.models import SimpleNSM
+from pulse.models import SimplePulse
 
 
 class SimpleLSTM(nn.Module):
@@ -415,25 +415,25 @@ def create_model(model_type, input_dim, output_dim, is_text=False):
             return SimpleTransformer(input_dim=input_dim, model_dim=128, num_heads=4, 
                                    num_layers=2, output_dim=output_dim)
     
-    elif model_type == "NSM":
+    elif model_type == "PULSE":
         # For text data, we need to handle it specially
         if is_text:
             # Return a model that handles text data with embedding
-            class TextNSM(nn.Module):
+            class TextPULSE(nn.Module):
                 def __init__(self, vocab_size, state_dim, num_states, output_dim):
-                    super(TextNSM, self).__init__()
+                    super(TextPULSE, self).__init__()
                     self.embedding = nn.Embedding(vocab_size, state_dim)
-                    self.nsm = SimpleNSM(input_dim=state_dim, state_dim=state_dim, 
+                    self.pulse = SimplePulse(input_dim=state_dim, state_dim=state_dim, 
                                        num_states=num_states, output_dim=output_dim)
                 
                 def forward(self, x):
                     # x shape: [batch_size, seq_len] (token indices)
                     x = self.embedding(x)  # [batch_size, seq_len, state_dim]
-                    return self.nsm(x)
+                    return self.pulse(x)
             
-            return TextNSM(input_dim, 64, 16, output_dim)
+            return TextPULSE(input_dim, 64, 16, output_dim)
         else:
-            return SimpleNSM(input_dim=input_dim, state_dim=64, num_states=16, output_dim=output_dim)
+            return SimplePulse(input_dim=input_dim, state_dim=64, num_states=16, output_dim=output_dim)
     
     else:
         raise ValueError(f"Unknown model type: {model_type}")
@@ -443,7 +443,7 @@ def run_baseline_comparison():
     """Run baseline comparison experiment."""
     
     # Model types to compare
-    model_types = ["LSTM", "GRU", "Transformer", "NSM"]
+    model_types = ["LSTM", "GRU", "Transformer", "PULSE"]
     
     # Dataset configurations
     datasets = {
@@ -544,7 +544,7 @@ def run_baseline_comparison():
 def plot_comparison_results(results):
     """Plot comparison results."""
     
-    model_types = ["LSTM", "GRU", "Transformer", "NSM"]
+    model_types = ["LSTM", "GRU", "Transformer", "PULSE"]
     datasets = list(results.keys())
     
     # Create subplots

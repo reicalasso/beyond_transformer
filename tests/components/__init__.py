@@ -1,3 +1,3 @@
 """
-NSM Component Tests Package
+PULSE Component Tests Package
 """

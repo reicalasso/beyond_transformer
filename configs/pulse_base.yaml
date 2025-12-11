@@ -1,0 +1,99 @@
+# PULSE Base Configuration
+# This is the default configuration for training PULSE models
+
+model:
+  # Architecture
+  vocab_size: 32000
+  hidden_size: 768
+  num_layers: 12
+  num_heads: 12
+  intermediate_size: 3072
+  max_position_embeddings: 2048
+  
+  # PULSE-specific
+  num_states: 32
+  state_dim: 768
+  gate_type: "gru"  # gru or lstm
+  use_adaptive_states: true
+  use_hierarchical_states: false
+  
+  # Regularization
+  dropout: 0.1
+  attention_dropout: 0.1
+  
+  # Initialization
+  initializer_range: 0.02
+  
+  # Special tokens
+  pad_token_id: 0
+  bos_token_id: 1
+  eos_token_id: 2
+  
+  # Weight tying
+  tie_word_embeddings: true
+
+training:
+  # Basic
+  epochs: 3
+  batch_size: 8
+  gradient_accumulation_steps: 4
+  
+  # Optimizer
+  optimizer: "adamw"
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1.0e-8
+  
+  # Scheduler
+  scheduler: "cosine"
+  warmup_steps: 1000
+  warmup_ratio: 0.0
+  
+  # Gradient
+  max_grad_norm: 1.0
+  
+  # Mixed precision
+  fp16: false
+  bf16: false
+  
+  # Logging
+  logging_steps: 100
+  logging_first_step: true
+  
+  # Evaluation
+  eval_strategy: "steps"
+  eval_steps: 500
+  
+  # Saving
+  save_strategy: "steps"
+  save_steps: 1000
+  save_total_limit: 3
+  load_best_model_at_end: true
+  
+  # Early stopping
+  early_stopping_patience: 5
+  early_stopping_threshold: 0.0
+
+data:
+  # Dataset
+  train_file: null
+  validation_file: null
+  test_file: null
+  
+  # Preprocessing
+  max_seq_length: 512
+  preprocessing_num_workers: 4
+  
+  # DataLoader
+  dataloader_num_workers: 4
+  dataloader_pin_memory: true
+
+output:
+  output_dir: "./output"
+  logging_dir: "./logs"
+  overwrite_output_dir: false
+
+# Reproducibility
+seed: 42

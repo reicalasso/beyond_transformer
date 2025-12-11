@@ -1,9 +1,9 @@
 Core Components
 ===============
 
-The core module contains the fundamental building blocks of Neural State Machines.
+The core module contains the fundamental building blocks of Parallel Unified Linear State Engines.
 
-.. automodule:: nsm.core
+.. automodule:: pulse.core
    :members:
    :undoc-members:
    :show-inheritance:
@@ -11,7 +11,7 @@ The core module contains the fundamental building blocks of Neural State Machine
 Components
 ----------
 
-.. automodule:: nsm.core.components
+.. automodule:: pulse.core.components
    :members:
    :undoc-members:
    :show-inheritance:
@@ -19,7 +19,7 @@ Components
 Layers
 ------
 
-.. automodule:: nsm.core.layers
+.. automodule:: pulse.core.layers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -27,7 +27,7 @@ Layers
 Configuration
 -------------
 
-.. automodule:: nsm.core.config
+.. automodule:: pulse.core.config
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,6 +1,6 @@
-# Forward/Backward Flow and Variable Interactions in Neural State Machine
+# Forward/Backward Flow and Variable Interactions in PULSE
 
-This document defines the forward and backward computational flow in the Neural State Machine architecture and details how memory, attention, and state variables interact.
+This document defines the forward and backward computational flow in the PULSE architecture and details how memory, attention, and state variables interact.
 
 ## 1. Forward Pass Flow
 
@@ -458,4 +458,4 @@ Routing Mechanisms → Input Embeddings
 - Memory allocation/pruning logs
 ```
 
-This comprehensive specification defines how memory, attention, and state variables interact in the Neural State Machine architecture, providing a clear understanding of both forward and backward computational flows.
+This comprehensive specification defines how memory, attention, and state variables interact in the PULSE architecture, providing a clear understanding of both forward and backward computational flows.

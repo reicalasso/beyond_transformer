@@ -1,5 +1,5 @@
 """
-Main test runner for NSM components
+Main test runner for PULSE components
 """
 
 import os
@@ -10,7 +10,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "components"))
 
 # Import all test modules
-from test_layers import TestHybridAttention, TestNSMLayer
+from test_layers import TestHybridAttention, TestPulseLayer
 from test_router import TestTokenToStateRouter
 from test_state_manager import TestStateManager
 
@@ -19,8 +19,8 @@ def create_test_suite():
     """Create a test suite with all component tests."""
     suite = unittest.TestSuite()
 
-    # Add NSMLayer tests
-    suite.addTest(unittest.makeSuite(TestNSMLayer))
+    # Add PulseLayer tests
+    suite.addTest(unittest.makeSuite(TestPulseLayer))
     suite.addTest(unittest.makeSuite(TestHybridAttention))
 
     # Add TokenToStateRouter tests
@@ -34,7 +34,7 @@ def create_test_suite():
 
 def run_all_tests():
     """Run all component tests."""
-    print("Running NSM Component Tests")
+    print("Running PULSE Component Tests")
     print("=" * 40)
 
     # Create test suite

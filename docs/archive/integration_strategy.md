@@ -1,6 +1,6 @@
-# Integration Strategy for Neural State Machine Architecture
+# Integration Strategy for PULSE Architecture
 
-This document defines the integration strategies for combining different architectural components in the Neural State Machine framework.
+This document defines the integration strategies for combining different architectural components in the PULSE framework.
 
 ## 1. Attention + SSM Integration Strategy
 
@@ -275,4 +275,4 @@ Output Sequence
 
 ## 9. Conclusion
 
-The integration strategy for Neural State Machines combines the strengths of attention mechanisms, state space models, RNNs, and neural Turing machines through carefully designed interaction patterns. Each integration approach addresses specific computational needs while maintaining efficiency and interpretability. The framework provides a solid foundation for developing hybrid architectures that can adapt to various tasks and computational constraints.
+The integration strategy for PULSEs combines the strengths of attention mechanisms, state space models, RNNs, and neural Turing machines through carefully designed interaction patterns. Each integration approach addresses specific computational needs while maintaining efficiency and interpretability. The framework provides a solid foundation for developing hybrid architectures that can adapt to various tasks and computational constraints.

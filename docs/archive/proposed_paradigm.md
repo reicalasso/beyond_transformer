@@ -1,11 +1,11 @@
-# Neural State Machines: A Revolutionary AI Paradigm
+# PULSEs: A Revolutionary AI Paradigm
 ## Beyond Transformers - The Next Generation of Intelligent Systems
 
 ---
 
 ## 🎯 **Executive Summary**
 
-Neural State Machines (NSM) represent a **fundamental paradigm shift** in artificial intelligence architecture, designed to overcome the critical limitations of transformer-based systems while unlocking new capabilities for large-scale AI applications.
+PULSEs (PULSE) represent a **fundamental paradigm shift** in artificial intelligence architecture, designed to overcome the critical limitations of transformer-based systems while unlocking new capabilities for large-scale AI applications.
 
 **Key Innovation**: Replace quadratic attention complexity with intelligent state-based memory management, achieving **linear scaling** while maintaining superior performance and interpretability.
 
@@ -38,15 +38,15 @@ Current State:
 
 ---
 
-## 2. 💡 **The NSM Solution: Intelligent State Management**
+## 2. 💡 **The PULSE Solution: Intelligent State Management**
 
 ### **Core Innovation: Dynamic Memory States**
 
-Neural State Machines revolutionize information processing through **intelligent memory management**:
+PULSEs revolutionize information processing through **intelligent memory management**:
 
 ```
 Traditional Attention:     [Token] ↔ [ALL Tokens] (O(n²))
-NSM State Attention:      [Token] ↔ [Relevant States] (O(s))
+PULSE State Attention:      [Token] ↔ [Relevant States] (O(s))
                          where s ≪ n
 ```
 
@@ -69,7 +69,7 @@ NSM State Attention:      [Token] ↔ [Relevant States] (O(s))
 
 ---
 
-## 3. 🏗️ **NSM Architecture: Intelligent Design**
+## 3. 🏗️ **PULSE Architecture: Intelligent Design**
 
 ### **3.1 System Overview**
 
@@ -144,7 +144,7 @@ class TokenToStateRouter:
 
 ### **4.1 Computational Efficiency**
 
-| Metric | Transformer | NSM | Improvement |
+| Metric | Transformer | PULSE | Improvement |
 |--------|-------------|-----|-------------|
 | **Complexity** | O(n²) | O(n·s) | **90% reduction** |
 | **Memory Usage** | 32GB (8K tokens) | 4GB | **87% reduction** |
@@ -163,7 +163,7 @@ Transformer Memory Usage:
 16K tokens: ████████████████ 32GB
 32K tokens: ████████████████████████████████ 64GB ❌
 
-NSM Memory Usage:
+PULSE Memory Usage:
 1K tokens:  █ 0.5GB
 4K tokens:  █ 1GB
 8K tokens:  █ 2GB
@@ -226,7 +226,7 @@ NSM Memory Usage:
 - Ana deney notebooku: `notebooks/experiments/baseline_comparison.ipynb`
 - Hiperparametre süpürme: `notebooks/experiments/hyperparameter_sweep.ipynb`
 - Routing görselleştirme: `notebooks/experiments/routing_viz.ipynb`
-- Kod: `src/nsm/`, `scripts/`, `notebooks/scripts/`
+- Kod: `src/pulse/`, `scripts/`, `notebooks/scripts/`
 - Sonuçlar: `results/experiments/`, `results/visualization/`
 - Referanslar: `references/papers.bib`
 
@@ -236,8 +236,8 @@ NSM Memory Usage:
 
 - What is the optimal number of state nodes for different tasks?
 - Can token-to-state routing be learned dynamically (meta-attention)?
-- Does NSM improve interpretability compared to Transformers?
-- How does NSM compare to RWKV/S4 in scaling?
+- Does PULSE improve interpretability compared to Transformers?
+- How does PULSE compare to RWKV/S4 in scaling?
 
 ---
 

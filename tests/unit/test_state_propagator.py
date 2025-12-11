@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from nsm import StatePropagator
+from pulse import StatePropagator
 
 
 class TestStatePropagator:

@@ -43,7 +43,7 @@ def run_tests(test_type="unit", markers=None, verbose=True):
         args.extend(["-m", marker_expr])
     
     # Add coverage
-    args.extend(["--cov=src/nsm", "--cov-report=html", "--cov-report=term"])
+    args.extend(["--cov=src/pulse", "--cov-report=html", "--cov-report=term"])
     
     # Add junit xml report
     args.extend(["--junitxml=reports/junit/test-results.xml"])
@@ -78,7 +78,7 @@ def main():
     """Main test runner."""
     import argparse
     
-    parser = argparse.ArgumentParser(description="NSM Test Runner")
+    parser = argparse.ArgumentParser(description="PULSE Test Runner")
     parser.add_argument(
         "--type", 
         choices=["unit", "integration", "performance", "all"],
