@@ -311,9 +311,12 @@ def run_copy_task(
     return accuracy
 
 
-def run_benchmark(config: BenchmarkConfig) -> Dict:
+def run_benchmark(config: BenchmarkConfig, use_optimized: bool = True) -> Dict:
     """Run complete benchmark suite."""
-    from pulse.models.pulse_lm import PulseConfig, PulseForCausalLM
+    if use_optimized:
+        from pulse.models.optimized_pulse_lm import OptimizedPulseConfig as PulseConfig, OptimizedPulseForCausalLM as PulseForCausalLM
+    else:
+        from pulse.models.pulse_lm import PulseConfig, PulseForCausalLM
     
     device = torch.device(config.device if torch.cuda.is_available() else "cpu")
     logger.info(f"Running benchmark on: {device}")
