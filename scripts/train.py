@@ -15,7 +15,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
@@ -30,6 +30,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 
 from pulse import PulseConfig, PulseForCausalLM
+from pulse.utils.config import load_config, FullConfig, TrainingConfig, DataConfig, OutputConfig
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -93,7 +94,8 @@ def get_lr(step: int, warmup_steps: int, max_steps: int, max_lr: float, min_lr: 
     return min_lr + coeff * (max_lr - min_lr)
 
 
-def train(args):
+def train(args, config: Optional[FullConfig] = None):
+    """Main training function."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Training on: {device}")
     
@@ -101,8 +103,41 @@ def train(args):
         logger.info(f"GPU: {torch.cuda.get_device_name(0)}")
         logger.info(f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
     
-    # Create output directory
-    output_dir = Path(args.output_dir)
+    # Use config if provided, otherwise use args
+    if config is not None:
+        model_config = config.model
+        train_cfg = config.training
+        data_cfg = config.data
+        output_cfg = config.output
+        seed = config.seed
+    else:
+        # Fallback to args (backward compatibility)
+        model_config = None
+        train_cfg = None
+        data_cfg = None
+        output_cfg = None
+        seed = 42
+    
+    # Set seed
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    
+    # Get values from config or args
+    output_dir = Path(output_cfg.output_dir if output_cfg else args.output_dir)
+    batch_size = train_cfg.batch_size if train_cfg else args.batch_size
+    gradient_accumulation = train_cfg.gradient_accumulation_steps if train_cfg else args.gradient_accumulation
+    learning_rate = train_cfg.learning_rate if train_cfg else args.learning_rate
+    max_steps = train_cfg.max_steps if train_cfg and train_cfg.max_steps else args.max_steps
+    warmup_steps = train_cfg.warmup_steps if train_cfg else args.warmup_steps
+    eval_steps = train_cfg.eval_steps if train_cfg else args.eval_interval
+    max_seq_len = data_cfg.max_seq_length if data_cfg else args.max_seq_len
+    max_samples = data_cfg.max_samples if data_cfg else args.max_samples
+    
+    # Mixed precision settings
+    use_fp16 = train_cfg.fp16 if train_cfg else False
+    use_bf16 = train_cfg.bf16 if train_cfg else False
+    
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Load tokenizer
@@ -117,55 +152,64 @@ def train(args):
     dataset = load_dataset("roneneldan/TinyStories", split="train")
     
     # Use subset for faster training
-    if args.max_samples:
-        dataset = dataset.select(range(min(args.max_samples, len(dataset))))
+    if max_samples:
+        dataset = dataset.select(range(min(max_samples, len(dataset))))
     
     logger.info(f"Dataset size: {len(dataset):,} stories")
     
     # Split
-    split = dataset.train_test_split(test_size=0.02, seed=42)
+    split = dataset.train_test_split(test_size=0.02, seed=seed)
     train_data = split['train']
     val_data = split['test']
     
     # Create datasets
-    train_dataset = TinyStoriesDataset(train_data, tokenizer, args.max_seq_len)
-    val_dataset = TinyStoriesDataset(val_data, tokenizer, args.max_seq_len)
+    train_dataset = TinyStoriesDataset(train_data, tokenizer, max_seq_len)
+    val_dataset = TinyStoriesDataset(val_data, tokenizer, max_seq_len)
     
     logger.info(f"Train examples: {len(train_dataset):,}")
     logger.info(f"Val examples: {len(val_dataset):,}")
     
     # DataLoaders
+    num_workers = data_cfg.dataloader_num_workers if data_cfg else 4
+    pin_memory = data_cfg.dataloader_pin_memory if data_cfg else True
+    
     train_loader = DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True,
-        num_workers=4, pin_memory=True, drop_last=True
+        train_dataset, batch_size=batch_size, shuffle=True,
+        num_workers=num_workers, pin_memory=pin_memory, drop_last=True
     )
     val_loader = DataLoader(
-        val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2
+        val_dataset, batch_size=batch_size, shuffle=False, num_workers=2
     )
     
     # Create model
     logger.info("Creating model...")
-    config = PulseConfig(
-        vocab_size=vocab_size,
-        hidden_size=args.hidden_size,
-        num_layers=args.num_layers,
-        num_heads=args.num_heads,
-        num_states=args.num_states,
-        state_dim=args.hidden_size,
-        intermediate_size=args.hidden_size * 4,
-        max_position_embeddings=args.max_seq_len + 64,
-        dropout=0.1,
-    )
+    if model_config is not None:
+        # Override vocab_size from tokenizer
+        model_config.vocab_size = vocab_size
+        pulse_config = model_config
+    else:
+        pulse_config = PulseConfig(
+            vocab_size=vocab_size,
+            hidden_size=args.hidden_size,
+            num_layers=args.num_layers,
+            num_heads=args.num_heads,
+            num_states=args.num_states,
+            state_dim=args.hidden_size,
+            intermediate_size=args.hidden_size * 4,
+            max_position_embeddings=max_seq_len + 64,
+            dropout=0.1,
+        )
     
-    model = PulseForCausalLM(config).to(device)
+    model = PulseForCausalLM(pulse_config).to(device)
     params = sum(p.numel() for p in model.parameters())
     logger.info(f"Parameters: {params:,} ({params * 4 / 1024**2:.1f} MB)")
     
     # Save config
     with open(output_dir / "config.json", "w") as f:
-        json.dump(config.to_dict(), f, indent=2)
+        json.dump(pulse_config.to_dict(), f, indent=2)
     
     # Optimizer with weight decay
+    weight_decay = train_cfg.weight_decay if train_cfg else 0.1
     decay_params = []
     no_decay_params = []
     for name, param in model.named_parameters():
@@ -175,36 +219,70 @@ def train(args):
             decay_params.append(param)
     
     optimizer = torch.optim.AdamW([
-        {'params': decay_params, 'weight_decay': 0.1},
+        {'params': decay_params, 'weight_decay': weight_decay},
         {'params': no_decay_params, 'weight_decay': 0.0},
-    ], lr=args.learning_rate, betas=(0.9, 0.95), eps=1e-8)
+    ], lr=learning_rate, betas=(0.9, 0.95), eps=1e-8)
     
-    scaler = GradScaler('cuda')
+    # Mixed precision scaler
+    if use_bf16:
+        scaler = None  # BF16 doesn't need scaler
+        autocast_dtype = torch.bfloat16
+    elif use_fp16:
+        scaler = GradScaler('cuda')
+        autocast_dtype = torch.float16
+    else:
+        scaler = GradScaler('cuda')
+        autocast_dtype = torch.float16  # Default to FP16
+    
+    # Resume from checkpoint if specified
+    start_step = 0
+    best_val_loss = float('inf')
+    
+    if args.resume:
+        resume_path = Path(args.resume)
+        if resume_path.exists():
+            logger.info(f"Resuming from checkpoint: {resume_path}")
+            checkpoint = torch.load(resume_path, map_location=device)
+            
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            
+            if scaler is not None and checkpoint.get('scaler_state_dict'):
+                scaler.load_state_dict(checkpoint['scaler_state_dict'])
+            
+            start_step = checkpoint.get('step', 0)
+            best_val_loss = checkpoint.get('val_loss', float('inf'))
+            
+            logger.info(f"  Resumed from step {start_step}")
+            logger.info(f"  Best val loss so far: {best_val_loss:.4f}")
+        else:
+            logger.warning(f"Checkpoint not found: {resume_path}, starting from scratch")
     
     # Training
     logger.info("=" * 70)
     logger.info("Starting training...")
-    logger.info(f"  Batch size: {args.batch_size}")
-    logger.info(f"  Gradient accumulation: {args.gradient_accumulation}")
-    logger.info(f"  Effective batch: {args.batch_size * args.gradient_accumulation}")
-    logger.info(f"  Max steps: {args.max_steps}")
-    logger.info(f"  Learning rate: {args.learning_rate}")
+    logger.info(f"  Batch size: {batch_size}")
+    logger.info(f"  Gradient accumulation: {gradient_accumulation}")
+    logger.info(f"  Effective batch: {batch_size * gradient_accumulation}")
+    logger.info(f"  Max steps: {max_steps}")
+    logger.info(f"  Learning rate: {learning_rate}")
+    logger.info(f"  Mixed precision: {'BF16' if use_bf16 else 'FP16' if use_fp16 else 'FP16 (default)'}")
     logger.info("=" * 70)
     
     model.train()
-    best_val_loss = float('inf')
-    step = 0
+    # Use values from checkpoint if resuming
+    step = start_step
     accum_loss = 0
     data_iter = iter(train_loader)
     
     start_time = time.time()
     tokens_processed = 0
     
-    pbar = tqdm(total=args.max_steps, desc="Training")
+    pbar = tqdm(total=max_steps, initial=start_step, desc="Training")
     
     optimizer.zero_grad()
     
-    while step < args.max_steps:
+    while step < max_steps:
         # Get batch
         try:
             x, y = next(data_iter)
@@ -216,24 +294,32 @@ def train(args):
         tokens_processed += x.numel()
         
         # Update LR
-        lr = get_lr(step, args.warmup_steps, args.max_steps, args.learning_rate)
+        lr = get_lr(step, warmup_steps, max_steps, learning_rate)
         for pg in optimizer.param_groups:
             pg['lr'] = lr
         
         # Forward with mixed precision
-        with autocast('cuda'):
+        with autocast('cuda', dtype=autocast_dtype):
             outputs = model(x, labels=y)
-            loss = outputs['loss'] / args.gradient_accumulation
+            loss = outputs['loss'] / gradient_accumulation
         
-        scaler.scale(loss).backward()
+        if scaler is not None:
+            scaler.scale(loss).backward()
+        else:
+            loss.backward()
         accum_loss += outputs['loss'].item()
         
         # Gradient accumulation step
-        if (step + 1) % args.gradient_accumulation == 0:
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            scaler.step(optimizer)
-            scaler.update()
+        max_grad_norm = train_cfg.max_grad_norm if train_cfg else 1.0
+        if (step + 1) % gradient_accumulation == 0:
+            if scaler is not None:
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                optimizer.step()
             optimizer.zero_grad()
         
         step += 1
@@ -254,7 +340,7 @@ def train(args):
         pbar.update(1)
         
         # Evaluate
-        if step % args.eval_interval == 0:
+        if step % eval_steps == 0:
             model.eval()
             val_losses = []
             
@@ -282,7 +368,8 @@ def train(args):
                     'step': step,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
-                    'config': config.to_dict(),
+                    'scaler_state_dict': scaler.state_dict() if scaler else None,
+                    'config': pulse_config.to_dict(),
                     'val_loss': val_loss,
                     'tokenizer_name': 'gpt2',
                 }, output_dir / "best_model.pt")
@@ -292,7 +379,9 @@ def train(args):
             torch.save({
                 'step': step,
                 'model_state_dict': model.state_dict(),
-                'config': config.to_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'scaler_state_dict': scaler.state_dict() if scaler else None,
+                'config': pulse_config.to_dict(),
                 'val_loss': val_loss,
             }, output_dir / f"checkpoint_{step}.pt")
             
@@ -372,14 +461,18 @@ def generate_sample(model, tokenizer, device, prompt, max_tokens=80, temperature
 def main():
     parser = argparse.ArgumentParser(description="Train PULSE on TinyStories")
     
-    # Model
+    # Config file (preferred)
+    parser.add_argument("--config", type=str, default=None,
+                        help="Path to YAML config file (e.g., configs/pulse_small.yaml)")
+    
+    # Model (used if no config file)
     parser.add_argument("--hidden-size", type=int, default=512)
     parser.add_argument("--num-layers", type=int, default=8)
     parser.add_argument("--num-heads", type=int, default=8)
     parser.add_argument("--num-states", type=int, default=32)
     parser.add_argument("--max-seq-len", type=int, default=256)
     
-    # Training
+    # Training (used if no config file)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--gradient-accumulation", type=int, default=2)
     parser.add_argument("--learning-rate", type=float, default=5e-4)
@@ -387,15 +480,26 @@ def main():
     parser.add_argument("--warmup-steps", type=int, default=1000)
     parser.add_argument("--eval-interval", type=int, default=1000)
     
-    # Data
+    # Data (used if no config file)
     parser.add_argument("--max-samples", type=int, default=100000,
                         help="Max stories to use (None for all)")
     
-    # Output
+    # Output (used if no config file)
     parser.add_argument("--output-dir", type=str, default="./output/pulse_tinystories")
     
+    # Resume training
+    parser.add_argument("--resume", type=str, default=None,
+                        help="Path to checkpoint to resume from")
+    
     args = parser.parse_args()
-    train(args)
+    
+    # Load config if provided
+    config = None
+    if args.config:
+        logger.info(f"Loading config from: {args.config}")
+        config = load_config(args.config)
+    
+    train(args, config=config)
 
 
 if __name__ == "__main__":

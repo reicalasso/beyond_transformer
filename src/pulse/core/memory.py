@@ -104,12 +104,9 @@ class MemoryBank(nn.Module):
         # Age all memories
         age = age + 1
         
-        # Update buffers
-        self.memory = memory.mean(dim=0, keepdim=True)
-        self.importance = importance.mean(dim=0, keepdim=True)
-        self.age = age.mean(dim=0, keepdim=True)
-        
-        return memory
+        # Return updated memory state (don't modify buffers during forward pass)
+        # Buffers are only initial states; actual state should be tracked externally
+        return memory, importance, age
     
     def read(
         self,
@@ -269,13 +266,14 @@ class HierarchicalMemory(nn.Module):
         if content.dim() == 3:
             content = content.mean(dim=1)  # Pool sequence dimension
         
-        self.working_memory.write(content)
+        # Write returns (memory, importance, age) tuple now
+        _ = self.working_memory.write(content)
         
         # Decide what to consolidate to short-term
         consolidate_score = self.consolidation_gate(content)
         if consolidate_score.mean() > 0.5:
             compressed = self.short_term_memory.compress_and_store(content)
-            self.short_term_memory.write(
+            _ = self.short_term_memory.write(
                 self.short_term_memory.decompressor(compressed)
             )
         

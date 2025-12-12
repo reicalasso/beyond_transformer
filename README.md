@@ -32,8 +32,8 @@ PULSE is designed around how the brain actually works:
 - **🌊 Streaming Inference** - Infinite context via compressed summaries
 - **🎲 Natural Variation** - Controlled noise for human-like outputs
 - **🔥 Flash Attention** - PyTorch 2.0+ optimizations
-- **📊 Rich Visualization**: Built-in tools for understanding model behavior
-- **🖥️ CLI Tools**: Train, generate, benchmark, and visualize from command line
+
+This repository focuses on the core model and research components (see `src/pulse/`).
 
 ---
 
@@ -55,53 +55,24 @@ PULSE is designed around how the brain actually works:
 ### Installation
 
 ```bash
-pip install pulse-ai
-```
-
-Or install from source:
-
-```bash
 git clone https://github.com/reicalasso/beyond_transformer.git
 cd beyond_transformer
+
+# install core package
+pip install -e .
+
+# (optional) training script dependencies
+pip install -e ".[experiments]"
+
+# (optional) dev tools
 pip install -e ".[dev]"
-```
-
-### Basic Usage
-
-```python
-import torch
-from pulse import SimplePulse, SequencePulse
-
-# Simple classification model
-model = SimplePulse(
-    input_dim=784,      # Input features
-    state_dim=256,      # State dimension
-    num_states=32,      # Number of states
-    output_dim=10,      # Output classes
-    gate_type="gru",    # Gating mechanism
-)
-
-# Forward pass
-x = torch.randn(32, 784)  # [batch_size, input_dim]
-output = model(x)         # [batch_size, output_dim]
-
-# Sequence processing
-seq_model = SequencePulse(
-    input_dim=64,
-    state_dim=128,
-    num_states=16,
-    output_dim=10,
-    output_mode="last",  # 'last', 'all', or 'mean'
-)
-
-seq_x = torch.randn(32, 100, 64)  # [batch, seq_len, input_dim]
-seq_output = seq_model(seq_x)      # [batch, output_dim]
 ```
 
 ### Language Modeling
 
 ```python
 from pulse import PulseConfig, PulseForCausalLM
+import torch
 
 # Configure model
 config = PulseConfig(
@@ -134,26 +105,17 @@ generated = model.generate(
 
 ---
 
-## 🖥️ Command Line Interface
+## 🏋️ Training (TinyStories)
+
+The repository includes a simple training script for TinyStories:
 
 ```bash
-# Train a model
-pulse train --config configs/pulse_base.yaml --output-dir ./output
-
-# Generate text
-pulse generate --model ./output/model.pt --prompt "Hello world" --max-length 100
-
-# Run benchmarks
-pulse benchmark --task lra --model ./output/model.pt
-
-# Get model info
-pulse info --model ./output/model.pt
-
-# Convert model format
-pulse convert --input model.pt --output model.onnx --format onnx
+python scripts/train.py --output-dir ./output/pulse_tinystories --max-steps 2000 --max-samples 50000
 ```
 
----
+Notes:
+- The script uses Hugging Face `datasets` + `transformers`.
+- YAML configs under `configs/` are currently examples and are not consumed by `scripts/train.py`.
 
 ## 🏗️ Architecture Overview
 
@@ -196,83 +158,49 @@ pulse convert --input model.pt --output model.onnx --format onnx
 
 ## 📊 Visualization
 
-```python
-from pulse.visualization import StateVisualizer, AttentionVisualizer
-
-# Visualize state dynamics
-viz = StateVisualizer(model)
-viz.plot_state_dynamics(input_ids, save_path="states.png")
-viz.plot_state_similarity(states, save_path="similarity.png")
-
-# Visualize attention patterns
-attn_viz = AttentionVisualizer(model)
-attn_viz.plot_attention_heatmap(attention, tokens=["Hello", "world"])
-attn_viz.create_attention_report(input_ids, save_dir="./report")
-```
+Visualization helpers are not included in this repo snapshot.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-pulse/
+src/pulse/
 ├── core/
-│   ├── attention.py      # Advanced attention mechanisms
-│   ├── adaptive_state.py # Adaptive state management
-│   ├── components.py     # Core components
-│   └── layers.py         # PULSE layers
-├── models/
-│   ├── simple_pulse.py   # SimplePulse, SequencePulse
-│   ├── pulse_lm.py       # Language models
-│   └── hybrid_model.py   # Hybrid architectures
-├── modules/
-│   ├── state_propagator.py
-│   ├── state_manager.py
-│   ├── ntm_memory.py
-│   └── ssm_block.py
-├── training/
-│   ├── trainer.py        # PulseTrainer
-│   ├── optimizer.py      # Custom optimizers
-│   └── data_collator.py  # Data collation
-├── visualization/
-│   ├── state_visualizer.py
-│   └── attention_visualizer.py
-├── cli/
-│   └── main.py           # CLI entry point
-└── benchmarks/
-    ├── lra_benchmark.py
-    └── babi_benchmark.py
+│   ├── attention.py      # GQA/MHA + RoPE + KV cache support
+│   ├── cache.py          # KV cache variants
+│   ├── ffn.py            # SwiGLU etc.
+│   ├── memory.py         # Memory components
+│   ├── mixture.py        # MoE / MoD
+│   ├── norm.py           # RMSNorm
+│   ├── rope.py           # Rotary embeddings
+│   ├── speculative.py    # Speculative decoding helpers
+│   ├── spiking.py        # Pulse/spiking modules
+│   ├── ssm.py            # SSM block
+│   └── state.py          # State manager/propagator
+└── models/
+    └── pulse.py          # PulseConfig / PulseModel / PulseForCausalLM
+
+scripts/
+└── train.py              # TinyStories training script
+
+configs/
+├── pulse_base.yaml
+└── pulse_small.yaml
 ```
 
----
-
-## 🧪 Running Tests
-
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run with coverage
-pytest tests/ --cov=pulse --cov-report=html
-
-# Run specific test
-pytest tests/test_pulse_lm.py -v
-```
 
 ---
 
 ## 📚 Documentation
 
-- [API Reference](docs/api.md)
-- [Architecture Guide](docs/architecture.md)
-- [Training Guide](docs/training.md)
-- [Benchmarks](docs/benchmarks.md)
+Documentation pages under `docs/` are not included in this repo snapshot.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+Contributions are welcome!
 
 ```bash
 # Setup development environment
