@@ -1,13 +1,19 @@
 """
-PULSE Models Package
+PULSE Models - Language models built on PULSE architecture.
 """
 
-from .hybrid_model import AdvancedHybridModel, SequentialHybridModel
-from .simple_pulse import SequencePulse, SimplePulse
+from .pulse import (
+    PulseConfig,
+    PulseForCausalLM,
+    PulseModel,
+    PulseLayer,
+    PulseEmbeddings,
+)
 
 __all__ = [
-    "SimplePulse",
-    "SequencePulse",
-    "AdvancedHybridModel",
-    "SequentialHybridModel",
+    "PulseConfig",
+    "PulseForCausalLM",
+    "PulseModel",
+    "PulseLayer",
+    "PulseEmbeddings",
 ]

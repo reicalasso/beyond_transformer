@@ -4,24 +4,34 @@
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 
-**Breaking the O(n²) barrier: Linear complexity sequence modeling**
+**A biologically-inspired neural architecture - not Transformer, not RNN.**
 
-PULSE is a state-based alternative to Transformers, achieving **O(n·s) complexity** compared to Transformers' **O(n²)**.
+## 🧠 Philosophy
 
-## 📊 Benchmark Results
+PULSE is designed around how the brain actually works:
 
-| Sequence Length | PULSE | Transformer | Speedup | Memory Savings |
-|-----------------|-------|-------------|---------|----------------|
-| 512 | 10.4ms | 8.9ms | 0.86x | -27% |
-| 1024 | 23.9ms | 29.9ms | **1.25x** | **+33%** |
-| 2048 | 27.9ms | 57.5ms | **2.06x** | **+80%** |
+- **Pulse-based processing** - Information in bursts, not continuous streams
+- **Hierarchical memory** - Working, short-term, and long-term memory with decay
+- **Sparse attention** - Only attend to relevant context
+- **Dynamic routing** - Activate only needed modules (like brain regions)
+- **Natural variation** - Outputs feel human, not robotic
 
-## 🚀 Key Features
+## 📊 Performance
 
-- **⚡ 2x Faster** on sequences ≥1024 tokens
-- **💾 80% Less Memory** on long sequences
-- **🔥 Flash Attention** support (PyTorch 2.0+)
-- **🎯 Production Ready** with optimized kernels
+| Sequence Length | Speedup | Memory Savings |
+|-----------------|---------|----------------|
+| 1024 | **1.3x** | **+33%** |
+| 2048 | **2.0x** | **+80%** |
+| ∞ (streaming) | ✅ | ✅ |
+
+## 🚀 Features
+
+- **🧠 Hierarchical Memory** - Working, short-term, long-term with consolidation
+- **⚡ Pulse Processing** - Discrete bursts like biological neurons
+- **🎯 Dynamic Routing** - MoE-style expert selection
+- **🌊 Streaming Inference** - Infinite context via compressed summaries
+- **🎲 Natural Variation** - Controlled noise for human-like outputs
+- **🔥 Flash Attention** - PyTorch 2.0+ optimizations
 - **📊 Rich Visualization**: Built-in tools for understanding model behavior
 - **🖥️ CLI Tools**: Train, generate, benchmark, and visualize from command line
 

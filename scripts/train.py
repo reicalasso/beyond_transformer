@@ -29,7 +29,7 @@ from tqdm import tqdm
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
-from pulse.models.optimized_pulse_lm import OptimizedPulseConfig, OptimizedPulseForCausalLM
+from pulse import PulseConfig, PulseForCausalLM
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -145,7 +145,7 @@ def train(args):
     
     # Create model
     logger.info("Creating model...")
-    config = OptimizedPulseConfig(
+    config = PulseConfig(
         vocab_size=vocab_size,
         hidden_size=args.hidden_size,
         num_layers=args.num_layers,
@@ -157,7 +157,7 @@ def train(args):
         dropout=0.1,
     )
     
-    model = OptimizedPulseForCausalLM(config).to(device)
+    model = PulseForCausalLM(config).to(device)
     params = sum(p.numel() for p in model.parameters())
     logger.info(f"Parameters: {params:,} ({params * 4 / 1024**2:.1f} MB)")
     
