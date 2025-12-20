@@ -35,6 +35,23 @@ PULSE is designed around how the brain actually works:
 
 This repository focuses on the core model and research components (see `src/pulse/`).
 
+## 🔥 NEW: Memory-as-a-Service (MaaS)
+
+Persistent, queryable memory for AI agents and LLMs with hierarchical layers and dynamic routing.
+
+```python
+from pulse.maas import MemoryService, MemoryLayer
+
+memory = MemoryService(hidden_size=768)
+memory_id = memory.write_memory(
+    content="User prefers Python",
+    embedding=your_embedding,
+    layer=MemoryLayer.LONG_TERM
+)
+```
+
+**[⚡ Quick Start](QUICKSTART.md)** | **[📖 Docs](docs/)** | **[💡 Examples](examples/)**
+
 ---
 
 ## 📈 Performance Highlights
