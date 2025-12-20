@@ -1,19 +1,4 @@
-"""
-PULSE Core - Modular building blocks.
-
-Each module has a single responsibility:
-- norm.py: RMSNorm, LayerNorm
-- rope.py: Rotary Position Embeddings
-- attention.py: GQA, MHA, StateAttention
-- ffn.py: SwiGLU, GeGLU, MLP
-- ssm.py: Selective State Space Model
-- state.py: State propagation and management
-- memory.py: Hierarchical memory
-- spiking.py: Pulse processing, dynamic routing
-- mixture.py: MoE, MoD, ACT
-- cache.py: KV cache variants
-- speculative.py: Speculative decoding
-"""
+"""PULSE Core - Modular building blocks for neural architectures."""
 
 # Normalization
 from .norm import RMSNorm

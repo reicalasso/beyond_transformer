@@ -1,6 +1,4 @@
-"""
-PULSE Models - Language models built on PULSE architecture.
-"""
+"""PULSE Models - Language models built on PULSE architecture."""
 
 from .pulse import (
     PulseConfig,

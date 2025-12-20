@@ -1,70 +1,38 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pulse-ai"
-dynamic = ["version"]
-description = "PULSE - Parallel Unified Linear State Engine: An alternative to Transformer architectures"
+version = "1.0.0"
+description = "PULSE - Parallel Unified Linear State Engine"
 readme = "README.md"
 license = { file = "LICENSE" }
-authors = [
-    { name = "Rei Calasso", email = "reicalasso@gmail.com" },
-]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-]
+authors = [{ name = "Rei Calasso", email = "reicalasso@gmail.com" }]
 requires-python = ">=3.8"
 dependencies = [
     "torch>=2.0.0",
     "numpy>=1.21.0",
-    "matplotlib>=3.3.0",
-    "seaborn>=0.11.0",
-    "psutil>=5.8.0",
-    "pandas>=1.3.0",
-    "PyYAML>=5.4.0",
     "tqdm>=4.62.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "jupyter>=1.0.0",
-    "black>=23.0.0",
-    "flake8>=6.0.0",
-    "mypy>=1.0.0",
-    "pre-commit>=3.0.0",
+maas = [
+    "flask>=2.0.0",
+    "flask-cors>=3.0.0",
 ]
-test = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-]
-experiments = [
-    "wandb>=0.15.0",
-    "tensorboard>=2.10.0",
-    "scikit-learn>=1.0.0",
+train = [
     "datasets>=2.0.0",
     "transformers>=4.30.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/reicalasso/beyond_transformer"
-"Bug Tracker" = "https://github.com/reicalasso/beyond_transformer/issues"
-Documentation = "https://github.com/reicalasso/beyond_transformer#readme"
 Repository = "https://github.com/reicalasso/beyond_transformer"
-
-[tool.setuptools_scm]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -72,21 +40,8 @@ include = ["pulse*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-markers = [
-    "slow: marks tests as slow",
-    "integration: marks tests as integration tests",
-    "unit: marks tests as unit tests",
-]
+python_files = ["test_*.py"]
 
 [tool.black]
 line-length = 88
 target-version = ["py38"]
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["pulse"]

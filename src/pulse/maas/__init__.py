@@ -1,9 +1,4 @@
-"""
-PULSE + MaaS Integration
-
-Memory-as-a-Service for AI agents and LLMs.
-Provides persistent, queryable, and shared memory infrastructure.
-"""
+"""Memory-as-a-Service for AI agents and LLMs."""
 
 from .memory_service import MemoryService, MemoryLayer, MemoryScope
 from .api import MemoryAPI
