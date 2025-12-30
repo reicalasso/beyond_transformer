@@ -1,99 +1,110 @@
-# PULSE Architecture
+# PULSE v2 Architecture
+
+## Design Philosophy
+
+**Keep it simple. Keep it efficient.**
+
+v2 radically simplifies the architecture:
+- One primitive (UnifiedBlock) replaces SSM + Attention + State
+- O(n) complexity everywhere
+- Single recurrent state instead of state banks
+- LRU cache instead of hierarchical memory
 
 ## Core Components
 
-### PULSE Model
+### UnifiedBlock
 
 ```
-Input → Token Embeddings → PULSE Layers → Output
-                              │
-                              ├─ Attention (GQA/MHA)
-                              ├─ State Management
-                              ├─ FFN (SwiGLU)
-                              └─ Hierarchical Memory
+x → RMSNorm → [LocalConv ⊕ LinearAttn] → Gate → + → RMSNorm → SwiGLU → + → out
 ```
 
-**Key Modules:**
-- `attention.py` - Grouped Query Attention, Multi-Head Attention
-- `state.py` - State propagation and management
-- `memory.py` - Hierarchical memory with consolidation
-- `ffn.py` - Feed-forward networks (SwiGLU, MLP)
-- `rope.py` - Rotary position embeddings
-- `cache.py` - KV cache variants
-- `mixture.py` - Mixture of Experts (MoE)
-- `ssm.py` - State Space Models
+**Combines:**
+- `LocalConv`: Depthwise convolution for local patterns (O(n))
+- `LinearAttention`: Kernel attention with decay for global context (O(n))
+- `SwiGLU`: Gated FFN
 
-### Memory-as-a-Service (MaaS)
+### LinearAttention
 
-```
-API Layer (REST/Python)
-    │
-    ├─ MemoryService
-    │   ├─ Memory Store (3 layers)
-    │   ├─ Query Engine (dynamic routing)
-    │   └─ Consolidator (time/importance-based)
-    │
-    └─ PULSE Core (HierarchicalMemory, MemoryBank)
+O(n) attention using kernel trick:
+```python
+# Instead of: softmax(QK^T)V  -- O(n²)
+# We do: Q @ cumsum(K^T @ V)  -- O(n)
 ```
 
-**Memory Layers:**
+Features:
+- Exponential decay for recency bias
+- Cumulative state for streaming
+- Feature map: elu(x) + 1
+
+### SimpleMemory
+
+Fixed-size LRU cache replacing 3-tier memory:
+```
+┌─────────────────────────┐
+│  SimpleMemory (512)     │
+│  ├─ keys[capacity, dim] │
+│  ├─ values[capacity]    │
+│  └─ ptr (circular)      │
+└─────────────────────────┘
+```
+
+Operations:
+- `write(key, value)`: O(1) circular buffer insert
+- `read(query, top_k)`: O(k) similarity search
+
+### RecurrentState
+
+Single compressed state vector:
+```python
+# Old: [batch, 32, hidden_dim] state bank
+# New: [batch, hidden_dim] single state
+
+state = gate * state + (1 - gate) * update
+```
+
+## Model Architecture
 
 ```
-Working (32 slots, 1h TTL)
-    ↓ Consolidation
-Short-term (128 slots, 24h TTL)
-    ↓ Consolidation
-Long-term (512 slots, persistent)
+Input → Embed → [UnifiedBlock × N] → Norm → LM Head → Output
+                      │
+                      └─ Optional: RecurrentState (single vector)
+                      └─ Optional: SimpleMemory (LRU cache)
 ```
 
-**Consolidation Rules:**
-- Working → Short-term: age > 1h OR importance > 0.7
-- Short-term → Long-term: age > 24h AND importance > 0.8
+## File Structure
 
-## Data Flow
+```
+src/pulse/core/
+├── unified.py        # UnifiedBlock, LinearAttention, LocalConv, RecurrentState
+├── simple_memory.py  # SimpleMemory, MemoryAugmentedBlock
+├── attention.py      # GQA, MHA (legacy compatibility)
+├── ffn.py            # SwiGLU
+├── norm.py           # RMSNorm
+└── rope.py           # Rotary embeddings
 
-### Write Operation
-1. Convert content to embedding vector
-2. Calculate importance score
-3. Assign to layer (importance >= 0.8 → Long-term, >= 0.5 → Short-term, < 0.5 → Working)
-4. Create MemoryEntry with metadata
-5. Store in memory_store and update layer_indices
-6. Return memory ID
+src/pulse/models/
+├── pulse_v2.py       # PulseV2Config, PulseV2, PulseV2ForCausalLM
+└── pulse_legacy.py   # v1 compatibility
+```
 
-### Read Operation
-1. Convert query to embedding vector
-2. Dynamic routing - determine which layers to query
-3. Multi-layer search with similarity scoring
-4. Aggregate and rank results
-5. Update access patterns
-6. Return top-k matches
+## Complexity Comparison
 
-### Consolidation Process
-
-**Time-Based:**
-- Working → Short-term: age > 1h OR importance > 0.7
-- Short-term → Long-term: age > 24h AND importance > 0.8
-
-**Importance-Based:**
-- Working → Long-term: importance > 0.9
-- Short-term → Long-term: importance > 0.95
-
-**Access-Based:**
-- Promote frequently accessed memories
-- Boost importance for high access count
-
-**Decay & Forgetting:**
-- importance = importance × (0.99 ^ age_hours)
-- Delete if importance < 0.05 AND unused > 24h
+| Component | v1 | v2 |
+|-----------|----|----|
+| Attention | O(n²) GQA | O(n) LinearAttn |
+| State | 32 slots | 1 vector |
+| Memory | 3 tiers, 672 slots | 1 LRU, 512 slots |
+| Layer types | 4+ conditional | 1 uniform |
+| Config params | ~20 | ~10 |
 
 ## Performance
 
-**Query Speed:**
-- Dynamic routing: 2-3x faster (search ~160 slots vs 672 slots)
-- Complexity: O(k) vs O(n) with smart layer selection
+**Sequence Processing:**
+- Linear attention: O(n) vs O(n²)
+- Local conv: O(n) with small kernel
+- Total per layer: O(n)
 
-**Memory Usage:**
-- Working: 32 slots × 768 dim = ~96 KB
-- Short-term: 128 slots × 384 dim = ~192 KB (50% compression)
-- Long-term: 512 slots × 192 dim = ~384 KB (75% compression)
-- Total: ~672 KB (66% reduction vs full precision)
+**Memory:**
+- SimpleMemory: 512 × dim × 2 (keys + values)
+- RecurrentState: 1 × dim
+- ~50% reduction vs v1

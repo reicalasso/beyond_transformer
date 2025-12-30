@@ -1,10 +1,11 @@
 """
-PULSE Attention Mechanisms
+PULSE Attention
 
-Provides various attention implementations:
+Minimal attention implementations:
 - GroupedQueryAttention (GQA): Memory-efficient with fewer KV heads
-- MultiHeadAttention: Standard implementation
-- All support RoPE, KV caching, and Flash Attention
+- MultiHeadAttention: Standard (GQA with num_kv_heads = num_heads)
+
+Both support RoPE, KV caching, and Flash Attention.
 """
 
 import math
@@ -185,84 +186,4 @@ class MultiHeadAttention(GroupedQueryAttention):
             use_rope=use_rope,
         )
 
-
-class StateAttention(nn.Module):
-    """
-    Attention from hidden states to memory states.
-    
-    Queries come from hidden states, keys/values from states.
-    No causal masking needed.
-    
-    Args:
-        hidden_size: Hidden dimension
-        state_dim: State dimension
-        num_heads: Number of attention heads
-        dropout: Attention dropout
-    """
-    
-    def __init__(
-        self,
-        hidden_size: int,
-        state_dim: int,
-        num_heads: int = 8,
-        dropout: float = 0.0,
-    ):
-        super().__init__()
-        self.hidden_size = hidden_size
-        self.state_dim = state_dim
-        self.num_heads = num_heads
-        self.head_dim = hidden_size // num_heads
-        self.scale = self.head_dim ** -0.5
-        
-        # Q from hidden, KV from states
-        self.q_proj = nn.Linear(hidden_size, hidden_size, bias=False)
-        self.k_proj = nn.Linear(state_dim, hidden_size, bias=False)
-        self.v_proj = nn.Linear(state_dim, hidden_size, bias=False)
-        self.o_proj = nn.Linear(hidden_size, hidden_size, bias=False)
-        
-        self.dropout = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
-        self.use_flash = hasattr(F, 'scaled_dot_product_attention')
-    
-    def forward(
-        self,
-        hidden_states: torch.Tensor,
-        states: torch.Tensor,
-    ) -> torch.Tensor:
-        """
-        Forward pass.
-        
-        Args:
-            hidden_states: [batch, seq_len, hidden_size]
-            states: [batch, num_states, state_dim]
-            
-        Returns:
-            output: [batch, seq_len, hidden_size]
-        """
-        batch_size, seq_len, _ = hidden_states.shape
-        num_states = states.shape[1]
-        
-        # Project
-        q = self.q_proj(hidden_states)
-        k = self.k_proj(states)
-        v = self.v_proj(states)
-        
-        # Reshape
-        q = q.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        k = k.view(batch_size, num_states, self.num_heads, self.head_dim).transpose(1, 2)
-        v = v.view(batch_size, num_states, self.num_heads, self.head_dim).transpose(1, 2)
-        
-        # Attention (no causal mask for state attention)
-        if self.use_flash:
-            output = F.scaled_dot_product_attention(q, k, v, dropout_p=0.0)
-        else:
-            attn_weights = torch.matmul(q, k.transpose(-2, -1)) * self.scale
-            attn_weights = F.softmax(attn_weights, dim=-1, dtype=torch.float32).to(q.dtype)
-            attn_weights = self.dropout(attn_weights)
-            output = torch.matmul(attn_weights, v)
-        
-        # Reshape and project
-        output = output.transpose(1, 2).contiguous().view(batch_size, seq_len, -1)
-        output = self.o_proj(output)
-        
-        return output
 

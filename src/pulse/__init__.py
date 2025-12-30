@@ -1,12 +1,27 @@
-"""PULSE - Parallel Unified Linear State Engine
+"""
+PULSE - Parallel Unified Linear State Engine
 
-A biologically-inspired neural architecture with hierarchical memory.
+v2: Radically simplified. Keep it simple & efficient.
+
+A minimal neural architecture with:
+- UnifiedBlock: O(n) local+global processing
+- SimpleMemory: LRU cache for persistence
+- RecurrentState: Single compressed state
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
-# Models
-from .models import PulseConfig, PulseForCausalLM, PulseModel
+# Models (v2 recommended)
+from .models import (
+    # v2 - recommended
+    PulseV2Config,
+    PulseV2ForCausalLM,
+    PulseV2,
+    # v1 - legacy
+    PulseConfig,
+    PulseForCausalLM,
+    PulseModel,
+)
 
 # Core building blocks
 from .core import (
@@ -18,41 +33,24 @@ from .core import (
     # Attention
     GroupedQueryAttention,
     MultiHeadAttention,
-    StateAttention,
     # FFN
     SwiGLU,
-    GeGLU,
-    MLP,
-    # SSM
-    SelectiveSSM,
-    SSMBlock,
-    # State
-    GatedStatePropagator,
-    StateManager,
-    # Memory
-    MemoryBank,
-    HierarchicalMemory,
-    StreamingContext,
-    # Spiking
-    SpikingNeuron,
-    PulseProcessor,
-    DynamicRouter,
-    NaturalVariation,
-    # Mixture
-    MixtureOfExperts,
-    MixtureOfDepths,
-    AdaptiveComputation,
-    # Cache
-    KVCache,
-    CompressedKVCache,
-    SlidingWindowCache,
-    # Speculative
-    SpeculativeDecoder,
-    DraftModel,
+    # Unified (v2)
+    UnifiedBlock,
+    LinearAttention,
+    LocalConv,
+    RecurrentState,
+    # Memory (v2)
+    SimpleMemory,
+    MemoryAugmentedBlock,
 )
 
 __all__ = [
-    # Models
+    # Models (v2)
+    "PulseV2Config",
+    "PulseV2ForCausalLM",
+    "PulseV2",
+    # Models (v1 legacy)
     "PulseConfig",
     "PulseForCausalLM",
     "PulseModel",
@@ -64,35 +62,14 @@ __all__ = [
     # Attention
     "GroupedQueryAttention",
     "MultiHeadAttention",
-    "StateAttention",
     # FFN
     "SwiGLU",
-    "GeGLU",
-    "MLP",
-    # SSM
-    "SelectiveSSM",
-    "SSMBlock",
-    # State
-    "GatedStatePropagator",
-    "StateManager",
-    # Memory
-    "MemoryBank",
-    "HierarchicalMemory",
-    "StreamingContext",
-    # Spiking
-    "SpikingNeuron",
-    "PulseProcessor",
-    "DynamicRouter",
-    "NaturalVariation",
-    # Mixture
-    "MixtureOfExperts",
-    "MixtureOfDepths",
-    "AdaptiveComputation",
-    # Cache
-    "KVCache",
-    "CompressedKVCache",
-    "SlidingWindowCache",
-    # Speculative
-    "SpeculativeDecoder",
-    "DraftModel",
+    # Unified (v2)
+    "UnifiedBlock",
+    "LinearAttention",
+    "LocalConv",
+    "RecurrentState",
+    # Memory (v2)
+    "SimpleMemory",
+    "MemoryAugmentedBlock",
 ]

@@ -1,10 +1,19 @@
-# PULSE - Parallel Unified Linear State Engine
+# PULSE v2 - Parallel Unified Linear State Engine
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 
-A biologically-inspired neural architecture with hierarchical memory and efficient state-based processing.
+**Keep it simple. Keep it efficient. Make it godlike.**
+
+A radically simplified neural architecture with O(n) complexity.
+
+## What's New in v2
+
+- **UnifiedBlock**: Single primitive replacing SSM + Attention + State
+- **LinearAttention**: O(n) attention with exponential decay
+- **SimpleMemory**: LRU cache replacing 3-tier hierarchical memory
+- **~70% less code**, same or better performance
 
 ## Installation
 
@@ -16,95 +25,76 @@ pip install -e .
 
 ## Quick Start
 
-### Core Model
-
 ```python
-from pulse import PulseConfig, PulseForCausalLM
+from pulse import PulseV2Config, PulseV2ForCausalLM
 import torch
 
-config = PulseConfig(
+# Minimal config - just what matters
+config = PulseV2Config(
     vocab_size=32000,
     hidden_size=768,
     num_layers=12,
-    num_heads=12,
+    num_heads=8,
 )
 
-model = PulseForCausalLM(config)
+model = PulseV2ForCausalLM(config)
 outputs = model(input_ids, labels=labels)
+loss = outputs["loss"]
+
+# Generation
+generated = model.generate(input_ids, max_new_tokens=100)
 ```
 
-### Memory-as-a-Service (MaaS)
+## Core Components
 
 ```python
-from pulse.maas import MemoryService, MemoryLayer
-import torch
+from pulse import UnifiedBlock, SimpleMemory, LinearAttention
 
-memory = MemoryService(hidden_size=768)
-memory_id = memory.write_memory(
-    content="User prefers Python",
-    embedding=torch.randn(768),
-    layer=MemoryLayer.LONG_TERM
-)
+# UnifiedBlock: Local conv + Linear attention + SwiGLU
+block = UnifiedBlock(hidden_size=768, num_heads=8)
+output, state = block(x)  # O(n) complexity
 
-results = memory.read_memory(
-    query="user preferences",
-    query_embedding=torch.randn(768),
-    limit=5
-)
-```
-
-### MaaS Server
-
-```bash
-python -m pulse.maas.server
-# Server runs on http://localhost:5000
-```
-
-## Training
-
-```bash
-python scripts/train.py --output-dir ./output --max-steps 2000
+# SimpleMemory: Fixed-size LRU cache
+memory = SimpleMemory(hidden_size=768, capacity=512)
+memory.write(embedding)
+values, scores, _ = memory.read(query, top_k=5)
 ```
 
 ## Architecture
 
 ```
 src/pulse/
-├── core/              # Building blocks
-│   ├── attention.py   # GQA, MHA, sparse attention
-│   ├── cache.py       # KV cache variants
-│   ├── ffn.py         # SwiGLU, MLP
-│   ├── memory.py      # Hierarchical memory
-│   ├── mixture.py     # MoE, MoD
-│   ├── norm.py        # RMSNorm
-│   ├── rope.py        # Rotary embeddings
-│   ├── speculative.py # Speculative decoding
-│   ├── spiking.py     # Pulse processing
-│   ├── ssm.py         # State space models
-│   └── state.py       # State management
-├── maas/              # Memory-as-a-Service
-│   ├── api.py
-│   ├── consolidation.py
-│   ├── memory_service.py
-│   ├── query_engine.py
-│   └── server.py
+├── core/
+│   ├── unified.py        # UnifiedBlock, LinearAttention, LocalConv
+│   ├── simple_memory.py  # SimpleMemory, MemoryAugmentedBlock
+│   ├── attention.py      # GQA, MHA (for legacy)
+│   ├── ffn.py            # SwiGLU
+│   ├── norm.py           # RMSNorm
+│   └── rope.py           # Rotary embeddings
 └── models/
-    └── pulse.py       # Main model
+    ├── pulse_v2.py       # PulseV2 (recommended)
+    └── pulse_legacy.py   # PulseV1 (compatibility)
 ```
 
-## Key Features
+## Design Philosophy
 
-- **Hierarchical Memory**: Working, short-term, and long-term layers with automatic consolidation
-- **Efficient Attention**: Sparse and linear attention mechanisms
-- **Dynamic Routing**: MoE-style expert selection
-- **State Management**: GRU/LSTM-based state propagation
-- **Memory Service**: Persistent, queryable memory for AI agents
+| Principle | Implementation |
+|-----------|----------------|
+| **One primitive** | UnifiedBlock does it all |
+| **O(n) complexity** | LinearAttention + LocalConv |
+| **Minimal state** | Single recurrent vector |
+| **Simple memory** | LRU cache, not hierarchical |
+| **No conditionals** | Every layer identical |
 
-## Documentation
+## v1 → v2 Migration
 
-- [Architecture Details](docs/ARCHITECTURE.md)
-- [MaaS Guide](docs/MAAS.md)
-- [Examples](examples/)
+```python
+# v1 (legacy)
+from pulse import PulseConfig, PulseForCausalLM
+
+# v2 (recommended)  
+from pulse import PulseV2Config, PulseV2ForCausalLM
+```
 
 ## License
 

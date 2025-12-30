@@ -1,4 +1,8 @@
-"""PULSE Core - Modular building blocks for neural architectures."""
+"""
+PULSE Core - Minimal building blocks for neural architectures.
+
+v2: Radically simplified. Keep it simple & efficient.
+"""
 
 # Normalization
 from .norm import RMSNorm
@@ -6,32 +10,17 @@ from .norm import RMSNorm
 # Position Embeddings
 from .rope import RotaryEmbedding, apply_rotary_pos_emb
 
-# Attention
-from .attention import GroupedQueryAttention, MultiHeadAttention, StateAttention
+# Attention (minimal)
+from .attention import GroupedQueryAttention, MultiHeadAttention
 
-# Feed-Forward
-from .ffn import SwiGLU, GeGLU, MLP
+# Feed-Forward (minimal)
+from .ffn import SwiGLU
 
-# State Space Model
-from .ssm import SelectiveSSM, SSMBlock
+# Unified Block (NEW - replaces SSM, State, Mixture complexity)
+from .unified import UnifiedBlock, LinearAttention, LocalConv, RecurrentState
 
-# State Management
-from .state import GatedStatePropagator, StateManager
-
-# Memory
-from .memory import MemoryBank, HierarchicalMemory, StreamingContext
-
-# Spiking & Pulse
-from .spiking import SpikingNeuron, PulseProcessor, DynamicRouter, NaturalVariation
-
-# Mixture
-from .mixture import MixtureOfExperts, MixtureOfDepths, AdaptiveComputation
-
-# Cache
-from .cache import KVCache, CompressedKVCache, SlidingWindowCache
-
-# Speculative
-from .speculative import SpeculativeDecoder, DraftModel
+# Simple Memory (NEW - replaces HierarchicalMemory)
+from .simple_memory import SimpleMemory, MemoryAugmentedBlock
 
 __all__ = [
     # Norm
@@ -42,35 +31,14 @@ __all__ = [
     # Attention
     "GroupedQueryAttention",
     "MultiHeadAttention",
-    "StateAttention",
     # FFN
     "SwiGLU",
-    "GeGLU",
-    "MLP",
-    # SSM
-    "SelectiveSSM",
-    "SSMBlock",
-    # State
-    "GatedStatePropagator",
-    "StateManager",
-    # Memory
-    "MemoryBank",
-    "HierarchicalMemory",
-    "StreamingContext",
-    # Spiking
-    "SpikingNeuron",
-    "PulseProcessor",
-    "DynamicRouter",
-    "NaturalVariation",
-    # Mixture
-    "MixtureOfExperts",
-    "MixtureOfDepths",
-    "AdaptiveComputation",
-    # Cache
-    "KVCache",
-    "CompressedKVCache",
-    "SlidingWindowCache",
-    # Speculative
-    "SpeculativeDecoder",
-    "DraftModel",
+    # Unified (v2)
+    "UnifiedBlock",
+    "LinearAttention",
+    "LocalConv",
+    "RecurrentState",
+    # Memory (v2)
+    "SimpleMemory",
+    "MemoryAugmentedBlock",
 ]
