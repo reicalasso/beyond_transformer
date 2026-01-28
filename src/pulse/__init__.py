@@ -11,16 +11,20 @@ Core ideas:
 
 __version__ = "3.0.0"
 
-# Models (v2 recommended)
+# Models
 from .models import (
-    # v2 - recommended
-    PulseV2Config,
-    PulseV2ForCausalLM,
-    PulseV2,
-    # v1 - legacy
+    # Current PULSE model
     PulseConfig,
     PulseForCausalLM,
     PulseModel,
+    # Explicit v2 implementation (kept for compatibility)
+    PulseV2Config,
+    PulseV2ForCausalLM,
+    PulseV2,
+    # Legacy v1 implementation
+    LegacyPulseConfig,
+    LegacyPulseForCausalLM,
+    LegacyPulseModel,
 )
 
 from .core import (
@@ -48,14 +52,18 @@ from .core import (
 )
 
 __all__ = [
-    # Models (v2)
-    "PulseV2Config",
-    "PulseV2ForCausalLM",
-    "PulseV2",
-    # Models (v1 legacy)
+    # Current PULSE model
     "PulseConfig",
     "PulseForCausalLM",
     "PulseModel",
+    # Explicit v2 (compatibility)
+    "PulseV2Config",
+    "PulseV2ForCausalLM",
+    "PulseV2",
+    # Legacy v1
+    "LegacyPulseConfig",
+    "LegacyPulseForCausalLM",
+    "LegacyPulseModel",
     # Norm
     "RMSNorm",
     # Position

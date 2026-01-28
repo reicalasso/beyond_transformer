@@ -26,18 +26,18 @@ pip install -e .
 ## Quick Start
 
 ```python
-from pulse import PulseV2Config, PulseV2ForCausalLM
+from pulse import PulseConfig, PulseForCausalLM
 import torch
 
 # Minimal config - just what matters
-config = PulseV2Config(
+config = PulseConfig(
     vocab_size=32000,
     hidden_size=768,
     num_layers=12,
     num_heads=8,
 )
 
-model = PulseV2ForCausalLM(config)
+model = PulseForCausalLM(config)
 outputs = model(input_ids, labels=labels)
 loss = outputs["loss"]
 
@@ -72,8 +72,9 @@ src/pulse/
 │   ├── norm.py           # RMSNorm
 │   └── rope.py           # Rotary embeddings
 └── models/
-    ├── pulse_v2.py       # PulseV2 (recommended)
-    └── pulse_legacy.py   # PulseV1 (compatibility)
+    ├── pulse_model.py    # PulseConfig / PulseModel / PulseForCausalLM (current)
+    ├── pulse_v2.py       # Explicit v2 implementation
+    └── pulse_legacy.py   # v1 compatibility
 ```
 
 ## Design Philosophy
@@ -90,10 +91,10 @@ src/pulse/
 
 ```python
 # v1 (legacy)
-from pulse import PulseConfig, PulseForCausalLM
+from pulse import LegacyPulseConfig, LegacyPulseForCausalLM
 
-# v2 (recommended)  
-from pulse import PulseV2Config, PulseV2ForCausalLM
+# Current PULSE model
+from pulse import PulseConfig, PulseForCausalLM
 ```
 
 ## License

@@ -27,18 +27,18 @@ x → RMSNorm → [LocalConv ⊕ LinearAttn] → Gate → + → RMSNorm → SwiG
 
 ### LinearAttention
 
-O(n) attention using kernel trick:
+Causal, kernel-based attention layer with exponential decay:
 
-```python
-# Instead of: softmax(QK^T)V  -- O(n²)
-# We do: Q @ cumsum(K^T @ V)  -- O(n)
-```
+- Computes queries, keys, values per head
+- Applies non-negative feature map `elu(x) + 1`
+- Maintains a lightweight running summary per head
+- Applies an exponential decay factor to favor recent tokens
 
-Features:
+This implementation is designed to be:
 
-- Exponential decay for recency bias
-- Cumulative state for streaming
-- Feature map: elu(x) + 1
+- **O(n)** in sequence length
+- **Mask-aware** (padding tokens do not affect the state)
+- **Mixed-precision friendly** (no large intermediate matrices)
 
 ### KeyValueMemory
 
@@ -46,7 +46,7 @@ Fixed-size key–value cache replacing 3-tier memory:
 
 ```
 ┌─────────────────────────┐
-│  KeyValueMemory (512)   │
+│  KeyValueMemory (64)    │
 │  ├─ keys[capacity, dim] │
 │  ├─ values[capacity]    │
 │  └─ ptr (circular)      │
@@ -60,22 +60,19 @@ Operations:
 
 ### RecurrentState
 
-Single compressed state vector:
+Single compressed state vector shared across layers and sequences.
 
-```python
-# Old: [batch, 32, hidden_dim] state bank
-# New: [batch, hidden_dim] single state
-
-state = gate * state + (1 - gate) * update
-```
+- Input: current hidden states `[batch, seq_len, hidden_dim]`
+- Output: updated state `[batch, hidden_dim]`
+- Update rule: gated EMA-style blend of previous state and pooled hidden states
 
 ## Model Architecture
 
 ```
 Input → Embed → [UnifiedBlock × N] → Norm → LM Head → Output
-                      │
-                      └─ Optional: RecurrentState (single vector)
-                      └─ Optional: KeyValueMemory (LRU cache)
+                     │
+                     └─ RecurrentState (single vector, updated after all blocks)
+                     └─ Optional: KeyValueMemory (LRU-style cache)
 ```
 
 ## File Structure
@@ -90,7 +87,8 @@ src/pulse/core/
 └── rope.py           # Rotary embeddings
 
 src/pulse/models/
-├── pulse_v2.py       # PulseV2Config, PulseV2, PulseV2ForCausalLM
+├── pulse_model.py    # PulseConfig, PulseModel, PulseForCausalLM (current)
+├── pulse_v2.py       # explicit v2 implementation
 └── pulse_legacy.py   # v1 compatibility
 ```
 
@@ -114,6 +112,5 @@ src/pulse/models/
 
 **Memory:**
 
-- KeyValueMemory: 512 × dim × 2 (keys + values)
+- KeyValueMemory: capacity × dim × 2 (keys + values), capacity typically 64
 - RecurrentState: 1 × dim
-- ~50% reduction vs v1

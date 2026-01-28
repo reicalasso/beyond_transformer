@@ -1,8 +1,8 @@
 """
-PULSE Model v1 - Legacy Language Model
+PULSE model v1 - legacy language model.
 
-DEPRECATED: Use PulseV2 instead for new projects.
-This is kept for backward compatibility only.
+DEPRECATED: Use the current `PulseConfig` / `PulseModel` / `PulseForCausalLM`
+interfaces instead. This module is kept for backward compatibility only.
 
 Simple GQA + SwiGLU architecture.
 """

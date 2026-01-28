@@ -10,7 +10,7 @@ No SSM/MoE/MoD complexity. Just what works.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -41,7 +41,7 @@ class PulseV2Config:
     
     # Optional features
     use_memory: bool = False
-    memory_capacity: int = 512
+    memory_capacity: int = 64
     use_recurrent_state: bool = True
     
     # Regularization
@@ -95,7 +95,7 @@ class PulseV2(nn.Module):
             for _ in range(config.num_layers)
         ])
         
-        # Optional recurrent state
+        # Optional recurrent state (updated after all layers; no per-layer injection to avoid mode collapse)
         if config.use_recurrent_state:
             self.recurrent = RecurrentState(config.hidden_size)
         else:
@@ -169,7 +169,7 @@ class PulseV2(nn.Module):
             x, layer_state = layer(x, state=attention_state[i], attention_mask=pad_mask)
             layer_states.append(layer_state)
         
-        # Update recurrent state (after all layers)
+        # Update recurrent state once after all layers (per-layer injection caused repetition collapse)
         if self.recurrent is not None:
             recurrent_state = self.recurrent(x, recurrent_state)
         

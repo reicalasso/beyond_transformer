@@ -188,13 +188,18 @@ def train(args, config: Optional[FullConfig] = None):
         model_config.vocab_size = vocab_size
         pulse_config = model_config
     else:
-        # Minimal, current PULSE configuration
+        # Minimal, current PULSE configuration.
+        # Recurrent state is enabled by default; external memory is left off so that
+        # ablation runs can cleanly measure its impact.
         pulse_config = PulseConfig(
             vocab_size=vocab_size,
             hidden_size=args.hidden_size,
             num_layers=args.num_layers,
             num_heads=args.num_heads,
             max_seq_len=args.max_seq_len,
+            use_recurrent_state=True,
+            use_memory=False,
+            dropout=0.1,
         )
     
     model = PulseForCausalLM(pulse_config).to(device)
