@@ -1,7 +1,5 @@
 """
-PULSE Core - Minimal building blocks for neural architectures.
-
-v2: Radically simplified. Keep it simple & efficient.
+PULSE core modules: reusable building blocks for sequence models.
 """
 
 # Normalization
@@ -16,11 +14,11 @@ from .attention import GroupedQueryAttention, MultiHeadAttention
 # Feed-Forward (minimal)
 from .ffn import SwiGLU
 
-# Unified Block (NEW - replaces SSM, State, Mixture complexity)
+# Unified processing block
 from .unified import UnifiedBlock, LinearAttention, LocalConv, RecurrentState
 
-# Simple Memory (NEW - replaces HierarchicalMemory)
-from .simple_memory import SimpleMemory, MemoryAugmentedBlock
+# External memory
+from .memory import KeyValueMemory, MemoryAugmentedLayer, SimpleMemory, MemoryAugmentedBlock
 
 __all__ = [
     # Norm
@@ -38,7 +36,10 @@ __all__ = [
     "LinearAttention",
     "LocalConv",
     "RecurrentState",
-    # Memory (v2)
+    # Memory
+    "KeyValueMemory",
+    "MemoryAugmentedLayer",
+    # Backwards-compatible names
     "SimpleMemory",
     "MemoryAugmentedBlock",
 ]

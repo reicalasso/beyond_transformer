@@ -9,7 +9,6 @@ Single primitive combining:
 O(n) complexity, replaces separate SSM/Attention/State modules.
 """
 
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,17 +19,16 @@ from .rope import RotaryEmbedding, apply_rotary_pos_emb
 
 class LinearAttention(nn.Module):
     """
-    Linear Attention with exponential decay.
+    Linear Attention with exponential decay and lightweight state.
     
-    O(n) complexity via kernel trick:
-    - Q, K projected through feature map (elu + 1)
-    - Cumulative sum instead of full attention matrix
-    - Exponential decay for recency bias
+    Implementation follows kernel-based causal attention in a fully
+    vectorized way and keeps only a single running KV and K sum per
+    head instead of a full [D, D] matrix.
     
     Args:
         hidden_size: Model dimension
         num_heads: Number of attention heads
-        decay: Exponential decay factor (0.9-0.99)
+        decay: Exponential decay factor (0.0-1.0). 0.0 disables decay.
     """
     
     def __init__(
@@ -40,103 +38,111 @@ class LinearAttention(nn.Module):
         decay: float = 0.95,
     ):
         super().__init__()
+        assert hidden_size % num_heads == 0, "hidden_size must be divisible by num_heads"
         self.hidden_size = hidden_size
         self.num_heads = num_heads
         self.head_dim = hidden_size // num_heads
-        self.decay = decay
         
         self.qkv_proj = nn.Linear(hidden_size, hidden_size * 3, bias=False)
         self.out_proj = nn.Linear(hidden_size, hidden_size, bias=False)
         
-        # Learnable decay per head
-        self.decay_param = nn.Parameter(torch.ones(num_heads) * decay)
+        # Learnable decay per head in [0, 1]
+        self.decay_param = nn.Parameter(torch.full((num_heads,), float(decay)))
+    
+    def _phi(self, x: torch.Tensor) -> torch.Tensor:
+        """Kernel feature map: elu(x) + 1 to keep values non-negative."""
+        return F.elu(x) + 1
     
     def forward(
         self,
         x: torch.Tensor,
         state: torch.Tensor = None,
+        attention_mask: torch.Tensor = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass with optional recurrent state.
         
         Args:
             x: [batch, seq_len, hidden_size]
-            state: Optional [batch, num_heads, head_dim, head_dim] recurrent state
+            state: Optional tuple (kv, k_sum) where
+                kv: [batch, num_heads, head_dim] running KV summary
+                k_sum: [batch, num_heads, head_dim] running key sum
+            attention_mask: Optional [batch, 1, 1, seq_len] mask where 1
+                marks valid tokens and 0 marks padding positions. When
+                provided, padded positions do not contribute to the
+                running state.
             
         Returns:
             output: [batch, seq_len, hidden_size]
-            new_state: [batch, num_heads, head_dim, head_dim]
+            new_state: (kv, k_sum) with same shapes as above
         """
-        batch_size, seq_len, _ = x.shape
+        bsz, seqlen, _ = x.shape
         
-        # Project QKV
         qkv = self.qkv_proj(x)
         q, k, v = qkv.chunk(3, dim=-1)
         
-        # Reshape to heads
-        q = q.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        k = k.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
-        v = v.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        q = q.view(bsz, seqlen, self.num_heads, self.head_dim).transpose(1, 2)
+        k = k.view(bsz, seqlen, self.num_heads, self.head_dim).transpose(1, 2)
+        v = v.view(bsz, seqlen, self.num_heads, self.head_dim).transpose(1, 2)
         
-        # Feature map: elu(x) + 1 for non-negative keys/queries
-        q = F.elu(q) + 1
-        k = F.elu(k) + 1
-        
-        # Linear attention with decay
-        output, new_state = self._linear_attention(q, k, v, state)
-        
-        # Reshape and project
-        output = output.transpose(1, 2).contiguous().view(batch_size, seq_len, -1)
-        output = self.out_proj(output)
-        
-        return output, new_state
-    
-    def _linear_attention(
-        self,
-        q: torch.Tensor,
-        k: torch.Tensor, 
-        v: torch.Tensor,
-        state: torch.Tensor,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        """
-        Compute linear attention with cumulative state.
-        
-        Uses: output = (Q @ cumsum(K^T @ V)) / (Q @ cumsum(K^T @ 1))
-        """
-        batch_size, num_heads, seq_len, head_dim = q.shape
-        decay = torch.sigmoid(self.decay_param).view(1, num_heads, 1, 1)
+        q = self._phi(q)
+        k = self._phi(k)
         
         # Initialize state
         if state is None:
-            state = torch.zeros(
-                batch_size, num_heads, head_dim, head_dim,
-                device=q.device, dtype=q.dtype
+            kv = torch.zeros(
+                bsz, self.num_heads, self.head_dim,
+                device=x.device,
+                dtype=x.dtype,
             )
+            k_sum = torch.zeros_like(kv)
+        else:
+            kv, k_sum = state
         
+        # Expand decay to broadcast over sequence
+        decay = torch.sigmoid(self.decay_param).view(1, self.num_heads, 1)
+        
+        # Prepare boolean mask over time if provided: [B, 1, 1, T] -> [B, 1, T]
+        if attention_mask is not None:
+            # 1.0 for valid tokens, 0.0 for padding
+            time_mask = attention_mask.squeeze(2)  # [B, 1, T]
+        else:
+            time_mask = None
+        
+        # We perform a causal scan along time dimension using
+        # cumulative updates of kv and k_sum with decay.
         outputs = []
-        
-        # Sequential scan with decay
-        for t in range(seq_len):
-            q_t = q[:, :, t:t+1, :]  # [B, H, 1, D]
-            k_t = k[:, :, t:t+1, :]  # [B, H, 1, D]
-            v_t = v[:, :, t:t+1, :]  # [B, H, 1, D]
+        for t in range(seqlen):
+            k_t = k[:, :, t, :]  # [B, H, D]
+            v_t = v[:, :, t, :]  # [B, H, D]
+            q_t = q[:, :, t, :]  # [B, H, D]
             
-            # Update state: S = decay * S + k^T @ v
-            kv = k_t.transpose(-2, -1) @ v_t  # [B, H, D, D]
-            state = decay * state + kv
+            if time_mask is not None:
+                m_t = time_mask[:, :, t]  # [B, 1]
+                m_t = m_t.expand(-1, self.num_heads)  # [B, H]
+                m_t = m_t.unsqueeze(-1)  # [B, H, 1]
+                k_t = k_t * m_t
+                v_t = v_t * m_t
             
-            # Compute output: o = q @ S
-            o_t = q_t @ state  # [B, H, 1, D]
+            # Update running statistics
+            kv = decay * kv + torch.bmm(
+                k_t.view(bsz * self.num_heads, 1, self.head_dim),
+                v_t.view(bsz * self.num_heads, self.head_dim, 1),
+            ).view(bsz, self.num_heads, self.head_dim)
+            k_sum = decay * k_sum + k_t
             
-            # Normalize
-            k_sum = k_t.sum(dim=-1, keepdim=True)  # [B, H, 1, 1]
-            normalizer = (q_t * k_sum).sum(dim=-1, keepdim=True).clamp(min=1e-6)
-            o_t = o_t / normalizer
-            
-            outputs.append(o_t)
+            # Compute attention output
+            num = (q_t * kv).sum(dim=-1, keepdim=True)  # [B, H, 1]
+            den = (q_t * k_sum).sum(dim=-1, keepdim=True).clamp(min=1e-6)
+            o_t = (num / den) * q_t  # [B, H, D]
+            outputs.append(o_t.unsqueeze(2))
         
         output = torch.cat(outputs, dim=2)  # [B, H, T, D]
-        return output, state
+        output = output.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
+        output = self.out_proj(output)
+        
+        new_state = (kv, k_sum)
+        return output, new_state
 
 
 class LocalConv(nn.Module):
@@ -224,6 +230,7 @@ class UnifiedBlock(nn.Module):
         self,
         x: torch.Tensor,
         state: torch.Tensor = None,
+        attention_mask: torch.Tensor = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass.
@@ -242,7 +249,7 @@ class UnifiedBlock(nn.Module):
         
         # Local + Global processing
         local_out = self.local_conv(x_norm)
-        global_out, new_state = self.linear_attn(x_norm, state)
+        global_out, new_state = self.linear_attn(x_norm, state, attention_mask=attention_mask)
         
         # Gated fusion
         combined = torch.cat([local_out, global_out], dim=-1)

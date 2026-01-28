@@ -1,4 +1,4 @@
-# PULSE v2 - Parallel Unified Linear State Engine
+# PULSE 3 - Parallel Unified Linear State Engine
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -8,11 +8,11 @@
 
 A radically simplified neural architecture with O(n) complexity.
 
-## What's New in v2
+## What's New in this version
 
 - **UnifiedBlock**: Single primitive replacing SSM + Attention + State
 - **LinearAttention**: O(n) attention with exponential decay
-- **SimpleMemory**: LRU cache replacing 3-tier hierarchical memory
+- **KeyValueMemory**: LRU-style cache replacing 3-tier hierarchical memory
 - **~70% less code**, same or better performance
 
 ## Installation
@@ -48,14 +48,14 @@ generated = model.generate(input_ids, max_new_tokens=100)
 ## Core Components
 
 ```python
-from pulse import UnifiedBlock, SimpleMemory, LinearAttention
+from pulse import UnifiedBlock, KeyValueMemory, LinearAttention
 
-# UnifiedBlock: Local conv + Linear attention + SwiGLU
+# UnifiedBlock: Local conv + linear attention + SwiGLU
 block = UnifiedBlock(hidden_size=768, num_heads=8)
 output, state = block(x)  # O(n) complexity
 
-# SimpleMemory: Fixed-size LRU cache
-memory = SimpleMemory(hidden_size=768, capacity=512)
+# KeyValueMemory: Fixed-size key–value cache
+memory = KeyValueMemory(hidden_size=768, capacity=512)
 memory.write(embedding)
 values, scores, _ = memory.read(query, top_k=5)
 ```
@@ -66,7 +66,7 @@ values, scores, _ = memory.read(query, top_k=5)
 src/pulse/
 ├── core/
 │   ├── unified.py        # UnifiedBlock, LinearAttention, LocalConv
-│   ├── simple_memory.py  # SimpleMemory, MemoryAugmentedBlock
+│   ├── memory.py         # KeyValueMemory, MemoryAugmentedLayer
 │   ├── attention.py      # GQA, MHA (for legacy)
 │   ├── ffn.py            # SwiGLU
 │   ├── norm.py           # RMSNorm
@@ -83,10 +83,10 @@ src/pulse/
 | **One primitive** | UnifiedBlock does it all |
 | **O(n) complexity** | LinearAttention + LocalConv |
 | **Minimal state** | Single recurrent vector |
-| **Simple memory** | LRU cache, not hierarchical |
+| **External memory** | Key–value cache, not hierarchical |
 | **No conditionals** | Every layer identical |
 
-## v1 → v2 Migration
+## v1 → current PULSE Migration
 
 ```python
 # v1 (legacy)

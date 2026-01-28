@@ -188,16 +188,13 @@ def train(args, config: Optional[FullConfig] = None):
         model_config.vocab_size = vocab_size
         pulse_config = model_config
     else:
+        # Minimal, current PULSE configuration
         pulse_config = PulseConfig(
             vocab_size=vocab_size,
             hidden_size=args.hidden_size,
             num_layers=args.num_layers,
             num_heads=args.num_heads,
-            num_states=args.num_states,
-            state_dim=args.hidden_size,
-            intermediate_size=args.hidden_size * 4,
-            max_position_embeddings=max_seq_len + 64,
-            dropout=0.1,
+            max_seq_len=args.max_seq_len,
         )
     
     model = PulseForCausalLM(pulse_config).to(device)
@@ -469,7 +466,6 @@ def main():
     parser.add_argument("--hidden-size", type=int, default=512)
     parser.add_argument("--num-layers", type=int, default=8)
     parser.add_argument("--num-heads", type=int, default=8)
-    parser.add_argument("--num-states", type=int, default=32)
     parser.add_argument("--max-seq-len", type=int, default=256)
     
     # Training (used if no config file)

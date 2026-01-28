@@ -1,12 +1,12 @@
 """
-PULSE Simple Memory
+Key-value memory cache for sequence models.
 
-LRU-style fixed-size memory cache.
-Replaces complex 3-tier hierarchical memory with single efficient buffer.
+Provides a fixed-capacity, LRU-style key–value store that replaces
+deeper hierarchical memory structures with a single efficient buffer.
 
 Features:
-- Fixed capacity with circular buffer
-- Similarity-based retrieval
+- Fixed capacity with circular buffer semantics
+- Similarity-based retrieval over stored keys
 - O(k) lookup where k = capacity
 """
 
@@ -15,12 +15,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class SimpleMemory(nn.Module):
+class KeyValueMemory(nn.Module):
     """
-    Fixed-size LRU memory cache.
+    Fixed-size key–value memory cache.
     
-    Simple and efficient memory for storing/retrieving embeddings.
-    Uses cosine similarity for retrieval and circular buffer for updates.
+    Designed for storing and retrieving embedding vectors using cosine
+    similarity, with a circular buffer implementing LRU-style updates.
     
     Args:
         hidden_size: Embedding dimension
@@ -37,6 +37,8 @@ class SimpleMemory(nn.Module):
         self.register_buffer('values', torch.zeros(capacity, hidden_size))
         self.register_buffer('ptr', torch.zeros(1, dtype=torch.long))
         self.register_buffer('size', torch.zeros(1, dtype=torch.long))
+        # Store capacity as tensor for in-place min/clamp without reallocation
+        self.register_buffer('capacity_tensor', torch.tensor(capacity, dtype=torch.long))
         
         # Projection for query
         self.query_proj = nn.Linear(hidden_size, hidden_size, bias=False)
@@ -67,7 +69,9 @@ class SimpleMemory(nn.Module):
             self.keys[idx] = key[i].detach()
             self.values[idx] = value[i].detach()
             self.ptr = (self.ptr + 1) % self.capacity
-            self.size = min(self.size + 1, torch.tensor([self.capacity], device=self.size.device))
+            # Increase current size up to capacity, in-place to avoid tensor thrash
+            self.size.add_(1)
+            self.size.clamp_max_(self.capacity_tensor)
         
         return idx
     
@@ -176,11 +180,12 @@ class SimpleMemory(nn.Module):
         return self.size.item()
 
 
-class MemoryAugmentedBlock(nn.Module):
+class MemoryAugmentedLayer(nn.Module):
     """
-    Block that can read/write to external memory.
+    Layer that augments hidden states with external memory.
     
-    Optional wrapper for UnifiedBlock to add memory capabilities.
+    Intended as a wrapper around a sequence model block to add
+    differentiable key–value memory capabilities.
     
     Args:
         hidden_size: Model dimension
@@ -193,7 +198,7 @@ class MemoryAugmentedBlock(nn.Module):
         memory_capacity: int = 512,
     ):
         super().__init__()
-        self.memory = SimpleMemory(hidden_size, memory_capacity)
+        self.memory = KeyValueMemory(hidden_size, memory_capacity)
         self.gate = nn.Linear(hidden_size * 2, hidden_size, bias=False)
     
     def forward(
@@ -225,3 +230,9 @@ class MemoryAugmentedBlock(nn.Module):
             self.memory.write(pooled)
         
         return output
+
+
+# Backwards-compatible aliases for previous public names
+SimpleMemory = KeyValueMemory
+MemoryAugmentedBlock = MemoryAugmentedLayer
+

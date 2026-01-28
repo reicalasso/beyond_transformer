@@ -1,15 +1,15 @@
 """
 PULSE - Parallel Unified Linear State Engine
 
-v2: Radically simplified. Keep it simple & efficient.
+Minimal, efficient, production-ready sequence backbone.
 
-A minimal neural architecture with:
-- UnifiedBlock: O(n) local+global processing
+Core ideas:
+- UnifiedBlock: O(n) local + global processing
 - SimpleMemory: LRU cache for persistence
 - RecurrentState: Single compressed state
 """
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 
 # Models (v2 recommended)
 from .models import (
@@ -23,27 +23,29 @@ from .models import (
     PulseModel,
 )
 
-# Core building blocks
 from .core import (
-    # Norm
+    # Normalization
     RMSNorm,
-    # Position
+    # Position encodings
     RotaryEmbedding,
     apply_rotary_pos_emb,
     # Attention
     GroupedQueryAttention,
     MultiHeadAttention,
-    # FFN
+    # Feed-forward
     SwiGLU,
-    # Unified (v2)
+    # Unified processing
     UnifiedBlock,
     LinearAttention,
     LocalConv,
     RecurrentState,
-    # Memory (v2)
+    # External memory
+    KeyValueMemory,
+    MemoryAugmentedLayer,
+    # Backwards-compatible names
     SimpleMemory,
     MemoryAugmentedBlock,
-)
+]
 
 __all__ = [
     # Models (v2)
@@ -64,12 +66,15 @@ __all__ = [
     "MultiHeadAttention",
     # FFN
     "SwiGLU",
-    # Unified (v2)
+    # Unified processing
     "UnifiedBlock",
     "LinearAttention",
     "LocalConv",
     "RecurrentState",
-    # Memory (v2)
+    # External memory
+    "KeyValueMemory",
+    "MemoryAugmentedLayer",
+    # Backwards-compatible names
     "SimpleMemory",
     "MemoryAugmentedBlock",
 ]

@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional, Union
 
 import yaml
 
-from ..models.pulse import PulseConfig
+from ..models import PulseConfig
 
 
 @dataclass

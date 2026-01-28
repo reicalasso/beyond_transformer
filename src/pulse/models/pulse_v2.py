@@ -18,7 +18,7 @@ import torch.nn.functional as F
 
 from ..core.norm import RMSNorm
 from ..core.unified import UnifiedBlock, RecurrentState
-from ..core.simple_memory import SimpleMemory
+from ..core.memory import KeyValueMemory
 
 
 @dataclass
@@ -56,6 +56,15 @@ class PulseV2Config:
         if self.intermediate_size is None:
             self.intermediate_size = int(self.hidden_size * 2.7)
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize configuration to a plain dictionary."""
+        return {k: v for k, v in self.__dict__.items()}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "PulseV2Config":
+        """Construct configuration from a dictionary, ignoring unknown keys."""
+        return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
+
 
 class PulseV2(nn.Module):
     """
@@ -92,9 +101,9 @@ class PulseV2(nn.Module):
         else:
             self.recurrent = None
         
-        # Optional memory
+        # Optional external key–value memory
         if config.use_memory:
-            self.memory = SimpleMemory(config.hidden_size, config.memory_capacity)
+            self.memory = KeyValueMemory(config.hidden_size, config.memory_capacity)
         else:
             self.memory = None
         
@@ -119,6 +128,8 @@ class PulseV2(nn.Module):
         self,
         input_ids: torch.Tensor,
         recurrent_state: torch.Tensor = None,
+        attention_state: Optional[List[torch.Tensor]] = None,
+        attention_mask: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], List[torch.Tensor]]:
         """
         Forward pass.
@@ -132,20 +143,30 @@ class PulseV2(nn.Module):
             new_recurrent_state: Updated recurrent state
             layer_states: List of per-layer linear attention states
         """
-        batch_size = input_ids.shape[0]
+        batch_size, seq_len = input_ids.shape
         
         # Embed
         x = self.embed(input_ids)
         x = self.dropout(x)
+        
+        # Build padding mask if provided: [batch, seq_len] -> [batch, 1, 1, seq_len]
+        if attention_mask is not None:
+            # Mask: 1 for tokens, 0 for padding
+            pad_mask = attention_mask.view(batch_size, 1, 1, seq_len)
+        else:
+            pad_mask = None
         
         # Initialize recurrent state
         if self.recurrent is not None and recurrent_state is None:
             recurrent_state = self.recurrent.get_initial_state(batch_size)
         
         # Process layers
-        layer_states = []
-        for layer in self.layers:
-            x, layer_state = layer(x, state=None)
+        layer_states: List[torch.Tensor] = []
+        if attention_state is None:
+            attention_state = [None] * len(self.layers)
+        
+        for i, layer in enumerate(self.layers):
+            x, layer_state = layer(x, state=attention_state[i], attention_mask=pad_mask)
             layer_states.append(layer_state)
         
         # Update recurrent state (after all layers)
@@ -183,6 +204,8 @@ class PulseV2ForCausalLM(nn.Module):
         input_ids: torch.Tensor,
         labels: torch.Tensor = None,
         recurrent_state: torch.Tensor = None,
+        attention_state: Optional[List[torch.Tensor]] = None,
+        attention_mask: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
         """
         Forward pass.
@@ -195,12 +218,18 @@ class PulseV2ForCausalLM(nn.Module):
         Returns:
             Dict with logits, loss (if labels), and recurrent_state
         """
-        hidden, recurrent_state, _ = self.model(input_ids, recurrent_state)
+        hidden, recurrent_state, layer_states = self.model(
+            input_ids,
+            recurrent_state=recurrent_state,
+            attention_state=attention_state,
+            attention_mask=attention_mask,
+        )
         logits = self.lm_head(hidden)
         
         output = {
             "logits": logits,
             "recurrent_state": recurrent_state,
+            "attention_state": layer_states,
         }
         
         if labels is not None:
@@ -242,11 +271,22 @@ class PulseV2ForCausalLM(nn.Module):
         """
         generated = input_ids.clone()
         recurrent_state = None
+        attention_state: Optional[List[torch.Tensor]] = None
+        attention_mask: Optional[torch.Tensor] = None
         
         for _ in range(max_new_tokens):
             # Forward pass
-            outputs = self(generated, recurrent_state=recurrent_state)
+            if attention_mask is None:
+                attention_mask = (generated != self.config.pad_token_id).long()
+            
+            outputs = self(
+                generated,
+                recurrent_state=recurrent_state,
+                attention_state=attention_state,
+                attention_mask=attention_mask,
+            )
             recurrent_state = outputs["recurrent_state"]
+            attention_state = outputs.get("attention_state")
             
             # Get next token logits
             next_logits = outputs["logits"][:, -1, :] / max(temperature, 1e-8)
@@ -273,6 +313,10 @@ class PulseV2ForCausalLM(nn.Module):
             next_token = torch.multinomial(probs, num_samples=1)
             
             generated = torch.cat([generated, next_token], dim=1)
+            attention_mask = torch.cat(
+                [attention_mask, (next_token != self.config.pad_token_id).long()],
+                dim=1,
+            )
             
             # Check EOS
             if eos_token_id is not None and (next_token == eos_token_id).all():
