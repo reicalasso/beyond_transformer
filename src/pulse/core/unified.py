@@ -124,11 +124,8 @@ class LinearAttention(nn.Module):
                 k_t = k_t * m_t
                 v_t = v_t * m_t
             
-            # Update running statistics
-            kv = decay * kv + torch.bmm(
-                k_t.view(bsz * self.num_heads, 1, self.head_dim),
-                v_t.view(bsz * self.num_heads, self.head_dim, 1),
-            ).view(bsz, self.num_heads, self.head_dim)
+            # Update running statistics (element-wise key–value summary)
+            kv = decay * kv + k_t * v_t  # [B, H, D]
             k_sum = decay * k_sum + k_t
             
             # Compute attention output

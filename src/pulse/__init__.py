@@ -45,7 +45,7 @@ from .core import (
     # Backwards-compatible names
     SimpleMemory,
     MemoryAugmentedBlock,
-]
+)
 
 __all__ = [
     # Models (v2)
