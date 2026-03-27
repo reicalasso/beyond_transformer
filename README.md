@@ -1,122 +1,135 @@
-# PULSE — Parallel Unified Linear State Engine
+# PULSE v3 — Parallel Unified Linear State Engine
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 [![Status: Active Research](https://img.shields.io/badge/Status-Active%20Research-orange.svg)]()
 
-> A personal research project exploring whether a single, simple primitive can replace the SSM + Attention + State complexity of modern sequence models.
-
----
-
-## What This Is
-
-PULSE is an experimental sequence architecture built around one question:
-
-**Can a uniform, O(n) block — combining local convolution and linear attention — match transformer-class models without quadratic complexity?**
-
-This is not a production library. It's a focused research implementation where I'm testing architectural assumptions from scratch.
+> A personal research project exploring whether a single, simple O(n) primitive can replace the SSM + Attention + State complexity of modern sequence models.
 
 ---
 
 ## Core Idea
 
-Instead of stacking multiple specialized modules (self-attention, SSM, cross-attention, state banks), PULSE uses a single `UnifiedBlock`:
+PULSE v3 uses a single **DualStateBlock** repeated across all layers — no special first/last layers, no conditional logic:
 
 ```
-x → RMSNorm → [LocalConv ⊕ LinearAttn] → GatedFusion → + → RMSNorm → SwiGLU → +
+x → RMSNorm → [LocalConv ⊕ DualStateAttention] → gate → residual
+  → RMSNorm → SwiGLU FFN → residual
 ```
 
-- **LocalConv** — depthwise separable convolution for short-range patterns, O(n)
-- **LinearAttention** — kernel-based causal attention with exponential decay, O(n)  
-- **GatedFusion** — learned interpolation between local and global signals
-- **KeyValueMemory** — optional fixed-size LRU cache for long-range recall
+The key innovation is **dual-timescale linear attention**:
 
-Every layer is identical. No conditionals, no special first/last layer logic.
+- **Fast state** (α ≈ 0.70, learnable): local syntax, short-range patterns
+- **Slow state** (β ≈ 0.97, learnable): semantics, long-range context
+
+Both run as O(n) causal decay scans. A learned gate blends the two timescales per position.
+
+**LocalConv** — causal depthwise-separable convolution for sub-word patterns, O(n).
 
 ---
 
-## Current State
+## Architecture
 
-| Component | Status | Notes |
-|---|---|---|
-| `UnifiedBlock` | ✅ Working | LocalConv + LinearAttn + GatedFusion; gate double-computation fixed |
-| `LinearAttention` | ✅ Working | Vectorized causal scan — single loop over T, parallelized across B/H/D |
-| `KeyValueMemory` | ✅ Working | Circular buffer, O(1) write, O(k) read |
-| `RecurrentState` | ✅ Working | Gated EMA update; now conditions embedding via projection (read path fixed) |
-| `PulseForCausalLM` | ✅ Working | Full model with incremental O(n) generation |
-| Training script | ✅ Working | TinyStories, AdamW + cosine LR; FP32/FP16/BF16 all correct |
-| Benchmarks | 🔲 Planned | No results yet |
+```
+DualStateAttention:
+  q, k, v  ←  qkv_proj(x)           # [B, H, T, D]
+  q, k     ←  phi(·)                 # elu + 1, non-negative kernel
+  kv       =  k * v                  # element-wise, [B, H, T, D]
+
+  # Two independent decay scans
+  fast_kv, fast_ks  ←  decay_scan(kv, k,  alpha)
+  slow_kv, slow_ks  ←  decay_scan(kv, k,  beta)
+
+  out_fast = (q * fast_kv) / (q · fast_ks)
+  out_slow = (q * slow_kv) / (q · slow_ks)
+
+  output  =  W_out( cat[out_fast, out_slow] )   # [B, T, D]
+```
+
+State per layer: `(kv_f, ks_f, kv_s, ks_s)` each `[B, H, D]` — 4D floats per head.
+
+Incremental generation carries these states forward → **O(1) per decode step**.
 
 ---
 
-## Installation
+## Quick Start
 
 ```bash
 git clone https://github.com/kaelvalen/beyond_transformer.git
 cd beyond_transformer
-pip install -e .
+pip install -e ".[train]"
 ```
-
-## Quick Start
 
 ```python
 from pulse import PulseConfig, PulseForCausalLM
 import torch
 
 config = PulseConfig(
-    vocab_size=32000,
-    hidden_size=768,
-    num_layers=12,
+    vocab_size=50257,
+    hidden_size=512,
+    num_layers=8,
     num_heads=8,
+    fast_decay=0.70,
+    slow_decay=0.97,
 )
 
 model = PulseForCausalLM(config)
-outputs = model(input_ids, labels=labels)
-loss = outputs["loss"]
+out   = model(input_ids, labels=labels)
+loss  = out["loss"]
 
-generated = model.generate(input_ids, max_new_tokens=100)
+generated = model.generate(input_ids, max_new_tokens=100, temperature=0.8)
 ```
 
 ```bash
-# Smoke test
+# Sanity check
 python scripts/smoke_test.py
 
-# Train on TinyStories
+# Train on TinyStories (defaults: 512-dim, 8-layer, 20k steps)
 python scripts/train.py
+
+# Train with RTX 4090 config (~50M params, 50k steps)
+python scripts/train.py --config configs/rtx4090_tinystories.yaml
+
+# Evaluate a checkpoint
+python scripts/test_best_model.py --checkpoint output/pulse_v3_4090/best_model.pt
 ```
 
 ---
 
-## Architecture Decisions
+## Configuration
 
-### Why linear attention instead of softmax attention?
+All hyperparameters are in `PulseConfig`:
 
-Softmax attention is O(n²) in sequence length. For long-context tasks this becomes a hard limit. Linear attention approximates attention with a kernel feature map (`elu(x) + 1`), reducing complexity to O(n) while maintaining a running KV summary across the sequence.
+| Parameter | Default | Description |
+|---|---|---|
+| `hidden_size` | 512 | Model dimension |
+| `num_layers` | 8 | Number of DualStateBlocks |
+| `num_heads` | 8 | Attention heads |
+| `ffn_mult` | 2.7 | FFN hidden = hidden × ffn_mult |
+| `kernel_size` | 4 | LocalConv kernel size |
+| `fast_decay` | 0.70 | Initial fast-state decay (learnable) |
+| `slow_decay` | 0.97 | Initial slow-state decay (learnable) |
+| `dropout` | 0.0 | Dropout probability |
+| `tie_embeddings` | True | Tie input/output embeddings |
 
-The tradeoff: weaker expressiveness on tasks that require precise token-to-token matching. The hypothesis being tested here is whether local convolution compensates for this.
+A YAML config can override any train.py CLI flag:
 
-### Why a single block type?
+```yaml
+# configs/my_config.yaml
+hidden_size: 768
+num_layers: 12
+fast_decay: 0.70
+slow_decay: 0.97
+batch_size: 16
+bf16: true
+max_steps: 50000
+output_dir: ./output/my_run
+```
 
-Conditional logic in architectures (different layers doing different things) makes ablations hard to interpret. A uniform block makes it easier to isolate what actually matters.
-
-### Why not Mamba or RWKV?
-
-I read both. PULSE is not an implementation of either — it's a different design informed by the same questions. The recurrent state here is deliberately simpler than Mamba's selective SSM.
-
----
-
-## What's Next
-
-- [x] Vectorize `LinearAttention` causal scan
-- [x] Fix gate double-computation in `UnifiedBlock`
-- [x] Fix `RecurrentState` read path (was updated but never read back in)
-- [x] Fix incremental generation (was O(n²), now O(n) via carried linear-attn state)
-- [ ] Run baseline benchmarks on TinyStories (loss, perplexity, sample quality)
-- [ ] Ablation: with/without `KeyValueMemory`
-- [ ] Ablation: with/without `RecurrentState`
-- [ ] Compare against a vanilla transformer baseline at same parameter count
-- [ ] Replace sequential scan in `_causal_decay_scan` with true parallel prefix (requires custom CUDA or `torch.compile`)
+```bash
+python scripts/train.py --config configs/my_config.yaml --lr 5e-4
+```
 
 ---
 
@@ -124,30 +137,35 @@ I read both. PULSE is not an implementation of either — it's a different desig
 
 ```
 src/pulse/
-├── core/
-│   ├── unified.py      # UnifiedBlock, LinearAttention, LocalConv, RecurrentState
-│   ├── memory.py       # KeyValueMemory, MemoryAugmentedLayer
-│   ├── attention.py    # GQA, MHA (legacy)
-│   ├── ffn.py          # SwiGLU
-│   ├── norm.py         # RMSNorm
-│   └── rope.py         # Rotary embeddings
-└── models/
-    ├── pulse_model.py  # PulseConfig, PulseModel, PulseForCausalLM
-    ├── pulse_v2.py     # Explicit v2
-    └── pulse_legacy.py # v1 compatibility
+├── __init__.py     # exports PulseConfig, PulseModel, PulseForCausalLM
+├── core.py         # RMSNorm, SwiGLU, _decay_scan, DualStateAttention, LocalConv, DualStateBlock
+├── model.py        # PulseConfig, PulseModel, PulseForCausalLM
+└── train.py        # self-contained training script with --config YAML support
 
-docs/
-├── ARCHITECTURE.md     # Design decisions in detail
-└── EXPERIMENTS.md      # Evaluation protocol
+scripts/
+├── train.py        # thin launcher → src/pulse/train.py
+├── smoke_test.py   # minimal forward + generate sanity check
+└── test_best_model.py  # generation and perplexity evaluation
+
+configs/
+└── rtx4090_tinystories.yaml   # 768-dim, 12-layer, 50k steps on 24 GB GPU
 ```
+
+---
+
+## What's Next
+
+- [ ] Benchmark vs. vanilla transformer at same parameter count on TinyStories
+- [ ] Ablation: single vs. dual timescale
+- [ ] Ablation: with/without LocalConv
+- [ ] Replace Python chunk-loop in `_decay_scan` with parallel prefix scan (CUDA / `torch.compile`)
 
 ---
 
 ## What This Is Not
 
-- Not a benchmark against GPT-4 or any production model
-- Not a claim that linear attention is strictly better than softmax attention
-- Not finished — active development, things will break
+- Not a claim that linear attention beats softmax attention
+- Not production-ready — active research, things will break
 
 ---
 

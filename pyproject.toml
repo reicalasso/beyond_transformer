@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pulse-ai"
 version = "3.0.0"
-description = "PULSE - Parallel Unified Linear State Engine"
+description = "PULSE v3 - Dual-timescale linear attention sequence model"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Rei Calasso", email = "reicalasso@gmail.com" }]
@@ -14,13 +14,10 @@ dependencies = [
     "torch>=2.0.0",
     "numpy>=1.21.0",
     "tqdm>=4.62.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
-maas = [
-    "flask>=2.0.0",
-    "flask-cors>=3.0.0",
-]
 train = [
     "datasets>=2.0.0",
     "transformers>=4.30.0",
