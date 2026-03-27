@@ -22,8 +22,8 @@ model:
 
 training:
   # Batching — 24 GB VRAM + BF16 handles this easily
-  batch_size: 32
-  gradient_accumulation_steps: 2   # effective batch = 64
+  batch_size: 16
+  gradient_accumulation_steps: 4   # effective batch = 64
   max_steps: 50000
 
   # Optimizer
