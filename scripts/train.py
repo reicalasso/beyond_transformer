@@ -42,41 +42,56 @@ logger = logging.getLogger(__name__)
 
 
 class TinyStoriesDataset(Dataset):
-    """Dataset wrapper for TinyStories."""
-    
-    def __init__(self, data, tokenizer, max_length: int = 256):
-        self.tokenizer = tokenizer
+    """Dataset wrapper for TinyStories.
+
+    Expects *pre-tokenized* data where each row has an ``input_ids`` field
+    (list of ints).  Chunking with 50 % overlap is done here; tokenization
+    should be done beforehand via ``pretokenize()`` for parallelism.
+    """
+
+    def __init__(self, data, pad_token_id: int, max_length: int = 256):
+        self.pad_token_id = pad_token_id
         self.max_length = max_length
         self.examples = []
-        
-        logger.info("Tokenizing dataset...")
-        for item in tqdm(data, desc="Processing"):
-            text = item['text']
-            tokens = tokenizer.encode(text, add_special_tokens=True)
-            
-            # Split into chunks with overlap
-            stride = max_length // 2
+
+        logger.info("Chunking pre-tokenized dataset...")
+        stride = max_length // 2
+        for item in tqdm(data, desc="Chunking"):
+            tokens = item['input_ids']
             for i in range(0, max(1, len(tokens) - max_length), stride):
                 chunk = tokens[i:i + max_length + 1]
                 if len(chunk) >= max_length // 2:
                     self.examples.append(chunk)
-        
+
         logger.info(f"Created {len(self.examples):,} training examples")
-    
+
     def __len__(self):
         return len(self.examples)
-    
+
     def __getitem__(self, idx):
         tokens = self.examples[idx]
-        
+
         # Pad if needed
         if len(tokens) < self.max_length + 1:
-            tokens = tokens + [self.tokenizer.pad_token_id or 0] * (self.max_length + 1 - len(tokens))
+            tokens = tokens + [self.pad_token_id] * (self.max_length + 1 - len(tokens))
         else:
             tokens = tokens[:self.max_length + 1]
-        
+
         tokens = torch.tensor(tokens, dtype=torch.long)
         return tokens[:-1], tokens[1:]
+
+
+def pretokenize(dataset, tokenizer, num_proc: int = 8):
+    """Tokenize a HuggingFace dataset in parallel using dataset.map()."""
+    logger.info(f"Pre-tokenizing with {num_proc} processes...")
+    tokenized = dataset.map(
+        lambda batch: tokenizer(batch['text'], add_special_tokens=True),
+        batched=True,
+        num_proc=num_proc,
+        remove_columns=dataset.column_names,
+        desc="Tokenizing",
+    )
+    return tokenized
 
 
 def get_lr(step: int, warmup_steps: int, max_steps: int, max_lr: float, min_lr: float = None) -> float:
@@ -161,14 +176,18 @@ def train(args, config: Optional[FullConfig] = None):
     
     logger.info(f"Dataset size: {len(dataset):,} stories")
     
+    # Pre-tokenize in parallel (uses all available CPU cores)
+    tok_num_proc = data_cfg.preprocessing_num_workers if data_cfg else 8
+    dataset = pretokenize(dataset, tokenizer, num_proc=tok_num_proc)
+
     # Split
     split = dataset.train_test_split(test_size=0.02, seed=seed)
     train_data = split['train']
     val_data = split['test']
     
-    # Create datasets
-    train_dataset = TinyStoriesDataset(train_data, tokenizer, max_seq_len)
-    val_dataset = TinyStoriesDataset(val_data, tokenizer, max_seq_len)
+    # Create datasets (chunking only — tokenization already done)
+    train_dataset = TinyStoriesDataset(train_data, tokenizer.pad_token_id, max_seq_len)
+    val_dataset = TinyStoriesDataset(val_data, tokenizer.pad_token_id, max_seq_len)
     
     logger.info(f"Train examples: {len(train_dataset):,}")
     logger.info(f"Val examples: {len(val_dataset):,}")
