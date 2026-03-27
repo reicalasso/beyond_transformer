@@ -7,6 +7,7 @@ This is ideal for training small language models that can generate coherent text
 """
 
 import argparse
+import contextlib
 import gc
 import json
 import logging
@@ -135,8 +136,11 @@ def train(args, config: Optional[FullConfig] = None):
     max_samples = data_cfg.max_samples if data_cfg else args.max_samples
     
     # Mixed precision settings
-    use_fp16 = train_cfg.fp16 if train_cfg else False
-    use_bf16 = train_cfg.bf16 if train_cfg else False
+    use_fp16 = train_cfg.fp16 if train_cfg else args.fp16
+    use_bf16 = train_cfg.bf16 if train_cfg else args.bf16
+    # Auto-enable BF16 when no explicit flag is passed and the GPU supports it
+    if not use_fp16 and not use_bf16:
+        use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
     
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -233,8 +237,8 @@ def train(args, config: Optional[FullConfig] = None):
         scaler = GradScaler('cuda')
         autocast_dtype = torch.float16
     else:
-        scaler = GradScaler('cuda')
-        autocast_dtype = torch.float16  # Default to FP16
+        scaler = None  # Full FP32 — no scaler needed
+        autocast_dtype = None
     
     # Resume from checkpoint if specified
     start_step = 0
@@ -267,8 +271,9 @@ def train(args, config: Optional[FullConfig] = None):
     logger.info(f"  Gradient accumulation: {gradient_accumulation}")
     logger.info(f"  Effective batch: {batch_size * gradient_accumulation}")
     logger.info(f"  Max steps: {max_steps}")
+    logger.info(f"  Warmup steps: {warmup_steps}")
     logger.info(f"  Learning rate: {learning_rate}")
-    logger.info(f"  Mixed precision: {'BF16' if use_bf16 else 'FP16' if use_fp16 else 'FP16 (default)'}")
+    logger.info(f"  Mixed precision: {'BF16' if use_bf16 else 'FP16' if use_fp16 else 'FP32 (no amp)'}")
     logger.info("=" * 70)
     
     model.train()
@@ -300,8 +305,8 @@ def train(args, config: Optional[FullConfig] = None):
         for pg in optimizer.param_groups:
             pg['lr'] = lr
         
-        # Forward with mixed precision
-        with autocast('cuda', dtype=autocast_dtype):
+        # Forward with mixed precision (or plain FP32 if no dtype is set)
+        with (autocast('cuda', dtype=autocast_dtype) if autocast_dtype is not None else contextlib.nullcontext()):
             outputs = model(x, labels=y)
             loss = outputs['loss'] / gradient_accumulation
         
@@ -349,7 +354,7 @@ def train(args, config: Optional[FullConfig] = None):
             with torch.no_grad():
                 for vx, vy in val_loader:
                     vx, vy = vx.to(device), vy.to(device)
-                    with autocast('cuda'):
+                    with (autocast('cuda', dtype=autocast_dtype) if autocast_dtype is not None else contextlib.nullcontext()):
                         vout = model(vx, labels=vy)
                     val_losses.append(vout['loss'].item())
                     if len(val_losses) >= 100:
@@ -474,8 +479,8 @@ def main():
     parser.add_argument("--max-seq-len", type=int, default=256)
     
     # Training (used if no config file)
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--gradient-accumulation", type=int, default=2)
+    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--gradient-accumulation", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=5e-4)
     parser.add_argument("--max-steps", type=int, default=20000)
     parser.add_argument("--warmup-steps", type=int, default=1000)
@@ -487,6 +492,12 @@ def main():
     
     # Output (used if no config file)
     parser.add_argument("--output-dir", type=str, default="./output/pulse_tinystories")
+    
+    # Mixed precision (default: auto-detect BF16 on Ampere+)
+    parser.add_argument("--fp16", action="store_true", default=False,
+                        help="Use FP16 mixed precision")
+    parser.add_argument("--bf16", action="store_true", default=False,
+                        help="Use BF16 mixed precision (recommended for Ampere+ GPUs)")
     
     # Resume training
     parser.add_argument("--resume", type=str, default=None,

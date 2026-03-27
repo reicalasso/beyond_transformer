@@ -95,11 +95,17 @@ class PulseV2(nn.Module):
             for _ in range(config.num_layers)
         ])
         
-        # Optional recurrent state (updated after all layers; no per-layer injection to avoid mode collapse)
+        # Optional recurrent state.
+        # The state is projected and added to the initial embedding so that
+        # cross-chunk context actually influences computation (read path).
+        # It is then updated from the final hidden states after all layers
+        # (write path). Per-layer injection was avoided to prevent collapse.
         if config.use_recurrent_state:
             self.recurrent = RecurrentState(config.hidden_size)
+            self.recurrent_in_proj = nn.Linear(config.hidden_size, config.hidden_size, bias=False)
         else:
             self.recurrent = None
+            self.recurrent_in_proj = None
         
         # Optional external key–value memory
         if config.use_memory:
@@ -159,6 +165,12 @@ class PulseV2(nn.Module):
         # Initialize recurrent state
         if self.recurrent is not None and recurrent_state is None:
             recurrent_state = self.recurrent.get_initial_state(batch_size)
+        
+        # Condition the initial embedding on cross-chunk context (read path).
+        # The projected state is broadcast across the sequence dimension so
+        # every position is aware of accumulated context from prior chunks.
+        if self.recurrent_in_proj is not None and recurrent_state is not None:
+            x = x + self.recurrent_in_proj(recurrent_state).unsqueeze(1)
         
         # Process layers
         layer_states: List[torch.Tensor] = []
@@ -256,73 +268,91 @@ class PulseV2ForCausalLM(nn.Module):
         eos_token_id: int = None,
     ) -> torch.Tensor:
         """
-        Simple autoregressive generation.
+        Incremental autoregressive generation.
+
+        Processes the prompt in a single forward pass to build the recurrent
+        state and per-layer linear-attention states, then decodes one token
+        at a time by feeding only the most recently generated token.  This
+        gives O(n) generation cost instead of the O(n²) cost of re-running
+        the full sequence every step.
         
         Args:
             input_ids: [batch, seq_len] prompt
             max_new_tokens: Number of tokens to generate
             temperature: Sampling temperature
-            top_k: Top-k filtering
-            top_p: Nucleus sampling threshold
-            eos_token_id: Stop token
+            top_k: Top-k filtering (0 to disable)
+            top_p: Nucleus sampling threshold (1.0 to disable)
+            eos_token_id: Stop token (generation halts when all batch items emit this)
             
         Returns:
-            Generated token IDs [batch, seq_len + max_new_tokens]
+            Generated token IDs [batch, prompt_len + num_generated]
         """
         generated = input_ids.clone()
-        recurrent_state = None
-        attention_state: Optional[List[torch.Tensor]] = None
-        attention_mask: Optional[torch.Tensor] = None
-        
-        for _ in range(max_new_tokens):
-            # Forward pass
-            if attention_mask is None:
-                attention_mask = (generated != self.config.pad_token_id).long()
-            
+
+        # ── Prompt encoding pass ──────────────────────────────────────────────
+        # Run the full prompt once to warm up the recurrent and attention states.
+        prompt_mask = (generated != self.config.pad_token_id).long()
+        outputs = self(
+            generated,
+            recurrent_state=None,
+            attention_state=None,
+            attention_mask=prompt_mask,
+        )
+        recurrent_state = outputs["recurrent_state"]
+        attention_state = outputs.get("attention_state")
+
+        # Sample the first new token from the last prompt position.
+        next_token = self._sample(outputs["logits"][:, -1, :], temperature, top_k, top_p)
+        generated = torch.cat([generated, next_token], dim=1)
+
+        if eos_token_id is not None and (next_token == eos_token_id).all():
+            return generated
+
+        # ── Incremental decoding ──────────────────────────────────────────────
+        for _ in range(max_new_tokens - 1):
+            # Feed only the single most-recently generated token.
+            # The linear-attention states carry all prior context.
             outputs = self(
-                generated,
+                next_token,
                 recurrent_state=recurrent_state,
                 attention_state=attention_state,
-                attention_mask=attention_mask,
+                attention_mask=None,
             )
             recurrent_state = outputs["recurrent_state"]
             attention_state = outputs.get("attention_state")
-            
-            # Get next token logits
-            next_logits = outputs["logits"][:, -1, :] / max(temperature, 1e-8)
-            
-            # Top-k filtering
-            if top_k > 0:
-                v, _ = torch.topk(next_logits, min(top_k, next_logits.size(-1)))
-                next_logits[next_logits < v[:, -1:]] = float('-inf')
-            
-            # Top-p (nucleus) filtering
-            if top_p < 1.0:
-                sorted_logits, sorted_idx = torch.sort(next_logits, descending=True)
-                cumulative = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
-                
-                remove = cumulative > top_p
-                remove[..., 1:] = remove[..., :-1].clone()
-                remove[..., 0] = False
-                
-                indices_to_remove = remove.scatter(1, sorted_idx, remove)
-                next_logits[indices_to_remove] = float('-inf')
-            
-            # Sample
-            probs = F.softmax(next_logits, dim=-1)
-            next_token = torch.multinomial(probs, num_samples=1)
-            
+
+            next_token = self._sample(outputs["logits"][:, -1, :], temperature, top_k, top_p)
             generated = torch.cat([generated, next_token], dim=1)
-            attention_mask = torch.cat(
-                [attention_mask, (next_token != self.config.pad_token_id).long()],
-                dim=1,
-            )
-            
-            # Check EOS
+
             if eos_token_id is not None and (next_token == eos_token_id).all():
                 break
-        
+
         return generated
+
+    def _sample(
+        self,
+        logits: torch.Tensor,
+        temperature: float,
+        top_k: int,
+        top_p: float,
+    ) -> torch.Tensor:
+        """Sample one token per batch item from logits."""
+        logits = logits / max(temperature, 1e-8)
+
+        if top_k > 0:
+            v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+            logits[logits < v[:, -1:]] = float('-inf')
+
+        if top_p < 1.0:
+            sorted_logits, sorted_idx = torch.sort(logits, descending=True)
+            cumulative = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+            remove = cumulative > top_p
+            remove[..., 1:] = remove[..., :-1].clone()
+            remove[..., 0] = False
+            logits[remove.scatter(1, sorted_idx, remove)] = float('-inf')
+
+        probs = F.softmax(logits, dim=-1)
+        return torch.multinomial(probs, num_samples=1)
     
     def write_to_memory(self, key: torch.Tensor, value: torch.Tensor = None):
         """Write to external memory if enabled."""

@@ -127,14 +127,16 @@ class RotaryEmbeddingScaled(RotaryEmbedding):
         super().__init__(dim, max_position_embeddings, base)
     
     def _build_cache(self, seq_len: int):
-        """Build cache with optional scaling."""
+        """Build cache with NTK-aware scaling when seq_len exceeds training length."""
         if seq_len > self.max_position_embeddings:
-            # Dynamic NTK-aware scaling
-            base = self.base * (
-                (self.scaling_factor * seq_len / self.max_position_embeddings) 
-                - (self.scaling_factor - 1)
-            ) ** (self.dim / (self.dim - 2))
-            inv_freq = 1.0 / (base ** (torch.arange(0, self.dim, 2).float() / self.dim))
-            self.register_buffer("inv_freq", inv_freq.to(self.inv_freq.device), persistent=False)
-        
+            scale = self.scaling_factor * seq_len / self.max_position_embeddings
+            base = self.base * (scale - (self.scaling_factor - 1)) ** (
+                self.dim / (self.dim - 2)
+            )
+            inv_freq = 1.0 / (
+                base ** (torch.arange(0, self.dim, 2, dtype=torch.float32) / self.dim)
+            )
+            self.register_buffer(
+                "inv_freq", inv_freq.to(self.inv_freq.device), persistent=False
+            )
         super()._build_cache(seq_len)

@@ -43,37 +43,32 @@ class KeyValueMemory(nn.Module):
         # Projection for query
         self.query_proj = nn.Linear(hidden_size, hidden_size, bias=False)
     
-    def write(self, key: torch.Tensor, value: torch.Tensor = None) -> int:
+    def write(self, key: torch.Tensor, value: torch.Tensor = None) -> None:
         """
         Write to memory (circular buffer style).
-        
+
+        For a single vector ([hidden_size]) or a batch ([batch, hidden_size]),
+        each item is written sequentially at the current circular-buffer pointer.
+
         Args:
             key: Key embedding [hidden_size] or [batch, hidden_size]
             value: Value embedding (defaults to key)
-            
-        Returns:
-            Index where written
         """
         if value is None:
             value = key
-        
+
         # Handle batch dimension
         if key.dim() == 1:
             key = key.unsqueeze(0)
             value = value.unsqueeze(0)
-        
-        batch_size = key.shape[0]
-        
-        for i in range(batch_size):
+
+        for i in range(key.shape[0]):
             idx = self.ptr.item()
             self.keys[idx] = key[i].detach()
             self.values[idx] = value[i].detach()
             self.ptr = (self.ptr + 1) % self.capacity
-            # Increase current size up to capacity, in-place to avoid tensor thrash
             self.size.add_(1)
             self.size.clamp_max_(self.capacity_tensor)
-        
-        return idx
     
     def read(
         self,

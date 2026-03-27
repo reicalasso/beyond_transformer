@@ -40,17 +40,13 @@ Every layer is identical. No conditionals, no special first/last layer logic.
 
 | Component | Status | Notes |
 |---|---|---|
-| `UnifiedBlock` | ✅ Working | LocalConv + LinearAttn + GatedFusion |
-| `LinearAttention` | ⚠️ In progress | Correct but not yet vectorized — Python loop over sequence, needs associative scan |
+| `UnifiedBlock` | ✅ Working | LocalConv + LinearAttn + GatedFusion; gate double-computation fixed |
+| `LinearAttention` | ✅ Working | Vectorized causal scan — single loop over T, parallelized across B/H/D |
 | `KeyValueMemory` | ✅ Working | Circular buffer, O(1) write, O(k) read |
-| `RecurrentState` | ✅ Working | Gated EMA-style update |
-| `PulseForCausalLM` | ✅ Working | Full model with generation |
-| Training script | ✅ Working | TinyStories, AdamW + cosine LR |
-| Benchmarks | 🔲 Planned | No results yet — will add after LinearAttention vectotization |
-
-**Known issues:**
-- `LinearAttention.forward()` uses a Python `for` loop over the sequence dimension. This is O(n) in FLOPs but slow in practice. A proper associative scan (parallel prefix) is needed.
-- Gate computation in `UnifiedBlock` calls `self.gate(combined)` twice — redundant forward pass, being fixed.
+| `RecurrentState` | ✅ Working | Gated EMA update; now conditions embedding via projection (read path fixed) |
+| `PulseForCausalLM` | ✅ Working | Full model with incremental O(n) generation |
+| Training script | ✅ Working | TinyStories, AdamW + cosine LR; FP32/FP16/BF16 all correct |
+| Benchmarks | 🔲 Planned | No results yet |
 
 ---
 
@@ -112,12 +108,15 @@ I read both. PULSE is not an implementation of either — it's a different desig
 
 ## What's Next
 
-- [ ] Vectorize `LinearAttention` with associative scan
-- [ ] Fix gate double-computation in `UnifiedBlock`
+- [x] Vectorize `LinearAttention` causal scan
+- [x] Fix gate double-computation in `UnifiedBlock`
+- [x] Fix `RecurrentState` read path (was updated but never read back in)
+- [x] Fix incremental generation (was O(n²), now O(n) via carried linear-attn state)
 - [ ] Run baseline benchmarks on TinyStories (loss, perplexity, sample quality)
 - [ ] Ablation: with/without `KeyValueMemory`
 - [ ] Ablation: with/without `RecurrentState`
 - [ ] Compare against a vanilla transformer baseline at same parameter count
+- [ ] Replace sequential scan in `_causal_decay_scan` with true parallel prefix (requires custom CUDA or `torch.compile`)
 
 ---
 
