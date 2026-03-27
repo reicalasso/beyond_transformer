@@ -278,6 +278,7 @@ class PulseV2ForCausalLM(nn.Module):
         top_k: int = 50,
         top_p: float = 0.9,
         eos_token_id: int = None,
+        repetition_penalty: float = 1.2,
     ) -> torch.Tensor:
         """
         Incremental autoregressive generation.
@@ -295,6 +296,8 @@ class PulseV2ForCausalLM(nn.Module):
             top_k: Top-k filtering (0 to disable)
             top_p: Nucleus sampling threshold (1.0 to disable)
             eos_token_id: Stop token (generation halts when all batch items emit this)
+            repetition_penalty: Penalize tokens that already appear in the
+                generated sequence (1.0 = no penalty, >1.0 = less repetition).
             
         Returns:
             Generated token IDs [batch, prompt_len + num_generated]
@@ -318,7 +321,10 @@ class PulseV2ForCausalLM(nn.Module):
         layer_states = outputs.get("layer_states")
 
         # Sample the first new token from the last prompt position.
-        next_token = self._sample(outputs["logits"][:, -1, :], temperature, top_k, top_p)
+        next_token = self._sample(
+            outputs["logits"][:, -1, :], temperature, top_k, top_p,
+            repetition_penalty=repetition_penalty, generated_ids=generated,
+        )
         generated = torch.cat([generated, next_token], dim=1)
 
         if eos_token_id is not None and (next_token == eos_token_id).all():
@@ -338,7 +344,10 @@ class PulseV2ForCausalLM(nn.Module):
             )
             logits = self.lm_head(hidden)
 
-            next_token = self._sample(logits[:, -1, :], temperature, top_k, top_p)
+            next_token = self._sample(
+                logits[:, -1, :], temperature, top_k, top_p,
+                repetition_penalty=repetition_penalty, generated_ids=generated,
+            )
             generated = torch.cat([generated, next_token], dim=1)
 
             if eos_token_id is not None and (next_token == eos_token_id).all():
@@ -352,8 +361,21 @@ class PulseV2ForCausalLM(nn.Module):
         temperature: float,
         top_k: int,
         top_p: float,
+        repetition_penalty: float = 1.0,
+        generated_ids: torch.Tensor = None,
     ) -> torch.Tensor:
         """Sample one token per batch item from logits."""
+        # Repetition penalty: reduce probability of already-generated tokens.
+        if repetition_penalty != 1.0 and generated_ids is not None:
+            for i in range(logits.size(0)):
+                seen = generated_ids[i].unique()
+                pos = logits[i, seen] > 0
+                logits[i, seen] = torch.where(
+                    pos,
+                    logits[i, seen] / repetition_penalty,
+                    logits[i, seen] * repetition_penalty,
+                )
+
         logits = logits / max(temperature, 1e-8)
 
         if top_k > 0:

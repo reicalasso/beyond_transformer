@@ -59,6 +59,13 @@ class LinearAttention(nn.Module):
         self.qkv_proj = nn.Linear(hidden_size, hidden_size * 3, bias=False)
         self.out_proj = nn.Linear(hidden_size, hidden_size, bias=False)
         
+        # Learnable output gate per dimension.  Controls how much of the
+        # attention-weighted output to use vs. passing the raw value through.
+        # When the accumulated state degenerates (e.g. repetition), the
+        # model can learn to attenuate attention and rely on the direct
+        # path, preventing fixed-point collapse.
+        self.out_gate = nn.Linear(hidden_size, hidden_size, bias=True)
+        
         # Learnable decay per head; stored as pre-sigmoid logit.
         # logit(p) = log(p / (1-p)) so that sigmoid(logit) == p.
         _logit = math.log(decay / (1.0 - decay)) if 0 < decay < 1 else 0.0
@@ -140,7 +147,15 @@ class LinearAttention(nn.Module):
         den = (q * running_ksum).sum(dim=-1, keepdim=True).clamp(min=1e-6)  # [B, H, T, 1]
         output = (q * running_kv) / den  # [B, H, T, D]
         
+        # Also compute a direct value path (skip attention state)
+        v_direct = v.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
         output = output.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
+        
+        # Learned gate: blend attention output with direct value signal.
+        # This prevents fixed-point collapse during autoregressive generation
+        # — the model can learn to attenuate degenerate attention states.
+        g = torch.sigmoid(self.out_gate(output))
+        output = g * output + (1 - g) * v_direct
         output = self.out_proj(output)
         
         # Final state is the last time-step of the inclusive scan

@@ -466,6 +466,7 @@ def generate_sample(model, tokenizer, device, prompt, max_tokens=80, temperature
         top_k=50,
         top_p=0.9,
         eos_token_id=tokenizer.eos_token_id,
+        repetition_penalty=1.2,
     )
     return tokenizer.decode(generated[0], skip_special_tokens=True)
 
