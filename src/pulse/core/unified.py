@@ -246,10 +246,12 @@ class LocalConv(nn.Module):
     def __init__(self, hidden_size: int, kernel_size: int = 4):
         super().__init__()
         self.kernel_size = kernel_size
+        # padding=0: we always manually prepend causal context (zeros or
+        # cached state) so there is exactly one source of left-padding.
         self.conv = nn.Conv1d(
             hidden_size, hidden_size,
             kernel_size=kernel_size,
-            padding=kernel_size - 1,
+            padding=0,
             groups=hidden_size,  # Depthwise
         )
         self.pointwise = nn.Linear(hidden_size, hidden_size, bias=False)
@@ -268,22 +270,23 @@ class LocalConv(nn.Module):
             output: [batch, seq_len, hidden_size]
             new_conv_state: [batch, hidden_size, kernel_size-1]
         """
+        T = x.shape[1]
         x_conv = x.transpose(1, 2)  # [B, D, T]
 
         if conv_state is not None:
-            # Prepend the cached context so the conv kernel sees prior tokens.
-            x_conv = torch.cat([conv_state, x_conv], dim=2)  # [B, D, state+T]
-            x_conv = self.conv(x_conv)  # causal padding adds kernel-1 zeros on left
-            # Trim to keep only the T positions that correspond to *new* input.
-            x_conv = x_conv[:, :, -(x.shape[1]):]
+            # Prepend cached context from previous call.
+            x_conv = torch.cat([conv_state, x_conv], dim=2)  # [B, D, K-1+T]
         else:
-            x_conv = self.conv(x_conv)[:, :, :x.shape[1]]  # Causal padding trim
+            # First call — zero-pad on the left for causal alignment.
+            pad = x_conv.new_zeros(x_conv.shape[0], x_conv.shape[1], self.kernel_size - 1)
+            x_conv = torch.cat([pad, x_conv], dim=2)  # [B, D, K-1+T]
 
-        # Save the last kernel_size-1 timesteps as the new conv state.
-        # Use the *input* (pre-conv) representation so the next call can
-        # prepend it before the conv.
-        inp_for_state = x.transpose(1, 2)  # [B, D, T]
-        new_conv_state = inp_for_state[:, :, -(self.kernel_size - 1):].clone()
+        # Save last kernel_size-1 *input* timesteps for the next call,
+        # before running the conv (state is pre-conv representation).
+        new_conv_state = x_conv[:, :, -(self.kernel_size - 1):].clone()
+
+        # Conv with padding=0: input length K-1+T → output length T. Exact.
+        x_conv = self.conv(x_conv)  # [B, D, T]
 
         x_conv = x_conv.transpose(1, 2)  # [B, T, D]
         return self.pointwise(F.silu(x_conv)), new_conv_state

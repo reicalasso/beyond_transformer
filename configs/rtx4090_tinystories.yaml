@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────
+# PULSE training config — 1× RTX 4090 (24 GB), vast.ai
+# Dataset: TinyStories   Target: ~50 M params, full run
+# ─────────────────────────────────────────────────────────
+
+seed: 42
+
+model:
+  vocab_size: 50257          # GPT-2 tokenizer
+  hidden_size: 768
+  num_layers: 12
+  num_heads: 8
+  intermediate_size: 2074    # ≈ 768 × 2.7
+  max_seq_len: 512
+  kernel_size: 4
+  decay: 0.95
+  use_recurrent_state: true
+  use_memory: false
+  dropout: 0.1
+  norm_eps: 1.0e-6
+  tie_embeddings: true
+
+training:
+  # Batching — 24 GB VRAM + BF16 handles this easily
+  batch_size: 32
+  gradient_accumulation_steps: 2   # effective batch = 64
+  max_steps: 50000
+
+  # Optimizer
+  optimizer: adamw
+  learning_rate: 6.0e-4
+  weight_decay: 0.1
+  adam_beta1: 0.9
+  adam_beta2: 0.95             # lower β₂ helps with spiky LLM gradients
+  adam_epsilon: 1.0e-8
+
+  # Schedule
+  scheduler: cosine
+  warmup_steps: 2000
+
+  # Gradient clipping
+  max_grad_norm: 1.0
+
+  # Mixed precision — Ada Lovelace has native BF16
+  fp16: false
+  bf16: true
+
+  # Logging / eval / save
+  logging_steps: 50
+  logging_first_step: true
+  eval_strategy: steps
+  eval_steps: 2000
+  save_strategy: steps
+  save_steps: 5000
+  save_total_limit: 3
+  load_best_model_at_end: true
+
+  # Early stopping
+  early_stopping_patience: 5
+  early_stopping_threshold: 0.0
+
+data:
+  max_seq_length: 512
+  preprocessing_num_workers: 8
+  dataloader_num_workers: 8
+  dataloader_pin_memory: true
+  max_samples: null            # use ALL TinyStories data
+
+output:
+  output_dir: ./output/pulse_4090
+  logging_dir: ./logs/pulse_4090
+  overwrite_output_dir: false

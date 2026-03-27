@@ -226,10 +226,14 @@ def train(args, config: Optional[FullConfig] = None):
         else:
             decay_params.append(param)
     
+    adam_beta1 = train_cfg.adam_beta1 if train_cfg else 0.9
+    adam_beta2 = train_cfg.adam_beta2 if train_cfg else 0.95
+    adam_eps = train_cfg.adam_epsilon if train_cfg else 1e-8
+
     optimizer = torch.optim.AdamW([
         {'params': decay_params, 'weight_decay': weight_decay},
         {'params': no_decay_params, 'weight_decay': 0.0},
-    ], lr=learning_rate, betas=(0.9, 0.95), eps=1e-8)
+    ], lr=learning_rate, betas=(adam_beta1, adam_beta2), eps=adam_eps)
     
     # Mixed precision scaler
     if use_bf16:
