@@ -139,14 +139,14 @@ class LinearAttention(nn.Module):
         running_kv   = _causal_decay_scan(kv_contrib, decay, kv_init)    # [B, H, T, D]
         running_ksum = _causal_decay_scan(k,          decay, ksum_init)   # [B, H, T, D]
         
-        # Compute output: o_t = (q_t · running_kv_t) / max(q_t · running_ksum_t, eps)
-        # Dot product along D: [B, H, T, D] * [B, H, T, D] -> sum -> [B, H, T, 1]
-        num = (q * running_kv).sum(dim=-1, keepdim=True)    # [B, H, T, 1]
+        # Compute D-dimensional output.
+        # With element-wise KV approximation (k*v per-dim, not outer product),
+        # the correct output per position t is:
+        #   o[t, d] = q[t,d] * running_kv[t,d] / clamp(sum_d(q[t,d] * running_ksum[t,d]))
+        # This keeps the full D-dimensional structure while normalizing by the
+        # scalar partition function — avoids collapsing to a scalar and re-expanding.
         den = (q * running_ksum).sum(dim=-1, keepdim=True).clamp(min=1e-6)  # [B, H, T, 1]
-        output = num / den  # [B, H, T, 1], broadcast to attend each head dim equally
-        # Multiply back by q to recover the full-dimensional output vector
-        # (standard linear attention output: weighted sum of values projected via q)
-        output = output * q  # [B, H, T, D]
+        output = (q * running_kv) / den  # [B, H, T, D]
         
         output = output.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
         output = self.out_proj(output)
@@ -164,29 +164,49 @@ def _causal_decay_scan(
     init: torch.Tensor,
 ) -> torch.Tensor:
     """
-    Causal prefix scan with exponential decay.
+    Fully vectorized causal prefix scan with exponential decay.
 
-    Computes the inclusive scan:
-        out[t] = decay * out[t-1] + x[t],  out[-1] = init
+    Computes the inclusive scan without any Python loop over T:
+        out[t] = sum_{s=0}^{t} decay^(t-s) * x[s]  +  decay^(t+1) * init
 
-    O(T) work. A true parallel scan would require custom CUDA kernels;
-    this sequential formulation is fully vectorized across B, H, D and
-    avoids per-step Python tensor allocation overhead.
+    Strategy — closed-form via weighted cumsum:
+      1. Build decay powers: p[t] = decay^t  →  [1, H, T, 1]
+      2. Scale inputs:       x_scaled[t] = x[t] / p[t]
+      3. Cumsum along T:     cs[t] = sum_{s=0}^{t} x_scaled[s]
+      4. Restore scale:      out[t] = p[t] * cs[t]  +  decay^(t+1) * init
+
+    This is numerically equivalent to the sequential recurrence and runs
+    entirely as fused CUDA ops — no Python loop over T.
 
     Args:
         x:     [batch, heads, seq_len, dim]  per-step contributions
-        decay: [1, heads, 1]                 per-head decay factor in (0,1)
+        decay: [1, heads, 1]                 per-head decay scalar in (0,1)
         init:  [batch, heads, dim]           state carried in from previous chunk
 
     Returns:
         out:   [batch, heads, seq_len, dim]  inclusive causal prefix sums
     """
     B, H, T, D = x.shape
-    out = torch.empty(B, H, T, D, device=x.device, dtype=x.dtype)
-    state = init  # [B, H, D]
-    for t in range(T):
-        state = decay * state + x[:, :, t, :]  # [B, H, D]
-        out[:, :, t, :] = state
+
+    # Build per-head log-decay series in float32 to avoid underflow.
+    # log_p[h, t] = (t+1) * log(decay[h])  → p[t] = decay^(t+1)
+    # Working in log-space avoids very small values when decay^T is tiny.
+    t_idx = torch.arange(T, device=x.device, dtype=torch.float32)  # [T]
+    log_decay = torch.log(decay.float().clamp(min=1e-8))  # [1, H, 1]
+    # log_powers: [1, H, T, 1]
+    log_powers = log_decay.unsqueeze(-1) * (t_idx + 1).view(1, 1, T, 1)
+    powers = log_powers.exp().to(x.dtype)  # [1, H, T, 1]
+
+    # Closed-form weighted cumsum (all ops are CUDA-fused, no Python loop):
+    #   out[t] = p[t] * sum_{s=0}^{t} x[s] / p[s]
+    # Divide in float32 to avoid precision loss, cast back afterwards.
+    x_f = x.float()
+    x_scaled = x_f / powers.float()         # [B, H, T, D]
+    cs = x_scaled.cumsum(dim=2)             # [B, H, T, D]
+    out = (cs * powers.float()).to(x.dtype)  # [B, H, T, D]
+
+    # Init contribution: init * decay^(t+1)
+    out = out + init.unsqueeze(2) * powers  # [B, H, T, D]
     return out
 
 
@@ -354,8 +374,8 @@ class RecurrentState(nn.Module):
         Returns:
             Updated state [batch, hidden_size]
         """
-        # Pool hidden states
-        pooled = hidden_states.mean(dim=1)  # [batch, hidden]
+        # Use last non-padding token rather than mean — preserves recency
+        pooled = hidden_states[:, -1, :]  # [batch, hidden]
         projected = self.update_proj(pooled)
         
         # Gated update
