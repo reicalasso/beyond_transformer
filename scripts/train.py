@@ -188,8 +188,9 @@ def train(args, config: Optional[FullConfig] = None):
     # Create model
     logger.info("Creating model...")
     if model_config is not None:
-        # Override vocab_size from tokenizer
+        # Override vocab_size and pad_token_id from tokenizer
         model_config.vocab_size = vocab_size
+        model_config.pad_token_id = tokenizer.pad_token_id
         pulse_config = model_config
     else:
         # Minimal, current PULSE configuration.
@@ -204,6 +205,7 @@ def train(args, config: Optional[FullConfig] = None):
             use_recurrent_state=True,
             use_memory=False,
             dropout=0.1,
+            pad_token_id=tokenizer.pad_token_id,
         )
     
     model = PulseForCausalLM(pulse_config).to(device)
@@ -298,6 +300,11 @@ def train(args, config: Optional[FullConfig] = None):
             x, y = next(data_iter)
         
         x, y = x.to(device), y.to(device)
+        attention_mask = (x != pulse_config.pad_token_id).long() if pulse_config.pad_token_id is not None else None
+        # Mask padding positions in labels so cross_entropy ignores them
+        if pulse_config.pad_token_id is not None:
+            y = y.clone()
+            y[y == pulse_config.pad_token_id] = -100
         tokens_processed += x.numel()
         
         # Update LR
@@ -307,7 +314,7 @@ def train(args, config: Optional[FullConfig] = None):
         
         # Forward with mixed precision (or plain FP32 if no dtype is set)
         with (autocast('cuda', dtype=autocast_dtype) if autocast_dtype is not None else contextlib.nullcontext()):
-            outputs = model(x, labels=y)
+            outputs = model(x, labels=y, attention_mask=attention_mask)
             loss = outputs['loss'] / gradient_accumulation
         
         if scaler is not None:
@@ -354,8 +361,12 @@ def train(args, config: Optional[FullConfig] = None):
             with torch.no_grad():
                 for vx, vy in val_loader:
                     vx, vy = vx.to(device), vy.to(device)
+                    val_mask = (vx != pulse_config.pad_token_id).long() if pulse_config.pad_token_id is not None else None
+                    if pulse_config.pad_token_id is not None:
+                        vy = vy.clone()
+                        vy[vy == pulse_config.pad_token_id] = -100
                     with (autocast('cuda', dtype=autocast_dtype) if autocast_dtype is not None else contextlib.nullcontext()):
-                        vout = model(vx, labels=vy)
+                        vout = model(vx, labels=vy, attention_mask=val_mask)
                     val_losses.append(vout['loss'].item())
                     if len(val_losses) >= 100:
                         break
@@ -422,47 +433,18 @@ def train(args, config: Optional[FullConfig] = None):
 
 @torch.no_grad()
 def generate_sample(model, tokenizer, device, prompt, max_tokens=80, temperature=0.8):
-    """Generate text sample."""
+    """Generate text sample using the model's incremental generate() method."""
     model.eval()
-    
     input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
-    
-    for _ in range(max_tokens):
-        if input_ids.shape[1] >= 250:
-            break
-        
-        with autocast('cuda'):
-            outputs = model(input_ids)
-        
-        logits = outputs['logits'][:, -1, :] / temperature
-        
-        # Top-k + top-p sampling
-        top_k = 50
-        top_p = 0.9
-        
-        # Top-k
-        topk_vals, topk_idx = torch.topk(logits, top_k)
-        logits[logits < topk_vals[:, -1:]] = float('-inf')
-        
-        # Top-p
-        sorted_logits, sorted_idx = torch.sort(logits, descending=True)
-        cumsum = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
-        remove_mask = cumsum > top_p
-        remove_mask[:, 1:] = remove_mask[:, :-1].clone()
-        remove_mask[:, 0] = False
-        sorted_logits[remove_mask] = float('-inf')
-        logits = sorted_logits.scatter(1, sorted_idx, sorted_logits)
-        
-        probs = F.softmax(logits, dim=-1)
-        next_token = torch.multinomial(probs, num_samples=1)
-        
-        input_ids = torch.cat([input_ids, next_token], dim=1)
-        
-        # Stop at EOS
-        if next_token.item() == tokenizer.eos_token_id:
-            break
-    
-    return tokenizer.decode(input_ids[0], skip_special_tokens=True)
+    generated = model.generate(
+        input_ids,
+        max_new_tokens=max_tokens,
+        temperature=temperature,
+        top_k=50,
+        top_p=0.9,
+        eos_token_id=tokenizer.eos_token_id,
+    )
+    return tokenizer.decode(generated[0], skip_special_tokens=True)
 
 
 def main():

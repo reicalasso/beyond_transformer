@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pulse-ai"
 version = "3.0.0"
 description = "PULSE - Parallel Unified Linear State Engine"
+readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Rei Calasso", email = "reicalasso@gmail.com" }]
 requires-python = ">=3.8"

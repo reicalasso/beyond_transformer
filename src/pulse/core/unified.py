@@ -234,7 +234,9 @@ class LocalConv(nn.Module):
     """
     Depthwise separable convolution for local patterns.
     
-    Captures short-range dependencies efficiently.
+    Captures short-range dependencies efficiently.  Supports an
+    optional ``conv_state`` buffer so that incremental (single-token)
+    inference sees the same context window as full-sequence training.
     
     Args:
         hidden_size: Model dimension
@@ -243,6 +245,7 @@ class LocalConv(nn.Module):
     
     def __init__(self, hidden_size: int, kernel_size: int = 4):
         super().__init__()
+        self.kernel_size = kernel_size
         self.conv = nn.Conv1d(
             hidden_size, hidden_size,
             kernel_size=kernel_size,
@@ -251,20 +254,39 @@ class LocalConv(nn.Module):
         )
         self.pointwise = nn.Linear(hidden_size, hidden_size, bias=False)
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        conv_state: torch.Tensor = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             x: [batch, seq_len, hidden_size]
+            conv_state: Optional [batch, hidden_size, kernel_size-1] buffer
+                        of the last kernel_size-1 timesteps (in Conv1d layout).
         Returns:
-            [batch, seq_len, hidden_size]
+            output: [batch, seq_len, hidden_size]
+            new_conv_state: [batch, hidden_size, kernel_size-1]
         """
-        # Depthwise conv
         x_conv = x.transpose(1, 2)  # [B, D, T]
-        x_conv = self.conv(x_conv)[:, :, :x.shape[1]]  # Causal padding
+
+        if conv_state is not None:
+            # Prepend the cached context so the conv kernel sees prior tokens.
+            x_conv = torch.cat([conv_state, x_conv], dim=2)  # [B, D, state+T]
+            x_conv = self.conv(x_conv)  # causal padding adds kernel-1 zeros on left
+            # Trim to keep only the T positions that correspond to *new* input.
+            x_conv = x_conv[:, :, -(x.shape[1]):]
+        else:
+            x_conv = self.conv(x_conv)[:, :, :x.shape[1]]  # Causal padding trim
+
+        # Save the last kernel_size-1 timesteps as the new conv state.
+        # Use the *input* (pre-conv) representation so the next call can
+        # prepend it before the conv.
+        inp_for_state = x.transpose(1, 2)  # [B, D, T]
+        new_conv_state = inp_for_state[:, :, -(self.kernel_size - 1):].clone()
+
         x_conv = x_conv.transpose(1, 2)  # [B, T, D]
-        
-        # Pointwise projection
-        return self.pointwise(F.silu(x_conv))
+        return self.pointwise(F.silu(x_conv)), new_conv_state
 
 
 class UnifiedBlock(nn.Module):
@@ -307,34 +329,40 @@ class UnifiedBlock(nn.Module):
         self.gate = nn.Linear(hidden_size * 2, hidden_size, bias=False)
         
         # FFN (SwiGLU)
-        self.gate_proj = nn.Linear(hidden_size, intermediate_size, bias=False)
-        self.up_proj = nn.Linear(hidden_size, intermediate_size, bias=False)
-        self.down_proj = nn.Linear(intermediate_size, hidden_size, bias=False)
+        self.ffn = SwiGLU(hidden_size, intermediate_size)
     
     def forward(
         self,
         x: torch.Tensor,
         state: torch.Tensor = None,
         attention_mask: torch.Tensor = None,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, tuple]:
         """
         Forward pass.
         
         Args:
             x: [batch, seq_len, hidden_size]
-            state: Optional recurrent state
+            state: Optional tuple (attn_state, conv_state) where
+                attn_state is the LinearAttention (kv, ksum) pair and
+                conv_state is the LocalConv buffer.
             
         Returns:
             output: [batch, seq_len, hidden_size]
-            new_state: Updated recurrent state
+            new_state: (attn_state, conv_state)
         """
+        # Unpack composite state
+        if state is not None:
+            attn_state, conv_state = state
+        else:
+            attn_state, conv_state = None, None
+
         # Pre-norm
         residual = x
         x_norm = self.norm1(x)
         
         # Local + Global processing
-        local_out = self.local_conv(x_norm)
-        global_out, new_state = self.linear_attn(x_norm, state, attention_mask=attention_mask)
+        local_out, new_conv_state = self.local_conv(x_norm, conv_state)
+        global_out, new_attn_state = self.linear_attn(x_norm, attn_state, attention_mask=attention_mask)
         
         # Gated fusion — compute gate once to avoid redundant forward pass
         combined = torch.cat([local_out, global_out], dim=-1)
@@ -347,9 +375,9 @@ class UnifiedBlock(nn.Module):
         # FFN with pre-norm
         residual = x
         x_norm = self.norm2(x)
-        x = residual + self.down_proj(F.silu(self.gate_proj(x_norm)) * self.up_proj(x_norm))
+        x = residual + self.ffn(x_norm)
         
-        return x, new_state
+        return x, (new_attn_state, new_conv_state)
 
 
 class RecurrentState(nn.Module):
