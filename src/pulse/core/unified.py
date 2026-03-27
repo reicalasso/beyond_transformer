@@ -49,25 +49,31 @@ class LinearAttention(nn.Module):
         hidden_size: int,
         num_heads: int = 8,
         decay: float = 0.95,
+        state_dim: int = 16,
     ):
         super().__init__()
         assert hidden_size % num_heads == 0, "hidden_size must be divisible by num_heads"
         self.hidden_size = hidden_size
         self.num_heads = num_heads
         self.head_dim = hidden_size // num_heads
+        self.state_dim = state_dim
         
         self.qkv_proj = nn.Linear(hidden_size, hidden_size * 3, bias=False)
         self.out_proj = nn.Linear(hidden_size, hidden_size, bias=False)
         
+        # Low-rank state projections.
+        # q and k share a projection so they live in the same space
+        # (attention weight = q_s · k_s).  v gets its own projection.
+        self.qk_state_proj = nn.Linear(self.head_dim, state_dim, bias=False)
+        self.v_state_proj = nn.Linear(self.head_dim, state_dim, bias=False)
+        # Map state-space attention output back to head_dim
+        self.state_out_proj = nn.Linear(state_dim, self.head_dim, bias=False)
+        
         # Learnable output gate per dimension.  Controls how much of the
         # attention-weighted output to use vs. passing the raw value through.
-        # When the accumulated state degenerates (e.g. repetition), the
-        # model can learn to attenuate attention and rely on the direct
-        # path, preventing fixed-point collapse.
         self.out_gate = nn.Linear(hidden_size, hidden_size, bias=True)
         
         # Learnable decay per head; stored as pre-sigmoid logit.
-        # logit(p) = log(p / (1-p)) so that sigmoid(logit) == p.
         _logit = math.log(decay / (1.0 - decay)) if 0 < decay < 1 else 0.0
         self.decay_param = nn.Parameter(torch.full((num_heads,), _logit))
     
@@ -82,24 +88,27 @@ class LinearAttention(nn.Module):
         attention_mask: torch.Tensor = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
-        Forward pass with optional recurrent state.
+        Forward pass with low-rank outer-product KV state.
+        
+        Instead of element-wise k*v (no cross-dim mixing), projects k and v
+        to a low-rank state space (R = state_dim) and accumulates the outer
+        product k_s^T @ v_s.  The matrix-vector product q_s @ state gives
+        each output dimension access to ALL value dimensions — enabling the
+        model to learn structured sequential patterns.
         
         Args:
             x: [batch, seq_len, hidden_size]
             state: Optional tuple (kv, k_sum) where
-                kv:    [batch, num_heads, head_dim]  running KV summary
-                k_sum: [batch, num_heads, head_dim]  running key sum
-            attention_mask: Optional [batch, 1, 1, seq_len] mask where 1
-                marks valid tokens and 0 marks padding positions. When
-                provided, padded positions do not contribute to the
-                running state.
+                kv:    [batch, heads, state_dim²]  running outer-product KV
+                k_sum: [batch, heads, state_dim]   running key sum
+            attention_mask: Optional [batch, 1, 1, seq_len] mask (1=valid, 0=pad)
             
         Returns:
             output:    [batch, seq_len, hidden_size]
-            new_state: (kv, k_sum) with same shapes as input state
+            new_state: (kv, k_sum) updated state
         """
         bsz, seqlen, _ = x.shape
-        H, D = self.num_heads, self.head_dim
+        H, D, R = self.num_heads, self.head_dim, self.state_dim
         
         qkv = self.qkv_proj(x)
         q, k, v = qkv.chunk(3, dim=-1)
@@ -109,58 +118,60 @@ class LinearAttention(nn.Module):
         k = k.view(bsz, seqlen, H, D).transpose(1, 2)
         v = v.view(bsz, seqlen, H, D).transpose(1, 2)
         
-        q = self._phi(q)  # [B, H, T, D]
-        k = self._phi(k)  # [B, H, T, D]
-        
-        # Apply padding mask: zero out k/v at padding positions so they
-        # do not contaminate the running state.
+        # Apply padding mask before state projection
         if attention_mask is not None:
-            # attention_mask: [B, 1, 1, T] -> [B, 1, T, 1]
-            pad_mask = attention_mask.squeeze(2).transpose(1, 2).unsqueeze(-1)  # [B, T, 1, 1]
+            pad_mask = attention_mask.squeeze(2).transpose(1, 2).unsqueeze(-1)
             pad_mask = pad_mask.permute(0, 2, 1, 3)  # [B, 1, T, 1]
             k = k * pad_mask
             v = v * pad_mask
         
-        # decay: [H] -> [1, H, 1] for broadcasting
-        decay = torch.sigmoid(self.decay_param).view(1, H, 1)  # [1, H, 1]
+        # Project to low-rank state space and apply kernel for positivity
+        q_s = self._phi(self.qk_state_proj(q))  # [B, H, T, R], positive
+        k_s = self._phi(self.qk_state_proj(k))  # [B, H, T, R], positive
+        v_s = self.v_state_proj(v)               # [B, H, T, R]
         
-        kv_contrib = k * v  # [B, H, T, D]  element-wise KV
+        # Outer-product KV: [B, H, T, R] × [B, H, T, R] → [B, H, T, R, R] → [B, H, T, R²]
+        kv_outer = (k_s.unsqueeze(-1) * v_s.unsqueeze(-2)).flatten(-2)
+        
+        # decay: [H] -> [1, H, 1] for broadcasting
+        decay = torch.sigmoid(self.decay_param).view(1, H, 1)
         
         # Initialize from incoming state
         if state is None:
-            kv_init   = torch.zeros(bsz, H, D, device=x.device, dtype=x.dtype)
-            ksum_init = torch.zeros(bsz, H, D, device=x.device, dtype=x.dtype)
+            kv_init   = torch.zeros(bsz, H, R * R, device=x.device, dtype=x.dtype)
+            ksum_init = torch.zeros(bsz, H, R, device=x.device, dtype=x.dtype)
         else:
             kv_init, ksum_init = state
         
-        # Inclusive causal prefix scan: position t includes its own contribution,
-        # which is standard for causal self-attention (token can attend to itself).
-        running_kv   = _causal_decay_scan(kv_contrib, decay, kv_init)    # [B, H, T, D]
-        running_ksum = _causal_decay_scan(k,          decay, ksum_init)   # [B, H, T, D]
+        # Causal prefix scan with exponential decay
+        running_kv   = _causal_decay_scan(kv_outer, decay, kv_init)  # [B, H, T, R²]
+        running_ksum = _causal_decay_scan(k_s,      decay, ksum_init)  # [B, H, T, R]
         
-        # Compute D-dimensional output.
-        # With element-wise KV approximation (k*v per-dim, not outer product),
-        # the correct output per position t is:
-        #   o[t, d] = q[t,d] * running_kv[t,d] / clamp(sum_d(q[t,d] * running_ksum[t,d]))
-        # This keeps the full D-dimensional structure while normalizing by the
-        # scalar partition function — avoids collapsing to a scalar and re-expanding.
-        den = (q * running_ksum).sum(dim=-1, keepdim=True).clamp(min=1e-6)  # [B, H, T, 1]
-        output = (q * running_kv) / den  # [B, H, T, D]
+        # Matrix-vector product in state space: q_s @ KV_matrix → [B, H, T, R]
+        # This is the key difference from element-wise: each output dimension
+        # receives information from ALL value dimensions.
+        running_kv_mat = running_kv.view(bsz, H, seqlen, R, R)
+        attn_out = torch.einsum('bhtr,bhtrs->bhts', q_s, running_kv_mat)
         
-        # Also compute a direct value path (skip attention state)
+        # Normalize by partition function
+        den = (q_s * running_ksum).sum(dim=-1, keepdim=True).clamp(min=1e-6)
+        attn_out = attn_out / den  # [B, H, T, R]
+        
+        # Project back to head_dim and merge heads
+        output = self.state_out_proj(attn_out)  # [B, H, T, D]
+        
+        # Direct value path (skip attention state) for output gate
         v_direct = v.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
         output = output.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
         
-        # Learned gate: blend attention output with direct value signal.
-        # This prevents fixed-point collapse during autoregressive generation
-        # — the model can learn to attenuate degenerate attention states.
+        # Learned gate: blend attention output with direct value signal
         g = torch.sigmoid(self.out_gate(output))
         output = g * output + (1 - g) * v_direct
         output = self.out_proj(output)
         
-        # Final state is the last time-step of the inclusive scan
-        new_kv   = running_kv[:, :, -1, :]    # [B, H, D]
-        new_ksum = running_ksum[:, :, -1, :]  # [B, H, D]
+        # Final state from last time-step of the scan
+        new_kv   = running_kv[:, :, -1, :]    # [B, H, R²]
+        new_ksum = running_ksum[:, :, -1, :]   # [B, H, R]
         new_state = (new_kv, new_ksum)
         return output, new_state
 
@@ -331,6 +342,7 @@ class UnifiedBlock(nn.Module):
         kernel_size: int = 4,
         decay: float = 0.95,
         norm_eps: float = 1e-6,
+        state_dim: int = 16,
     ):
         super().__init__()
         intermediate_size = intermediate_size or int(hidden_size * 2.7)
@@ -341,7 +353,7 @@ class UnifiedBlock(nn.Module):
         
         # Local + Global processing
         self.local_conv = LocalConv(hidden_size, kernel_size)
-        self.linear_attn = LinearAttention(hidden_size, num_heads, decay)
+        self.linear_attn = LinearAttention(hidden_size, num_heads, decay, state_dim)
         
         # Gated fusion
         self.gate = nn.Linear(hidden_size * 2, hidden_size, bias=False)

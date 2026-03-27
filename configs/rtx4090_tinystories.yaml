@@ -14,6 +14,7 @@ model:
   max_seq_len: 512
   kernel_size: 4
   decay: 0.95
+  state_dim: 16               # low-rank outer-product KV (R²=256 per head)
   use_recurrent_state: true
   use_memory: false
   dropout: 0.1

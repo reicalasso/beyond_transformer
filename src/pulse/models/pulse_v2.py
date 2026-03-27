@@ -38,6 +38,7 @@ class PulseV2Config:
     # UnifiedBlock settings
     kernel_size: int = 4
     decay: float = 0.95
+    state_dim: int = 16  # Low-rank dimension for outer-product KV state
     
     # Optional features
     use_memory: bool = False
@@ -77,11 +78,12 @@ class PulseV2(nn.Module):
         super().__init__()
         self.config = config
         
-        # Token embeddings (no position - handled by local conv + linear attn decay)
+        # Token + position embeddings
         self.embed = nn.Embedding(
             config.vocab_size, config.hidden_size,
             padding_idx=config.pad_token_id if config.pad_token_id is not None else None,
         )
+        self.pos_embed = nn.Embedding(config.max_seq_len, config.hidden_size)
         
         # Unified layers
         self.layers = nn.ModuleList([
@@ -92,6 +94,7 @@ class PulseV2(nn.Module):
                 kernel_size=config.kernel_size,
                 decay=config.decay,
                 norm_eps=config.norm_eps,
+                state_dim=config.state_dim,
             )
             for _ in range(config.num_layers)
         ])
@@ -140,6 +143,7 @@ class PulseV2(nn.Module):
         layer_states: Optional[List] = None,
         attention_mask: Optional[torch.Tensor] = None,
         update_recurrent: bool = True,
+        position_offset: int = 0,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], List]:
         """
         Forward pass.
@@ -152,6 +156,9 @@ class PulseV2(nn.Module):
             update_recurrent: Whether to update the recurrent state.  Set to
                 False during single-token decode to match the training regime
                 (one update per full chunk, not per token).
+            position_offset: Starting position index for the input tokens.
+                Used during incremental decoding so generated tokens receive
+                correct positions (prompt_len, prompt_len+1, ...).
             
         Returns:
             hidden_states: [batch, seq_len, hidden_size]
@@ -160,8 +167,12 @@ class PulseV2(nn.Module):
         """
         batch_size, seq_len = input_ids.shape
         
-        # Embed
-        x = self.embed(input_ids)
+        # Token + position embeddings
+        positions = torch.arange(
+            position_offset, position_offset + seq_len,
+            device=input_ids.device,
+        )
+        x = self.embed(input_ids) + self.pos_embed(positions)
         x = self.dropout(x)
         
         # Build padding mask if provided: [batch, seq_len] -> [batch, 1, 1, seq_len]
@@ -303,6 +314,7 @@ class PulseV2ForCausalLM(nn.Module):
             Generated token IDs [batch, prompt_len + num_generated]
         """
         generated = input_ids.clone()
+        prompt_len = generated.shape[1]
 
         # ── Prompt encoding pass ──────────────────────────────────────────────────────────
         # Run the full prompt once to build recurrent + per-layer states.
@@ -326,6 +338,7 @@ class PulseV2ForCausalLM(nn.Module):
             repetition_penalty=repetition_penalty, generated_ids=generated,
         )
         generated = torch.cat([generated, next_token], dim=1)
+        cur_pos = prompt_len  # position of next_token
 
         if eos_token_id is not None and (next_token == eos_token_id).all():
             return generated
@@ -335,12 +348,14 @@ class PulseV2ForCausalLM(nn.Module):
         # the train-test mismatch (trained: one update per full chunk;
         # inference would otherwise update per token).
         for _ in range(max_new_tokens - 1):
+            cur_pos += 1
             hidden, _, layer_states = self.model(
                 next_token,
                 recurrent_state=recurrent_state,
                 layer_states=layer_states,
                 attention_mask=None,
                 update_recurrent=False,  # freeze recurrent state
+                position_offset=min(cur_pos, self.config.max_seq_len - 1),
             )
             logits = self.lm_head(hidden)
 
