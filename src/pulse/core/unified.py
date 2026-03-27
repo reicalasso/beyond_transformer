@@ -9,10 +9,13 @@ Single primitive combining:
 O(n) complexity, replaces separate SSM/Attention/State modules.
 """
 
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .ffn import SwiGLU
 from .norm import RMSNorm
 
 
@@ -20,22 +23,25 @@ class LinearAttention(nn.Module):
     """
     Linear Attention with exponential decay and lightweight state.
     
-    Fully vectorized causal scan: no Python loop over the sequence.
-    Keeps only a single running KV and K-sum per head instead of a
-    full [D, D] outer-product matrix.
+    Chunked vectorized causal scan with O(T/C) Python iterations
+    (C=32 by default) — each iteration is fully vectorized CUDA ops.
+    Keeps a single running KV and K-sum per head (element-wise, not
+    the full [D, D] outer-product matrix).
     
     Forward recurrence (per head, per step t):
         kv_t   = decay * kv_{t-1}   + k_t * v_t
         ksum_t = decay * ksum_{t-1} + k_t
-        o_t    = (q_t · kv_t) / max(q_t · ksum_t, eps)
+        o_t[d] = q_t[d] * kv_t[d] / clamp(sum_d(q_t[d] * ksum_t[d]))
 
-    The causal constraint is enforced by excluding future tokens from
-    the running state when computing the output at position t.
+    The inclusive scan means each position can attend to itself
+    (standard for causal self-attention).
     
     Args:
         hidden_size: Model dimension
         num_heads: Number of attention heads
-        decay: Initial exponential decay factor (0.0–1.0). Learnable per head.
+        decay: Desired initial decay factor (0.0–1.0). Stored as
+            pre-sigmoid logit so sigmoid(param) == decay at init.
+            Learnable per head.
     """
     
     def __init__(
@@ -53,8 +59,10 @@ class LinearAttention(nn.Module):
         self.qkv_proj = nn.Linear(hidden_size, hidden_size * 3, bias=False)
         self.out_proj = nn.Linear(hidden_size, hidden_size, bias=False)
         
-        # Learnable decay per head; stored as pre-sigmoid logit
-        self.decay_param = nn.Parameter(torch.full((num_heads,), float(decay)))
+        # Learnable decay per head; stored as pre-sigmoid logit.
+        # logit(p) = log(p / (1-p)) so that sigmoid(logit) == p.
+        _logit = math.log(decay / (1.0 - decay)) if 0 < decay < 1 else 0.0
+        self.decay_param = nn.Parameter(torch.full((num_heads,), _logit))
     
     def _phi(self, x: torch.Tensor) -> torch.Tensor:
         """Kernel feature map: elu(x) + 1, keeps values non-negative."""
@@ -109,21 +117,7 @@ class LinearAttention(nn.Module):
         # decay: [H] -> [1, H, 1] for broadcasting
         decay = torch.sigmoid(self.decay_param).view(1, H, 1)  # [1, H, 1]
         
-        # Build causal decay powers: decay^(t - s) for t > s.
-        # powers[t] = decay^t, so prefix_kv at t = sum_{s<=t} decay^{t-s} * k_s*v_s
-        # Vectorized via cumulative sum with geometric discounting:
-        #   state_t = decay * state_{t-1} + k_t * v_t
-        # We scan over time using torch.ops in a single loop over heads is
-        # still O(n) but fully parallelisable via the following approach:
-        # Compute outer products k_t*v_t [B,H,T,D] and k_t [B,H,T,D],
-        # then apply a parallel prefix scan with geometric decay.
-        #
-        # Parallel prefix (associative scan) over T:
-        #   Given a[t] = k_t * v_t (or k_t), combine with operator:
-        #   (s1, a1) ⊕ (s2, a2) = (decay * s1 + a2, ...)
-        # We implement this iteratively over log2(T) steps.
-        
-        kv_contrib = k * v  # [B, H, T, D]  (element-wise, NOT outer product)
+        kv_contrib = k * v  # [B, H, T, D]  element-wise KV
         
         # Initialize from incoming state
         if state is None:
@@ -132,10 +126,8 @@ class LinearAttention(nn.Module):
         else:
             kv_init, ksum_init = state
         
-        # Inclusive causal prefix scan: computes running_kv[t] and running_ksum[t]
-        # that include contributions from positions 0..t.
-        # We need the *exclusive* prefix (0..t-1) for causal attention at t.
-        # Strategy: compute inclusive scan, then shift right by 1 and prepend init.
+        # Inclusive causal prefix scan: position t includes its own contribution,
+        # which is standard for causal self-attention (token can attend to itself).
         running_kv   = _causal_decay_scan(kv_contrib, decay, kv_init)    # [B, H, T, D]
         running_ksum = _causal_decay_scan(k,          decay, ksum_init)   # [B, H, T, D]
         
@@ -158,25 +150,28 @@ class LinearAttention(nn.Module):
         return output, new_state
 
 
+_SCAN_CHUNK = 32  # decay^32 ≈ 0.19 at decay=0.95 — safe for BF16/FP16
+
+
 def _causal_decay_scan(
     x: torch.Tensor,
     decay: torch.Tensor,
     init: torch.Tensor,
 ) -> torch.Tensor:
     """
-    Fully vectorized causal prefix scan with exponential decay.
+    Chunked vectorized causal prefix scan with exponential decay.
 
-    Computes the inclusive scan without any Python loop over T:
-        out[t] = sum_{s=0}^{t} decay^(t-s) * x[s]  +  decay^(t+1) * init
+    Computes the inclusive scan:
+        out[t] = decay * out[t-1] + x[t],  out[-1] = init
 
-    Strategy — closed-form via weighted cumsum:
-      1. Build decay powers: p[t] = decay^t  →  [1, H, T, 1]
-      2. Scale inputs:       x_scaled[t] = x[t] / p[t]
-      3. Cumsum along T:     cs[t] = sum_{s=0}^{t} x_scaled[s]
-      4. Restore scale:      out[t] = p[t] * cs[t]  +  decay^(t+1) * init
+    Strategy — chunk-and-chain:
+      Divide T into chunks of size C (default 32). Within each chunk
+      the closed-form cumsum is numerically safe because decay^C stays
+      well above BF16 subnormals. Between chunks the ending state is
+      chained to the next chunk's init.
 
-    This is numerically equivalent to the sequential recurrence and runs
-    entirely as fused CUDA ops — no Python loop over T.
+      Python iterations: T/C (e.g. 8 for T=256). Each iteration runs
+      fully vectorized CUDA ops — no per-timestep Python overhead.
 
     Args:
         x:     [batch, heads, seq_len, dim]  per-step contributions
@@ -187,26 +182,51 @@ def _causal_decay_scan(
         out:   [batch, heads, seq_len, dim]  inclusive causal prefix sums
     """
     B, H, T, D = x.shape
+    C = min(_SCAN_CHUNK, T)
 
-    # Build per-head log-decay series in float32 to avoid underflow.
-    # log_p[h, t] = (t+1) * log(decay[h])  → p[t] = decay^(t+1)
-    # Working in log-space avoids very small values when decay^T is tiny.
-    t_idx = torch.arange(T, device=x.device, dtype=torch.float32)  # [T]
+    # Pre-compute log-decay and within-chunk power tables (float32).
     log_decay = torch.log(decay.float().clamp(min=1e-8))  # [1, H, 1]
-    # log_powers: [1, H, T, 1]
-    log_powers = log_decay.unsqueeze(-1) * (t_idx + 1).view(1, 1, T, 1)
-    powers = log_powers.exp().to(x.dtype)  # [1, H, T, 1]
+    c_idx = torch.arange(C, device=x.device, dtype=torch.float32)
 
-    # Closed-form weighted cumsum (all ops are CUDA-fused, no Python loop):
-    #   out[t] = p[t] * sum_{s=0}^{t} x[s] / p[s]
-    # Divide in float32 to avoid precision loss, cast back afterwards.
-    x_f = x.float()
-    x_scaled = x_f / powers.float()         # [B, H, T, D]
-    cs = x_scaled.cumsum(dim=2)             # [B, H, T, D]
-    out = (cs * powers.float()).to(x.dtype)  # [B, H, T, D]
+    # p[c] = decay^c  for c in 0..C-1  →  [1, H, C, 1]
+    log_p = log_decay.unsqueeze(-1) * c_idx.view(1, 1, C, 1)
+    p = log_p.exp()       # float32, [1, H, C, 1]
+    inv_p = (-log_p).exp()  # float32, [1, H, C, 1]
 
-    # Init contribution: init * decay^(t+1)
-    out = out + init.unsqueeze(2) * powers  # [B, H, T, D]
+    # init_p[c] = decay^(c+1) for init contribution within a chunk
+    init_p = (log_decay.unsqueeze(-1) * (c_idx + 1).view(1, 1, C, 1)).exp()
+
+    out = torch.empty(B, H, T, D, device=x.device, dtype=x.dtype)
+    state = init.float()  # [B, H, D], keep in float32 throughout
+
+    for start in range(0, T, C):
+        end = min(start + C, T)
+        clen = end - start
+
+        chunk = x[:, :, start:end, :].float()  # [B, H, clen, D]
+
+        # If last chunk is shorter than C, slice the pre-computed tables.
+        if clen < C:
+            _inv_p = inv_p[:, :, :clen, :]
+            _p = p[:, :, :clen, :]
+            _init_p = init_p[:, :, :clen, :]
+        else:
+            _inv_p, _p, _init_p = inv_p, p, init_p
+
+        # Closed-form cumsum within the chunk:
+        #   chunk_out[c] = decay^c * cumsum_{s=0..c}(chunk[s] / decay^s)
+        scaled = chunk * _inv_p             # [B, H, clen, D]
+        cs = scaled.cumsum(dim=2)           # [B, H, clen, D]
+        chunk_out = cs * _p                 # [B, H, clen, D]
+
+        # Add incoming state contribution: state * decay^(c+1)
+        chunk_out = chunk_out + state.unsqueeze(2) * _init_p
+
+        out[:, :, start:end, :] = chunk_out.to(x.dtype)
+
+        # Chain: ending state of this chunk becomes init for the next
+        state = chunk_out[:, :, -1, :]  # [B, H, D], float32
+
     return out
 
 
@@ -334,19 +354,19 @@ class UnifiedBlock(nn.Module):
 
 class RecurrentState(nn.Module):
     """
-    Single compressed recurrent state.
+    Single compressed recurrent state with gated update.
     
-    Replaces complex state banks with simple EMA-style update.
+    Pools the last hidden state and merges it with the previous state
+    through a learned sigmoid gate, producing a fixed-size summary
+    that carries cross-chunk context.
     
     Args:
         hidden_size: State dimension
-        momentum: EMA momentum (0.9-0.99)
     """
     
-    def __init__(self, hidden_size: int, momentum: float = 0.95):
+    def __init__(self, hidden_size: int):
         super().__init__()
         self.hidden_size = hidden_size
-        self.momentum = momentum
         
         # Learnable initial state
         self.initial_state = nn.Parameter(torch.zeros(1, hidden_size))
