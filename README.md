@@ -1,171 +1,260 @@
-# PULSE v3 — Parallel Unified Linear State Engine
+# PULSE — Hybrid Gated Delta Network
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
-[![Status: Active Research](https://img.shields.io/badge/Status-Active%20Research-orange.svg)]()
+[CI](https://github.com/reicalasso/beyond_transformer/actions/workflows/ci.yml)
+[License: MIT](https://opensource.org/licenses/MIT)
+[Python 3.10+](https://www.python.org/downloads/)
+[PyTorch 2.1+](https://pytorch.org/)
+[Status]()
 
-> A personal research project exploring whether a single, simple O(n) primitive can replace the SSM + Attention + State complexity of modern sequence models.
+> A research sequence model that drops the attention–FFN duopoly in favor of a
+> **gated delta-rule recurrence** with a matrix-valued state, interleaved every
+> few layers with **sliding-window softmax attention** for in-context recall.
 
 ---
 
-## Core Idea
+## TL;DR
 
-PULSE v3 uses a single **DualStateBlock** repeated across all layers — no special first/last layers, no conditional logic:
+Modern long-context architectures converged on a small set of ideas:
 
-```
-x → RMSNorm → [LocalConv ⊕ DualStateAttention] → gate → residual
-  → RMSNorm → SwiGLU FFN → residual
-```
+1. **Recurrence with data-dependent gating** (Mamba-2, GLA, RWKV-7) for O(1)
+  per-token inference.
+2. **Delta-rule writes** with matrix-valued state (DeltaNet, Yang et al. 2024)
+  for honest associative recall — *targeted overwrite*, not just decay.
+3. **Hybrid stacks** with periodic short-window softmax attention
+  (Samba, Jamba, Zamba-2) to keep exact local recall.
+4. **Stability tricks** at scale: QK-norm, RoPE in the attention sub-layers,
+  logit soft-cap, z-loss, μP-style residual init.
 
-The key innovation is **dual-timescale linear attention**:
-
-- **Fast state** (α ≈ 0.70, learnable): local syntax, short-range patterns
-- **Slow state** (β ≈ 0.97, learnable): semantics, long-range context
-
-Both run as O(n) causal decay scans. A learned gate blends the two timescales per position.
-
-**LocalConv** — causal depthwise-separable convolution for sub-word patterns, O(n).
+PULSE bundles these into a single, tested package. The recurrence path runs
+in `O(N · D²)` (matrix-state) per layer with `O(D²)` per token at decode
+time, regardless of context length. The SWA layers add a fixed
+`O(window · D)` per token.
 
 ---
 
 ## Architecture
 
+A `PulseForCausalLM` is a stack of two block types, interleaved by a
+`swa_every` schedule (default 4 → 75% delta, 25% SWA):
+
+### `DeltaBlock` — recurrent mixer (the workhorse)
+
 ```
-DualStateAttention:
-  q, k, v  ←  qkv_proj(x)           # [B, H, T, D]
-  q, k     ←  phi(·)                 # elu + 1, non-negative kernel
-  kv       =  k * v                  # element-wise, [B, H, T, D]
-
-  # Two independent decay scans
-  fast_kv, fast_ks  ←  decay_scan(kv, k,  alpha)
-  slow_kv, slow_ks  ←  decay_scan(kv, k,  beta)
-
-  out_fast = (q * fast_kv) / (q · fast_ks)
-  out_slow = (q * slow_kv) / (q · slow_ks)
-
-  output  =  W_out( cat[out_fast, out_slow] )   # [B, T, D]
+x → RMSNorm → ShortCausalConv1d → GatedDeltaRule → residual
+  → RMSNorm → SwiGLU                              → residual
 ```
 
-State per layer: `(kv_f, ks_f, kv_s, ks_s)` each `[B, H, D]` — 4D floats per head.
+Inside `GatedDeltaRule`, per token and per head:
 
-Incremental generation carries these states forward → **O(1) per decode step**.
+```
+q, k, v   ← Linear(x)            (QK-normed)
+α_t       ← σ( W_α · x )         per-head scalar forget gate
+β_t       ← σ( W_β · x )         per-head scalar write strength
+S_t       =  α_t · S_{t-1} · (I − β_t k_t k_t^T) + β_t · v_t k_t^T   ∈ R^{Dh×Dh}
+o_t       =  S_t · q_t
+```
+
+The state `S_t` is a true `Dh × Dh` matrix per head — a **proper associative
+memory**, not the rank-1 element-wise approximation used in vanilla linear
+attention. Two execution paths are exposed and tested for bit-equivalence:
+a per-token recurrent reference, and a chunked path that ties into a future
+fused intra-chunk WY-representation kernel.
+
+### `AttentionBlock` — sliding-window recall
+
+```
+x → RMSNorm → ShortCausalConv1d → SlidingWindowAttention(RoPE, GQA, QK-norm)
+                                                  → residual
+  → RMSNorm → SwiGLU                              → residual
+```
+
+Standard causal softmax attention restricted to the last `window_size`
+tokens, with RoPE on `(q, k)`, optional GQA via `num_kv_heads`, and a
+ring-buffer KV cache for O(window) decode memory.
+
+### Top-level
+
+- `PulseForCausalLM` adds:
+  - Logit **soft-cap** (Gemma-style): `tanh(logits / cap) * cap`.
+  - Auxiliary **z-loss**: `λ · (log Z)²` for log-partition stability.
+  - O(1)-per-step **incremental generate** that prefills once then carries
+  `(conv_state, mixer_state)` per layer.
+  - Optional **tied embeddings**, **μP-style residual init** (`1/√(2L)`
+  on `out_proj` and `ffn.down`).
 
 ---
 
-## Quick Start
+## Quick start
 
 ```bash
-git clone https://github.com/kaelvalen/beyond_transformer.git
+git clone https://github.com/reicalasso/beyond_transformer.git
 cd beyond_transformer
-pip install -e ".[train]"
+pip install -e ".[train,dev]"
 ```
 
 ```python
-from pulse import PulseConfig, PulseForCausalLM
 import torch
+from pulse import PulseConfig, PulseForCausalLM
 
-config = PulseConfig(
-    vocab_size=50257,
+cfg = PulseConfig(
+    vocab_size=50_257,
     hidden_size=512,
-    num_layers=8,
+    num_layers=12,
     num_heads=8,
-    fast_decay=0.70,
-    slow_decay=0.97,
+    swa_every=4,            # 9 delta + 3 swa
+    swa_window_size=512,
+    delta_chunk_size=64,
 )
+model = PulseForCausalLM(cfg)
 
-model = PulseForCausalLM(config)
-out   = model(input_ids, labels=labels)
-loss  = out["loss"]
+ids = torch.randint(0, cfg.vocab_size, (1, 64))
+out = model(ids, labels=ids)
+print(out["loss"].item())           # CE + z-loss
 
-generated = model.generate(input_ids, max_new_tokens=100, temperature=0.8)
+generated = model.generate(ids[:, :8], max_new_tokens=120, top_k=50, top_p=0.9)
 ```
 
 ```bash
 # Sanity check
 python scripts/smoke_test.py
 
-# Train on TinyStories (defaults: 512-dim, 8-layer, 20k steps)
-python scripts/train.py
+# Microbenchmark (forward / train / decode latency + memory)
+python scripts/bench.py --hidden-size 384 --num-layers 8 --seq-len 512
 
-# Train with RTX 4090 config (~50M params, 50k steps)
+# Train on TinyStories (defaults: 512-dim, 12-layer, 20k steps)
+python scripts/train.py
+python scripts/train.py --config configs/tinystories_small.yaml
 python scripts/train.py --config configs/rtx4090_tinystories.yaml
 
-# Evaluate a checkpoint
-python scripts/test_best_model.py --checkpoint output/pulse_v3_4090/best_model.pt
+# Probe a checkpoint
+python scripts/test_best_model.py --checkpoint output/pulse/best_model.pt
 ```
 
 ---
 
 ## Configuration
 
-All hyperparameters are in `PulseConfig`:
+All hyperparameters live in `PulseConfig`. The most architecture-defining ones:
 
-| Parameter | Default | Description |
-|---|---|---|
-| `hidden_size` | 512 | Model dimension |
-| `num_layers` | 8 | Number of DualStateBlocks |
-| `num_heads` | 8 | Attention heads |
-| `ffn_mult` | 2.7 | FFN hidden = hidden × ffn_mult |
-| `kernel_size` | 4 | LocalConv kernel size |
-| `fast_decay` | 0.70 | Initial fast-state decay (learnable) |
-| `slow_decay` | 0.97 | Initial slow-state decay (learnable) |
-| `dropout` | 0.0 | Dropout probability |
-| `tie_embeddings` | True | Tie input/output embeddings |
 
-A YAML config can override any train.py CLI flag:
+| Field                 | Default | Meaning                                         |
+| --------------------- | ------- | ----------------------------------------------- |
+| `hidden_size`         | 512     | Model dimension.                                |
+| `num_layers`          | 12      | Total blocks (delta + swa).                     |
+| `num_heads`           | 8       | Heads in both block types.                      |
+| `num_kv_heads`        | None    | None → MHA in SWA layers; smaller value → GQA.  |
+| `swa_every`           | 4       | Place an SWA block every Nth layer.             |
+| `swa_window_size`     | 512     | Tokens visible to SWA layers.                   |
+| `delta_chunk_size`    | 64      | Chunk granularity in delta-rule prefill.        |
+| `qk_norm`             | True    | L2-normalize Q and K (stable at scale).         |
+| `gate_bias_init`      | 4.0     | logit s.t. `σ(α) ≈ 0.98` at init (long memory). |
+| `conv_kernel_size`    | 4       | Short causal conv before each mixer.            |
+| `logit_soft_cap`      | 30.0    | Gemma-style; set None to disable.               |
+| `z_loss_coef`         | 1e-4    | Auxiliary stability loss; set 0 to disable.     |
+| `tie_embeddings`      | True    | Share input/output embedding weights.           |
+| `init_scale_residual` | True    | Scale residual projection weights by `1/√(2L)`. |
 
-```yaml
-# configs/my_config.yaml
-hidden_size: 768
-num_layers: 12
-fast_decay: 0.70
-slow_decay: 0.97
-batch_size: 16
-bf16: true
-max_steps: 50000
-output_dir: ./output/my_run
-```
 
-```bash
-python scripts/train.py --config configs/my_config.yaml --lr 5e-4
-```
+YAML configs live in `configs/` and override CLI defaults; CLI flags then
+override YAML.
 
 ---
 
-## File Structure
+## Layout
 
 ```
 src/pulse/
-├── __init__.py     # exports PulseConfig, PulseModel, PulseForCausalLM
-├── core.py         # RMSNorm, SwiGLU, _decay_scan, DualStateAttention, LocalConv, DualStateBlock
-├── model.py        # PulseConfig, PulseModel, PulseForCausalLM
-└── train.py        # self-contained training script with --config YAML support
+├── __init__.py            # public API: PulseConfig, PulseModel, PulseForCausalLM
+├── config.py              # dataclass config, layer-pattern resolver
+├── model.py               # PulseModel, PulseForCausalLM
+├── train.py               # TinyStories training loop
+├── modules/
+│   ├── norm.py            # RMSNorm + L2-normalize (QK-norm)
+│   ├── rope.py            # RoPE with growable cache
+│   ├── conv.py            # ShortCausalConv1d (streaming)
+│   ├── ffn.py             # SwiGLU
+│   ├── delta.py           # GatedDeltaRule (recurrent + chunked paths)
+│   ├── swa.py             # SlidingWindowAttention (RoPE + GQA + ring-buffer cache)
+│   └── block.py           # DeltaBlock, AttentionBlock
+├── kernels/               # placeholder for future Triton kernel
+└── legacy/                # the original PULSE v3 dual-timescale prototype
+
+tests/
+├── test_norm.py           # RMSNorm + L2-norm correctness
+├── test_rope.py           # RoPE half-rotation + offset + relative property
+├── test_conv.py           # streaming conv == full conv
+├── test_delta.py          # recurrent ≡ chunked, prefill ≡ decode, gradients
+├── test_swa.py            # window cap, causality, GQA, padding mask
+├── test_block.py          # streaming equivalence per block
+├── test_model.py          # end-to-end shapes, soft-cap, prefill ≡ decode
+└── test_legacy_compat.py  # the legacy prototype still imports and runs
 
 scripts/
-├── train.py        # thin launcher → src/pulse/train.py
-├── smoke_test.py   # minimal forward + generate sanity check
-└── test_best_model.py  # generation and perplexity evaluation
-
-configs/
-└── rtx4090_tinystories.yaml   # 768-dim, 12-layer, 50k steps on 24 GB GPU
+├── smoke_test.py          # shape + finiteness sanity check
+├── bench.py               # forward/train/decode latency + memory
+├── train.py               # → pulse.train.main
+└── test_best_model.py     # generation + perplexity probe on a checkpoint
 ```
 
 ---
 
-## What's Next
+## Tests, lint, types
 
-- [ ] Benchmark vs. vanilla transformer at same parameter count on TinyStories
-- [ ] Ablation: single vs. dual timescale
-- [ ] Ablation: with/without LocalConv
-- [ ] Replace Python chunk-loop in `_decay_scan` with parallel prefix scan (CUDA / `torch.compile`)
+```bash
+ruff check src tests scripts          # lint
+ruff format --check src tests scripts # formatting
+mypy src/pulse                        # static types
+pytest -q                             # 46 tests, < 1 s on CPU
+```
+
+CI runs all four on every push/PR across Python 3.10/3.11/3.12.
+
+The architecture is correctness-tested, not just shape-tested. The
+non-negotiable invariants are:
+
+- `forward_recurrent` ≡ `forward_chunked` for any `chunk_size` (delta).
+- Per-block streaming decode ≡ full-sequence prefill (delta + swa + block).
+- Full-model prefill ≡ split-prefill+decode at the logits level.
+- Gradients are finite and flow to all parameters.
+- SWA padding mask actually masks padded positions out of softmax.
+- RoPE preserves vector norms and satisfies the relative-position invariant.
 
 ---
 
-## What This Is Not
+## What this is — and isn't
 
-- Not a claim that linear attention beats softmax attention
-- Not production-ready — active research, things will break
+- **Is**: a clean, tested, modern hybrid recurrent + sliding-window
+architecture in pure PyTorch, suitable for research and small-scale
+pretraining experiments. The math is correct; the architecture matches
+the 2024–2026 frontier of efficient sequence models.
+- **Isn't**: tuned for inference-time throughput. The chunked delta path
+uses a Python loop over chunks — competitive with reference PyTorch
+implementations but ~10× slower than a fused Triton kernel. A drop-in
+Triton WY-representation kernel slot is reserved under
+`src/pulse/kernels/`; contributions welcome.
+
+---
+
+## Roadmap
+
+- Triton WY-representation kernel for fully parallel intra-chunk delta.
+- HF-compatible `PreTrainedModel` shim for the wider ecosystem.
+- MoE SwiGLU (DeepSeekMoE-style with shared expert) behind a config flag.
+- Larger-scale ablation tables: hybrid ratios, delta vs GLA, with/without
+QK-norm, with/without z-loss, with/without residual init scaling.
+- Optional μP-coordinate-check script for HP transfer experiments.
+
+---
+
+## Legacy
+
+The original PULSE v3 dual-timescale prototype is preserved verbatim under
+`pulse.legacy` for reproducibility. It is **not** loaded by the new public
+API — use it only if you specifically need the v3 architecture:
+
+```python
+from pulse.legacy import PulseConfig, PulseForCausalLM
+```
 
 ---
 

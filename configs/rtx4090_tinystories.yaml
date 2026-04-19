@@ -1,10 +1,10 @@
 # ─────────────────────────────────────────────────────────
-# PULSE v3 training config — 1× RTX 4090 (24 GB), vast.ai
-# Dataset: TinyStories   Arch: DualStateAttention
+# Modern PULSE training config — 1× RTX 4090 (24 GB)
+# Dataset: TinyStories
+# Arch: hybrid gated-delta + sliding-window attention
 #
 # Usage:
-#   python src/pulse/train.py --config configs/rtx4090_tinystories.yaml
-#   python scripts/train.py   --config configs/rtx4090_tinystories.yaml
+#   python scripts/train.py --config configs/rtx4090_tinystories.yaml
 #
 # Keys map directly to train.py argparse flags (underscores).
 # CLI flags always override YAML values.
@@ -15,16 +15,27 @@ seed: 42
 # ── Model ────────────────────────────────────────────────
 hidden_size: 768
 num_layers: 12
-num_heads: 8
+num_heads: 12
+num_kv_heads: 4              # GQA in SWA layers
 ffn_mult: 2.7
-kernel_size: 4
-fast_decay: 0.70    # local syntax timescale (learnable per head)
-slow_decay: 0.97    # semantic / long-range timescale (learnable per head)
+conv_kernel_size: 4
+
+# Hybrid pattern: SWA every 4th block → 9 delta + 3 swa
+swa_every: 4
+swa_window_size: 512
+delta_chunk_size: 64
+
+qk_norm: true
+gate_bias_init: 4.0
+rope_max_seq_len: 2048
+
 dropout: 0.1
+logit_soft_cap: 30.0
+z_loss_coef: 1.0e-4
 
 # ── Training ─────────────────────────────────────────────
 batch_size: 16
-grad_accum: 4           # effective batch = 64
+grad_accum: 4               # effective batch = 64
 lr: 6.0e-4
 weight_decay: 0.1
 max_grad_norm: 1.0
@@ -38,8 +49,8 @@ fp16: false
 
 # ── Data ─────────────────────────────────────────────────
 seq_len: 512
-max_samples: null       # use ALL TinyStories
+max_samples: null            # use ALL TinyStories
 num_workers: 8
 
 # ── Output ───────────────────────────────────────────────
-output_dir: ./output/pulse_v3_4090
+output_dir: ./output/pulse_4090

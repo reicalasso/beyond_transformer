@@ -31,7 +31,7 @@ from tqdm import tqdm
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
-from pulse import PulseConfig, PulseForCausalLM
+from pulse.legacy import PulseConfig, PulseForCausalLM
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",

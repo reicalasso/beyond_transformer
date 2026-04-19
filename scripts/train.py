@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""
-PULSE v3 training launcher.
+"""Modern PULSE training launcher.
 
-Delegates entirely to src/pulse/train.py — all training logic lives there.
+Delegates to :mod:`pulse.train`. All training logic lives there. To train
+the legacy v3 prototype instead, run ``python -m pulse.legacy.train``.
 
-Usage:
-    python scripts/train.py                                      # defaults
-    python scripts/train.py --config configs/rtx4090_tinystories.yaml
-    python scripts/train.py --hidden-size 512 --num-layers 6    # CLI overrides
+Usage::
+
+    python scripts/train.py
+    python scripts/train.py --config configs/tinystories_small.yaml
+    python scripts/train.py --hidden-size 768 --num-layers 12 --max-steps 50000
 """
+
+from __future__ import annotations
 
 import os
 import sys
